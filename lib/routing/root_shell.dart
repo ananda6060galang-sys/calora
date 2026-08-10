@@ -237,7 +237,7 @@ class FoodDiaryScreenNoAppBar extends StatelessWidget {
   const FoodDiaryScreenNoAppBar({super.key});
 
   @override
-  Widget build(BuildContext context) => const FoodDiaryScreen();
+  Widget build(BuildContext context) => const FoodDiaryScreen(showBackButton: false);
 }
 
 class _ComingSoonTab extends StatelessWidget {

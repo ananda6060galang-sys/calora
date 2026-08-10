@@ -59,7 +59,7 @@ class StatCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),

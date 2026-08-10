@@ -22,10 +22,35 @@ class DashboardScreen extends ConsumerWidget {
     final remaining = (target - totals.calories).round();
     final calorieProgress = target <= 0 ? 0.0 : totals.calories / target;
 
-    return ColoredBox(
-      color: AppColors.lightBg,
-      child: SafeArea(
-        bottom: false,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+      body: Stack(
+        children: [
+          // Soft gradient hero background
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 350,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    isDark
+                        ? const Color(0xFF2C4A26) // Dark sage
+                        : const Color.fromARGB(255, 214, 253, 150), // Light sage / soft green
+                    (isDark ? AppColors.darkBg : AppColors.lightBg).withValues(alpha: 0.0), // Fade to bg
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
         child: ListView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 124),
@@ -131,6 +156,8 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+        ],
       ),
     );
   }

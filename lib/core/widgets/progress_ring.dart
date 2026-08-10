@@ -10,6 +10,7 @@ class ProgressRing extends StatelessWidget {
     super.key,
     required this.progress,
     required this.color,
+    this.gradientColors,
     this.size = 160,
     this.strokeWidth = 14,
     this.trackColor,
@@ -18,6 +19,7 @@ class ProgressRing extends StatelessWidget {
 
   final double progress; // 0.0 - 1.0 (values >1 render as overshoot color)
   final Color color;
+  final List<Color>? gradientColors;
   final double size;
   final double strokeWidth;
   final Color? trackColor;
@@ -40,11 +42,12 @@ class ProgressRing extends StatelessWidget {
             painter: _RingPainter(
               progress: progress.clamp(0, 1.15),
               color: progress > 1 ? AppColors.warning : color,
+              gradientColors: gradientColors,
               trackColor: track,
               strokeWidth: strokeWidth,
             ),
           ),
-          if (child != null) child!,
+          ?child,
         ],
       ),
     );
@@ -55,12 +58,14 @@ class _RingPainter extends CustomPainter {
   _RingPainter({
     required this.progress,
     required this.color,
+    this.gradientColors,
     required this.trackColor,
     required this.strokeWidth,
   });
 
   final double progress;
   final Color color;
+  final List<Color>? gradientColors;
   final Color trackColor;
   final double strokeWidth;
 
@@ -76,14 +81,24 @@ class _RingPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final fgPaint = Paint()
-      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
+    if (gradientColors != null && gradientColors!.length > 1) {
+      fgPaint.shader = SweepGradient(
+        colors: gradientColors!,
+        startAngle: -pi / 2,
+        endAngle: (-pi / 2) + (2 * pi),
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    } else {
+      fgPaint.color = color;
+    }
+
     canvas.drawCircle(center, radius, trackPaint);
 
     final sweep = 2 * pi * progress.clamp(0, 1.0);
+    // Draw using standard arc
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi / 2,
@@ -95,5 +110,7 @@ class _RingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RingPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.color != color;
+      oldDelegate.progress != progress ||
+      oldDelegate.color != color ||
+      oldDelegate.gradientColors != gradientColors;
 }

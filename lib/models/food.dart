@@ -28,12 +28,14 @@ class DiaryEntry {
     required this.food,
     required this.servings,
     required this.meal,
+    required this.date,
   });
 
   final String id;
   final Food food;
   final double servings;
   final String meal; // Breakfast / Lunch / Dinner / Snacks
+  final DateTime date;
 
   int get calories => (food.calories * servings).round();
   double get proteinG => food.proteinG * servings;
