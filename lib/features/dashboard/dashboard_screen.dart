@@ -55,7 +55,7 @@ class DashboardScreen extends ConsumerWidget {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 124),
           children: [
-            _DashboardHeader(profile: profile),
+            _DashboardHeader(profile: profile, isDark: isDark),
             const SizedBox(height: 22),
             _CalorieHeroCard(
               consumed: totals.calories,
@@ -63,6 +63,7 @@ class DashboardScreen extends ConsumerWidget {
               target: target.round(),
               progress: calorieProgress,
               goal: _goalLabel(profile.goal),
+              isDark: isDark,
             ),
             const SizedBox(height: 14),
             LayoutBuilder(
@@ -77,6 +78,7 @@ class DashboardScreen extends ConsumerWidget {
                         target: '${profile.proteinTargetG.round()}g',
                         color: AppColors.protein,
                         progress: totals.proteinG / profile.proteinTargetG,
+                        isDark: isDark,
                       ),
                     ),
                     SizedBox(width: gap),
@@ -87,6 +89,7 @@ class DashboardScreen extends ConsumerWidget {
                         target: '${profile.carbsTargetG.round()}g',
                         color: AppColors.carbs,
                         progress: totals.carbsG / profile.carbsTargetG,
+                        isDark: isDark,
                       ),
                     ),
                     SizedBox(width: gap),
@@ -97,6 +100,7 @@ class DashboardScreen extends ConsumerWidget {
                         target: '${profile.fatTargetG.round()}g',
                         color: AppColors.lavender,
                         progress: totals.fatG / profile.fatTargetG,
+                        isDark: isDark,
                       ),
                     ),
                   ],
@@ -108,6 +112,7 @@ class DashboardScreen extends ConsumerWidget {
               title: 'Quick Actions',
               action: 'View all',
               onActionTap: () {},
+              isDark: isDark,
             ),
             const SizedBox(height: 12),
             LayoutBuilder(
@@ -124,6 +129,7 @@ class DashboardScreen extends ConsumerWidget {
                             builder: (_) => const FoodDiaryScreen(),
                           ),
                         ),
+                        isDark: isDark,
                       ),
                     ),
                     SizedBox(width: gap),
@@ -133,6 +139,7 @@ class DashboardScreen extends ConsumerWidget {
                         label: 'Workout',
                         color: AppColors.lavender,
                         onTap: () {},
+                        isDark: isDark,
                       ),
                     ),
                     SizedBox(width: gap),
@@ -140,8 +147,9 @@ class DashboardScreen extends ConsumerWidget {
                       child: _QuickActionTile(
                         icon: Icons.monitor_weight_outlined,
                         label: 'Weight',
-                        color: AppColors.lightTextPrimary,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                         onTap: () {},
+                        isDark: isDark,
                       ),
                     ),
                   ],
@@ -149,10 +157,11 @@ class DashboardScreen extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 24),
-            _SectionTitle(title: "Today's Insights"),
+            _SectionTitle(title: "Today's Insights", isDark: isDark),
             const SizedBox(height: 12),
             _InsightCard(
               remaining: remaining,
+              isDark: isDark,
             ),
           ],
         ),
@@ -177,9 +186,10 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader({required this.profile});
+  const _DashboardHeader({required this.profile, required this.isDark});
 
   final UserProfile profile;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -188,17 +198,17 @@ class _DashboardHeader extends StatelessWidget {
         Container(
           height: 46,
           width: 46,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.accent,
-            borderRadius: BorderRadius.circular(16),
+            shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
           child: Text(
-            profile.name.characters.first.toUpperCase(),
-            style: _textStyle(
-              size: 18,
-              weight: FontWeight.w800,
-              color: AppColors.lightTextPrimary,
+            profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'C',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF0E0F10),
             ),
           ),
         ),
@@ -210,9 +220,10 @@ class _DashboardHeader extends StatelessWidget {
               Text(
                 'Hello',
                 style: _textStyle(
+                  isDark: isDark,
                   size: 11,
                   weight: FontWeight.w600,
-                  color: AppColors.lightTextSecondary,
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -220,15 +231,15 @@ class _DashboardHeader extends StatelessWidget {
                 profile.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: _textStyle(size: 17, weight: FontWeight.w800),
+                style: _textStyle(isDark: isDark, size: 17, weight: FontWeight.w800),
               ),
             ],
           ),
         ),
         const SizedBox(width: 10),
-        const _CircleIconButton(icon: Icons.search_rounded),
+        _CircleIconButton(icon: Icons.search_rounded, isDark: isDark),
         const SizedBox(width: 8),
-        const _CircleIconButton(icon: Icons.notifications_none_rounded),
+        _CircleIconButton(icon: Icons.notifications_none_rounded, isDark: isDark),
       ],
     );
   }
@@ -241,6 +252,7 @@ class _CalorieHeroCard extends StatelessWidget {
     required this.target,
     required this.progress,
     required this.goal,
+    required this.isDark,
   });
 
   final int consumed;
@@ -248,13 +260,14 @@ class _CalorieHeroCard extends StatelessWidget {
   final int target;
   final double progress;
   final String goal;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 244,
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      decoration: _cardDecoration(radius: 34),
+      decoration: _cardDecoration(isDark: isDark, radius: 34),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -266,7 +279,7 @@ class _CalorieHeroCard extends StatelessWidget {
                   'Daily Summary',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _textStyle(size: 19, weight: FontWeight.w800),
+                  style: _textStyle(isDark: isDark, size: 19, weight: FontWeight.w800),
                 ),
               ),
               const SizedBox(width: 8),
@@ -276,20 +289,20 @@ class _CalorieHeroCard extends StatelessWidget {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.lightSurfaceAlt,
+                  color: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.flag_outlined,
                       size: 14,
-                      color: AppColors.lightTextPrimary,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       goal,
-                      style: _textStyle(size: 11, weight: FontWeight.w700),
+                      style: _textStyle(isDark: isDark, size: 11, weight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -306,7 +319,7 @@ class _CalorieHeroCard extends StatelessWidget {
                 children: [
                   CustomPaint(
                     size: const Size(210, 132),
-                    painter: _SegmentedGaugePainter(progress: progress),
+                    painter: _SegmentedGaugePainter(progress: progress, isDark: isDark),
                   ),
                   Positioned(
                     bottom: 14,
@@ -320,14 +333,15 @@ class _CalorieHeroCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '$remaining',
-                          style: _textStyle(size: 31, weight: FontWeight.w900),
+                          style: _textStyle(isDark: isDark, size: 31, weight: FontWeight.w900),
                         ),
                         Text(
                           'kcal left',
                           style: _textStyle(
+                            isDark: isDark,
                             size: 12,
                             weight: FontWeight.w600,
-                            color: AppColors.lightTextSecondary,
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                           ),
                         ),
                       ],
@@ -341,11 +355,11 @@ class _CalorieHeroCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _HeroMetric(label: 'Consumed', value: '$consumed kcal'),
+                child: _HeroMetric(label: 'Consumed', value: '$consumed kcal', isDark: isDark),
               ),
-              Container(width: 1, height: 34, color: AppColors.lightBorder),
+              Container(width: 1, height: 34, color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
               Expanded(
-                child: _HeroMetric(label: 'Goal', value: '$target kcal'),
+                child: _HeroMetric(label: 'Goal', value: '$target kcal', isDark: isDark),
               ),
             ],
           ),
@@ -356,10 +370,11 @@ class _CalorieHeroCard extends StatelessWidget {
 }
 
 class _HeroMetric extends StatelessWidget {
-  const _HeroMetric({required this.label, required this.value});
+  const _HeroMetric({required this.label, required this.value, required this.isDark});
 
   final String label;
   final String value;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -368,13 +383,14 @@ class _HeroMetric extends StatelessWidget {
         Text(
           label,
           style: _textStyle(
+            isDark: isDark,
             size: 11,
             weight: FontWeight.w600,
-            color: AppColors.lightTextSecondary,
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
           ),
         ),
         const SizedBox(height: 4),
-        Text(value, style: _textStyle(size: 14, weight: FontWeight.w800)),
+        Text(value, style: _textStyle(isDark: isDark, size: 14, weight: FontWeight.w800)),
       ],
     );
   }
@@ -387,6 +403,7 @@ class _MacroCard extends StatelessWidget {
     required this.target,
     required this.color,
     required this.progress,
+    required this.isDark,
   });
 
   final String label;
@@ -394,13 +411,14 @@ class _MacroCard extends StatelessWidget {
   final String target;
   final Color color;
   final double progress;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 92,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: _cardDecoration(radius: 20, blur: 18, offset: 7),
+      decoration: _cardDecoration(isDark: isDark, radius: 20, blur: 18, offset: 7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -418,16 +436,17 @@ class _MacroCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: _textStyle(
+                    isDark: isDark,
                     size: 11,
                     weight: FontWeight.w700,
-                    color: AppColors.lightTextSecondary,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                 ),
               ),
             ],
           ),
           const Spacer(),
-          Text(value, style: _textStyle(size: 16, weight: FontWeight.w900)),
+          Text(value, style: _textStyle(isDark: isDark, size: 16, weight: FontWeight.w900)),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
@@ -435,16 +454,17 @@ class _MacroCard extends StatelessWidget {
               value: progress.clamp(0, 1),
               minHeight: 5,
               color: color,
-              backgroundColor: AppColors.lightSurfaceAlt,
+              backgroundColor: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             'of $target',
             style: _textStyle(
+              isDark: isDark,
               size: 10,
               weight: FontWeight.w600,
-              color: AppColors.lightTextSecondary,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
             ),
           ),
         ],
@@ -454,11 +474,12 @@ class _MacroCard extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, this.action, this.onActionTap});
+  const _SectionTitle({required this.title, this.action, this.onActionTap, required this.isDark});
 
   final String title;
   final String? action;
   final VoidCallback? onActionTap;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -466,7 +487,7 @@ class _SectionTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Flexible(
-          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: _textStyle(size: 17, weight: FontWeight.w900)),
+          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: _textStyle(isDark: isDark, size: 17, weight: FontWeight.w900)),
         ),
         if (action != null) ...[
           const SizedBox(width: 8),
@@ -475,9 +496,10 @@ class _SectionTitle extends StatelessWidget {
             child: Text(
               action!,
               style: _textStyle(
+                isDark: isDark,
                 size: 12,
                 weight: FontWeight.w800,
-                color: AppColors.lavender,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
               ),
             ),
           ),
@@ -493,22 +515,25 @@ class _QuickActionTile extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.color = AppColors.accent,
+    required this.isDark,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final Color color;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
+    final isPrimaryColor = color == AppColors.lightTextPrimary || color == AppColors.darkTextPrimary;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 82,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        decoration: _cardDecoration(radius: 22, blur: 16, offset: 6),
+        decoration: _cardDecoration(isDark: isDark, radius: 22, blur: 16, offset: 6),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -517,7 +542,7 @@ class _QuickActionTile extends StatelessWidget {
               width: 34,
               decoration: BoxDecoration(
                 color: color.withValues(
-                  alpha: color == AppColors.lightTextPrimary ? 0.08 : 0.18,
+                  alpha: isPrimaryColor ? 0.08 : 0.18,
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -528,7 +553,7 @@ class _QuickActionTile extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: _textStyle(size: 11, weight: FontWeight.w800),
+              style: _textStyle(isDark: isDark, size: 11, weight: FontWeight.w800),
             ),
           ],
         ),
@@ -540,16 +565,18 @@ class _QuickActionTile extends StatelessWidget {
 class _InsightCard extends StatelessWidget {
   const _InsightCard({
     required this.remaining,
+    required this.isDark,
   });
 
   final int remaining;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(minHeight: 112),
       padding: const EdgeInsets.all(18),
-      decoration: _cardDecoration(radius: 28),
+      decoration: _cardDecoration(isDark: isDark, radius: 28),
       child: Row(
         children: [
           Container(
@@ -559,9 +586,9 @@ class _InsightCard extends StatelessWidget {
               color: AppColors.accent.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.auto_awesome_rounded,
-              color: AppColors.lightTextPrimary,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
             ),
           ),
           const SizedBox(width: 14),
@@ -572,7 +599,7 @@ class _InsightCard extends StatelessWidget {
               children: [
                 Text(
                   remaining >= 0 ? 'On pace today' : 'Light reset needed',
-                  style: _textStyle(size: 15, weight: FontWeight.w900),
+                  style: _textStyle(isDark: isDark, size: 15, weight: FontWeight.w900),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -580,9 +607,10 @@ class _InsightCard extends StatelessWidget {
                       ? '$remaining kcal left today. Keep it up!'
                       : '${remaining.abs()} kcal over. Keep dinner lighter.',
                   style: _textStyle(
+                    isDark: isDark,
                     size: 12,
                     weight: FontWeight.w600,
-                    color: AppColors.lightTextSecondary,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                     height: 1.35,
                   ),
                 ),
@@ -596,9 +624,10 @@ class _InsightCard extends StatelessWidget {
 }
 
 class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon});
+  const _CircleIconButton({required this.icon, required this.isDark});
 
   final IconData icon;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -606,19 +635,20 @@ class _CircleIconButton extends StatelessWidget {
       height: 38,
       width: 38,
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         shape: BoxShape.circle,
-        boxShadow: _softShadow(blur: 16, offset: 6),
+        boxShadow: _softShadow(isDark: isDark, blur: 16, offset: 6),
       ),
-      child: Icon(icon, size: 18, color: AppColors.lightTextPrimary),
+      child: Icon(icon, size: 18, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
     );
   }
 }
 
 class _SegmentedGaugePainter extends CustomPainter {
-  const _SegmentedGaugePainter({required this.progress});
+  const _SegmentedGaugePainter({required this.progress, required this.isDark});
 
   final double progress;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -646,7 +676,7 @@ class _SegmentedGaugePainter extends CustomPainter {
       final paint = Paint()
         ..color = isActive
             ? Color.lerp(AppColors.lavender, AppColors.accent, t)!
-            : AppColors.lightSurfaceAlt
+            : (isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt)
         ..strokeWidth = 7
         ..strokeCap = StrokeCap.round;
 
@@ -656,24 +686,26 @@ class _SegmentedGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SegmentedGaugePainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.isDark != isDark;
   }
 }
 
 BoxDecoration _cardDecoration({
+  required bool isDark,
   required double radius,
   double blur = 24,
   double offset = 10,
 }) {
   return BoxDecoration(
-    color: AppColors.lightSurface,
+    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
     borderRadius: BorderRadius.circular(radius),
-    border: Border.all(color: AppColors.lightBorder.withValues(alpha: 0.72)),
-    boxShadow: _softShadow(blur: blur, offset: offset),
+    border: Border.all(color: (isDark ? AppColors.darkBorder : AppColors.lightBorder).withValues(alpha: 0.72)),
+    boxShadow: _softShadow(isDark: isDark, blur: blur, offset: offset),
   );
 }
 
-List<BoxShadow> _softShadow({required double blur, required double offset}) {
+List<BoxShadow> _softShadow({required bool isDark, required double blur, required double offset}) {
+  if (isDark) return [];
   return [
     BoxShadow(
       color: AppColors.lightTextPrimary.withValues(alpha: 0.055),
@@ -684,16 +716,18 @@ List<BoxShadow> _softShadow({required double blur, required double offset}) {
 }
 
 TextStyle _textStyle({
+  required bool isDark,
   required double size,
   required FontWeight weight,
-  Color color = AppColors.lightTextPrimary,
+  Color? color,
   double? height,
 }) {
   return GoogleFonts.inter(
     fontSize: size,
     fontWeight: weight,
-    color: color,
+    color: color ?? (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
     height: height,
     letterSpacing: 0,
   );
 }
+

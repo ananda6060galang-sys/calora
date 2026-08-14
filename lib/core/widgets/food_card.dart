@@ -43,26 +43,7 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                // Thumbnail
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text('🍲', style: TextStyle(fontSize: 20)),
-                  ),
-                ),
-                const SizedBox(width: 16),
+
 
                 // Info
                 Expanded(
@@ -90,12 +71,12 @@ class FoodCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       // Pills
-                      Row(
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
                           _macroPill(context, 'P', protein, const Color(0xFFFF8B7B)),
-                          const SizedBox(width: 6),
                           _macroPill(context, 'C', carbs, const Color(0xFFFFC04D)),
-                          const SizedBox(width: 6),
                           _macroPill(context, 'F', fat, const Color(0xFF7BAAF7)),
                         ],
                       ),

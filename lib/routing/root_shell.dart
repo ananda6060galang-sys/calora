@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
-import '../core/widgets/empty_state.dart';
+
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/diary/food_diary_screen.dart';
+import '../features/profile/profile_screen.dart';
+import '../features/workout/workout_screen.dart';
 
-/// The main authenticated app shell. Workout and Profile are stubbed with
-/// "coming soon" empty states here — they're next in line to be built out
-/// following the same component system already established.
+/// The main authenticated app shell.
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
 
@@ -21,8 +21,8 @@ class _RootShellState extends State<RootShell> {
   static const _tabs = [
     DashboardScreen(),
     FoodDiaryScreenNoAppBar(),
-    _ComingSoonTab(icon: Icons.fitness_center_rounded, label: 'Workout'),
-    _ComingSoonTab(icon: Icons.person_rounded, label: 'Profile'),
+    WorkoutScreen(),
+    ProfileScreen(),
   ];
 
   static const _destinations = [
@@ -238,26 +238,4 @@ class FoodDiaryScreenNoAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const FoodDiaryScreen(showBackButton: false);
-}
-
-class _ComingSoonTab extends StatelessWidget {
-  const _ComingSoonTab({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: EmptyState(
-          icon: icon,
-          title: '$label — coming next',
-          message:
-              'This part of Calora is being built next, using the '
-              'same design system as Dashboard and Diary.',
-        ),
-      ),
-    );
-  }
 }

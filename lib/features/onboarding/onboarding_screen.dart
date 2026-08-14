@@ -25,22 +25,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const _totalSteps = 5;
 
   // Step data
-  DateTime? _dateOfBirth;
+  DateTime _dateOfBirth = DateTime(2000, 1, 1);
   Gender _gender = Gender.male;
   ActivityLevel _activity = ActivityLevel.moderate;
-  Goal? _goal;
+  Goal _goal = Goal.maintainWeight;
 
   bool get _canProceed {
     switch (_step) {
       case 0:
         return _nameController.text.trim().isNotEmpty;
-      case 1:
-        return _dateOfBirth != null;
       case 2:
         return double.tryParse(_heightController.text.trim()) != null &&
                double.tryParse(_weightController.text.trim()) != null;
-      case 4:
-        return _goal != null;
       default:
         return true;
     }
@@ -48,15 +44,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _next() {
     if (_step == _totalSteps - 1) {
-      final age = calculateAge(_dateOfBirth!);
+      final age = calculateAge(_dateOfBirth);
       final profile = UserProfile(
-        name: _nameController.text.trim(),
+        name: _nameController.text.trim().isEmpty ? 'Calora User' : _nameController.text.trim(),
         age: age,
         gender: _gender,
         heightCm: double.tryParse(_heightController.text.trim()) ?? 170.0,
         weightKg: double.tryParse(_weightController.text.trim()) ?? 65.0,
         activityLevel: _activity,
-        goal: _goal!,
+        goal: _goal,
       );
       ref.read(userProfileProvider.notifier).state = profile;
       Navigator.of(context).pushReplacement(
@@ -248,7 +244,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 context: context,
                 firstDate: DateTime(1940),
                 lastDate: DateTime.now().subtract(const Duration(days: 3650)),
-                initialDate: _dateOfBirth ?? DateTime(2002, 1, 1),
+                initialDate: _dateOfBirth,
                 builder: (context, child) {
                   return Theme(
                     data: Theme.of(context).copyWith(
@@ -610,7 +606,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 const Icon(Icons.check_circle_rounded,
                     color: AppColors.accent, size: 22)
               else
-                Icon(Icons.circle_outlined,
+                Icon(Icons.circle_rounded,
                     color: Theme.of(context).dividerColor, size: 22),
             ],
           ),
