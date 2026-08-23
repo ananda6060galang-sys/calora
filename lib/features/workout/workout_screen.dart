@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,19 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/user_profile.dart';
 import '../dashboard/providers/profile_provider.dart';
+
+String _muscleGroupLabel(String mg) {
+  switch (mg.toLowerCase()) {
+    case 'all': return 'workout.muscleGroups.all'.tr();
+    case 'chest': return 'workout.muscleGroups.chest'.tr();
+    case 'back': return 'workout.muscleGroups.back'.tr();
+    case 'legs': return 'workout.muscleGroups.legs'.tr();
+    case 'shoulders': return 'workout.muscleGroups.shoulders'.tr();
+    case 'arms': return 'workout.muscleGroups.arms'.tr();
+    case 'core': return 'workout.muscleGroups.core'.tr();
+    default: return mg;
+  }
+}
 
 // ─── Data Models aligned strictly with Calora PRD & ERD Schemas ──────────────
 // ERD Tables: workout_session, exercises, workout_sets
@@ -308,8 +322,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
                 // ── 4. Muscle Group Workout Sessions (PRD Exercises & Sets) ──
                 _SectionHeaderTitle(
-                  title: 'Gym Workout Sessions',
-                  action: 'View All',
+                  title: 'workout.gymWorkoutSessions'.tr(),
+                  action: 'dashboard.viewAll'.tr(),
                   isDark: isDark,
                 ),
                 const SizedBox(height: 12),
@@ -321,7 +335,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     itemCount: _muscleGroups.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (context, index) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
                       final isSelected = _selectedMuscleIndex == index;
                       return GestureDetector(
@@ -341,7 +355,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                             ),
                           ),
                           child: Text(
-                            _muscleGroups[index],
+                            _muscleGroupLabel(_muscleGroups[index]),
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
@@ -428,7 +442,7 @@ class _WorkoutHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello',
+                'dashboard.hello'.tr(),
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -536,7 +550,7 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
-                  'Muscle Focus  •  ${session.muscleGroup}',
+                  'workout.muscleFocus'.tr(args: [_muscleGroupLabel(session.muscleGroup)]),
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -588,7 +602,7 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${session.durationMinutes} min',
+                          'workout.durationMin'.tr(args: ['${session.durationMinutes}']),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -603,7 +617,7 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${session.exercises.length} Exercises • ${session.totalSets} Sets',
+                          'workout.exercisesAndSets'.tr(args: ['${session.exercises.length}', '${session.totalSets}']),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -663,7 +677,7 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Log Gym Session',
+                    'workout.logGymSession'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -714,7 +728,7 @@ class _DailyProgressActivitySection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Daily progress activity',
+              'workout.dailyProgressActivity'.tr(),
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
@@ -782,7 +796,7 @@ class _DailyProgressActivitySection extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Volume (kg)',
+                              'workout.volumeKg'.tr(),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -818,7 +832,7 @@ class _DailyProgressActivitySection extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'kg lifted today',
+                              'workout.kgLiftedToday'.tr(),
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -834,7 +848,7 @@ class _DailyProgressActivitySection extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Average',
+                            'workout.average'.tr(),
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -864,9 +878,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                   children: [
                     // Sets Logged Card (workout_sets count)
                     _BentoStatCard(
-                      title: 'Sets Logged',
+                      title: 'workout.setsLogged'.tr(),
                       value: '10',
-                      unit: 'sets',
+                      unit: 'workout.setsUnit'.tr(),
                       icon: Icons.checklist_rounded,
                       iconBgColor: AppColors.accent,
                       isDark: isDark,
@@ -875,7 +889,7 @@ class _DailyProgressActivitySection extends StatelessWidget {
 
                     // Weight Tracker Card (profiles.weight_kg)
                     _BentoStatCard(
-                      title: 'Body Weight',
+                      title: 'workout.bodyWeight'.tr(),
                       value: '${profile.weightKg.toStringAsFixed(1)} kg',
                       unit: '',
                       icon: Icons.monitor_weight_outlined,
@@ -1164,7 +1178,7 @@ class _WorkoutProgramCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   // Meta info row
                   Text(
-                    '${session.durationMinutes} min  ·  ${session.exercises.length} exercises  ·  ${session.totalSets} sets',
+                    'workout.sessionMeta'.tr(args: ['${session.durationMinutes}', '${session.exercises.length}', '${session.totalSets}']),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
@@ -1348,7 +1362,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Focus: ${widget.session.muscleGroup} • ${widget.session.note}',
+                      'workout.focusAndNote'.tr(args: [_muscleGroupLabel(widget.session.muscleGroup), widget.session.note]),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -1367,7 +1381,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
             child: ListView.separated(
               physics: const BouncingScrollPhysics(),
               itemCount: widget.session.exercises.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, exIndex) {
                 final ex = widget.session.exercises[exIndex];
                 final sets = _loggedSetsMap[ex.name] ?? [];
@@ -1412,7 +1426,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                               borderRadius: BorderRadius.circular(AppRadius.pill),
                             ),
                             child: Text(
-                              ex.muscleGroup,
+                              _muscleGroupLabel(ex.muscleGroup),
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -1439,7 +1453,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'Set ${setObj.setNumber}',
+                                  'workout.setItem'.tr(args: ['${setObj.setNumber}']),
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
@@ -1507,7 +1521,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '${setObj.reps} reps',
+                                        'workout.repsCount'.tr(args: ['${setObj.reps}']),
                                         style: GoogleFonts.inter(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
@@ -1550,9 +1564,9 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
             onTap: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Gym Workout Session & Sets Logged to Database!'),
-                  duration: Duration(seconds: 2),
+                SnackBar(
+                  content: Text('workout.sessionLoggedSuccess'.tr()),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             },

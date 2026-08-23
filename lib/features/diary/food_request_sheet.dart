@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,8 +47,8 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
 
     if (name.isEmpty || serving.isEmpty || cals <= 0 || _selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill out all required fields.'),
+        SnackBar(
+          content: Text('diary.foodRequest.fillRequired'.tr()),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -70,8 +71,8 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Food request submitted successfully! Pending review.'),
+      SnackBar(
+        content: Text('diary.foodRequest.submittedSuccess'.tr()),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
       ),
@@ -123,7 +124,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Request New Food',
+                      'diary.foodRequest.title'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -142,7 +143,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                   padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
                   children: [
                     Text(
-                      'Add missing nutrition details for admin verification.',
+                      'diary.foodRequest.subtitle'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -154,8 +155,8 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                     // Food Name Field
                     _SheetField(
                       controller: _nameCtrl,
-                      label: 'Food Name *',
-                      hint: 'e.g. Grilled Salmon Bowl',
+                      label: 'diary.foodRequest.foodNameLabel'.tr(),
+                      hint: 'diary.foodRequest.foodNameHint'.tr(),
                       icon: Icons.restaurant_menu_rounded,
                       isDark: isDark,
                     ),
@@ -163,7 +164,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
 
                     // Category Dropdown
                     Text(
-                      'Category *',
+                      'diary.foodRequest.categoryLabel'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -174,7 +175,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedCategoryId,
                       decoration: InputDecoration(
-                        hintText: 'Select Food Category',
+                        hintText: 'diary.foodRequest.selectCategoryHint'.tr(),
                         hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.lightTextTertiary),
                         prefixIcon: const Icon(Icons.category_rounded, size: 18),
                         fillColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -215,8 +216,8 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                         Expanded(
                           child: _SheetField(
                             controller: _servingCtrl,
-                            label: 'Serving Size *',
-                            hint: 'e.g. 100g, 1 bowl',
+                            label: 'diary.foodRequest.servingSizeLabel'.tr(),
+                            hint: 'diary.foodRequest.servingSizeHint'.tr(),
                             icon: Icons.scale_rounded,
                             isDark: isDark,
                           ),
@@ -225,8 +226,8 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                         Expanded(
                           child: _SheetField(
                             controller: _caloriesCtrl,
-                            label: 'Calories (kcal) *',
-                            hint: 'e.g. 350',
+                            label: 'diary.foodRequest.caloriesLabel'.tr(),
+                            hint: 'diary.foodRequest.caloriesHint'.tr(),
                             keyboardType: TextInputType.number,
                             icon: Icons.local_fire_department_rounded,
                             isDark: isDark,
@@ -238,7 +239,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
 
                     // Macros Row (Protein, Carbs, Fat)
                     Text(
-                      'Nutritional Breakdown (Grams)',
+                      'diary.foodRequest.nutritionalBreakdown'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -251,7 +252,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                         Expanded(
                           child: _SheetField(
                             controller: _proteinCtrl,
-                            label: 'Protein (g)',
+                            label: 'diary.foodRequest.proteinLabel'.tr(),
                             hint: '0',
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             isDark: isDark,
@@ -261,7 +262,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                         Expanded(
                           child: _SheetField(
                             controller: _carbsCtrl,
-                            label: 'Carbs (g)',
+                            label: 'diary.foodRequest.carbsLabel'.tr(),
                             hint: '0',
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             isDark: isDark,
@@ -271,7 +272,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                         Expanded(
                           child: _SheetField(
                             controller: _fatCtrl,
-                            label: 'Fat (g)',
+                            label: 'diary.foodRequest.fatLabel'.tr(),
                             hint: '0',
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             isDark: isDark,
@@ -284,8 +285,8 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                     // Optional Notes
                     _SheetField(
                       controller: _notesCtrl,
-                      label: 'Additional Notes',
-                      hint: 'Details to assist admin verification...',
+                      label: 'diary.foodRequest.notesLabel'.tr(),
+                      hint: 'diary.foodRequest.notesHint'.tr(),
                       maxLines: 2,
                       isDark: isDark,
                     ),
@@ -310,7 +311,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Submit Food Request',
+                          'diary.foodRequest.submitButton'.tr(),
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,

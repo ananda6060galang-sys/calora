@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -46,13 +47,13 @@ class OnboardingResultScreen extends StatelessWidget {
 
               // ─── Heading ────────────────────────────────────
               Text(
-                "You're all set, $_firstName!",
+                'onboarding.youreAllSet'.tr(args: [_firstName]),
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                "Here's your personalized daily plan.",
+                'onboarding.personalizedPlan'.tr(),
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -77,7 +78,7 @@ class OnboardingResultScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Daily Calories',
+                      'onboarding.dailyCalories'.tr(),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -105,21 +106,21 @@ class OnboardingResultScreen extends StatelessWidget {
                 children: [
                   _macroCard(
                     context,
-                    label: 'Protein',
+                    label: 'dashboard.protein'.tr(),
                     grams: profile.proteinTargetG,
                     color: AppColors.protein,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _macroCard(
                     context,
-                    label: 'Carbs',
+                    label: 'dashboard.carbs'.tr(),
                     grams: profile.carbsTargetG,
                     color: AppColors.carbs,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _macroCard(
                     context,
-                    label: 'Fat',
+                    label: 'dashboard.fat'.tr(),
                     grams: profile.fatTargetG,
                     color: AppColors.fat,
                   ),
@@ -130,7 +131,7 @@ class OnboardingResultScreen extends StatelessWidget {
 
               // ─── Disclaimer ─────────────────────────────────
               Text(
-                'These targets are calculated using the Mifflin-St Jeor equation based on your profile. They are for reference only, not medical advice.',
+                'onboarding.disclaimer'.tr(),
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -139,7 +140,7 @@ class OnboardingResultScreen extends StatelessWidget {
 
               // ─── CTA ────────────────────────────────────────
               AppButton(
-                label: 'Get Started',
+                label: 'onboarding.getStarted'.tr(),
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (_) => const RootShell()),

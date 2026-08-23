@@ -1,8 +1,8 @@
 import 'dart:ui' as ui;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
@@ -15,6 +15,21 @@ import '../../models/mock_data.dart';
 import '../dashboard/providers/profile_provider.dart';
 import 'providers/diary_provider.dart';
 import 'food_request_sheet.dart';
+
+String _mealLabel(String meal) {
+  switch (meal.toLowerCase()) {
+    case 'breakfast':
+      return 'diary.meals.breakfast'.tr();
+    case 'lunch':
+      return 'diary.meals.lunch'.tr();
+    case 'snack':
+      return 'diary.meals.snack'.tr();
+    case 'dinner':
+      return 'diary.meals.dinner'.tr();
+    default:
+      return meal;
+  }
+}
 
 class FoodDiaryScreen extends ConsumerWidget {
   final bool showBackButton;
@@ -116,7 +131,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                             Expanded(
                               flex: 5,
                               child: Text(
-                                'Set your daily\nmeal plan',
+                                'diary.setDailyMealPlan'.tr(),
                                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                       fontWeight: FontWeight.w800,
                                       color: isDark ? Colors.white : Colors.black,
@@ -127,7 +142,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                             Expanded(
                               flex: 4,
                               child: Image.asset(
-                                'assets/head.webp',
+                                'assets/head.png',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -317,7 +332,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'of $targetCals',
+                                  'dashboard.ofTarget'.tr(args: ['$targetCals']),
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                         color: isDark ? AppColors.darkTextSecondary : const Color(0xFF999999),
                                         fontWeight: FontWeight.w500,
@@ -333,19 +348,19 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _MacroRow(
-                                  label: 'Protein',
+                                  label: 'dashboard.protein'.tr(),
                                   consumed: totals.proteinG,
                                   target: profile.proteinTargetG,
                                 ),
                                 const SizedBox(height: 12),
                                 _MacroRow(
-                                  label: 'Carbs',
+                                  label: 'dashboard.carbs'.tr(),
                                   consumed: totals.carbsG,
                                   target: profile.carbsTargetG,
                                 ),
                                 const SizedBox(height: 12),
                                 _MacroRow(
-                                  label: 'Fat',
+                                  label: 'dashboard.fat'.tr(),
                                   consumed: totals.fatG,
                                   target: profile.fatTargetG,
                                 ),
@@ -574,7 +589,7 @@ class _MealCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Logged Foods',
+                        'diary.loggedFoods'.tr(),
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: isDark ? AppColors.darkTextSecondary : const Color(0xFFAAAAAA),
@@ -582,7 +597,7 @@ class _MealCard extends StatelessWidget {
                             ),
                       ),
                       Text(
-                        '${items.length} item${items.length > 1 ? 's' : ''}',
+                        'diary.itemCount'.tr(args: ['${items.length}']),
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: isDark ? AppColors.darkTextSecondary : const Color(0xFFAAAAAA),
@@ -630,9 +645,9 @@ class _MealCard extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, int cals) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    String rec = 'Recommended 830-1170Cal';
-    if (meal == 'Lunch') rec = 'Recommended 255-370Cal';
-    if (meal == 'Dinner') rec = 'Recommended 255-370Cal';
+    String rec = 'diary.recommendedCal'.tr(args: ['830-1170']);
+    if (meal == 'Lunch') rec = 'diary.recommendedCal'.tr(args: ['255-370']);
+    if (meal == 'Dinner') rec = 'diary.recommendedCal'.tr(args: ['255-370']);
 
     return Expanded(
       flex: 3,
@@ -644,14 +659,18 @@ class _MealCard extends StatelessWidget {
             mainAxisAlignment:
                 isReversed ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              Text(
-                meal,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+              Flexible(
+                child: Text(
+                  _mealLabel(meal),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
               ),
               if (cals > 0) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Text(
                   '• $cals Cal',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -666,6 +685,8 @@ class _MealCard extends StatelessWidget {
           Text(
             rec,
             textAlign: isReversed ? TextAlign.right : TextAlign.left,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: isDark
                       ? AppColors.darkTextSecondary
@@ -684,7 +705,7 @@ class _MealCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 child: Text(
-                  '+ Add',
+                  'diary.add'.tr(),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: const Color(0xFF0E0F10),
                         fontWeight: FontWeight.w700,
@@ -765,9 +786,9 @@ class _MacroRow extends StatelessWidget {
 
     // Pastel/muted tonal colors
     Color dotColor;
-    if (label == 'Protein') {
+    if (label == 'Protein' || label == 'dashboard.protein'.tr()) {
       dotColor = const Color(0xFFFF8B7B); // Soft coral
-    } else if (label == 'Carbs') {
+    } else if (label == 'Carbs' || label == 'dashboard.carbs'.tr()) {
       dotColor = const Color(0xFFFFC04D); // Soft amber
     } else {
       dotColor = const Color(0xFF7BAAF7); // Soft blue
@@ -782,9 +803,11 @@ class _MacroRow extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         SizedBox(
-          width: 48,
+          width: 58,
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
@@ -856,13 +879,20 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
   double _servings = 1.0;
   late String _selectedMeal;
   bool _isCtaPressed = false;
-  bool _isMinusPressed = false;
-  bool _isPlusPressed = false;
+  bool _isCustomServing = false;
+  late TextEditingController _customServingController;
 
   @override
   void initState() {
     super.initState();
     _selectedMeal = widget.meal;
+    _customServingController = TextEditingController(text: '1.0');
+  }
+
+  @override
+  void dispose() {
+    _customServingController.dispose();
+    super.dispose();
   }
 
   void _addFood() {
@@ -947,7 +977,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                     ),
                     Expanded(
                       child: Text(
-                        '${widget.meal} items',
+                        'diary.mealItems'.tr(args: [_mealLabel(widget.meal)]),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
@@ -964,7 +994,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'Search foods...',
+                    hintText: 'diary.searchFoods'.tr(),
                     prefixIcon: const Icon(Icons.search_rounded),
                     filled: true,
                     fillColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -1003,7 +1033,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             children: [
               Icon(Icons.search_off_rounded, size: 48, color: Theme.of(context).disabledColor),
               const SizedBox(height: AppSpacing.lg),
-              Text("Can't find your food?", style: Theme.of(context).textTheme.titleLarge),
+              Text("diary.cantFindFood".tr(), style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: AppSpacing.xl),
               TextButton(
                 onPressed: () {
@@ -1017,7 +1047,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                     builder: (_) => FoodRequestSheet(ref: ref),
                   );
                 },
-                child: const Text('Request Food', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                child: Text('diary.requestFood'.tr(), style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
               ),
             ],
           ),
@@ -1028,7 +1058,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
       itemCount: results.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (context, index) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final food = results[index];
         return GestureDetector(
@@ -1036,6 +1066,8 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             setState(() {
               _selectedFood = food;
               _servings = 1.0;
+              _isCustomServing = false;
+              _customServingController.text = '1.0';
             });
           },
           child: Container(
@@ -1119,8 +1151,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
     );
   }
 
-  Widget _buildFoodDetails(BuildContext context, bool isDark, Color accentColor) {
+  Widget _buildFoodDetails(BuildContext context, bool isDark, Color accentColorParam) {
     final food = _selectedFood!;
+    final accentColor = AppColors.accent;
     final heroHeight = MediaQuery.of(context).size.height * 0.36;
 
     return Stack(
@@ -1157,46 +1190,26 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           ),
         ),
 
-        // Overlaid Frosted Glass Navigation Bar
+        // Overlaid Frosted Glass Navigation Bar (Only Back Button, No duplicate title)
         Positioned(
           top: 16,
           left: 16,
-          right: 16,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(24),
+                  shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.2),
                     width: 0.8,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
-                      onPressed: () => setState(() => _selectedFood = null),
-                    ),
-                    Expanded(
-                      child: Text(
-                        food.name,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
+                  onPressed: () => setState(() => _selectedFood = null),
                 ),
               ),
             ),
@@ -1255,172 +1268,127 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Text(
-                              food.servingLabel,
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
-                              ),
-                            ),
-                            Text(
-                              ' • ',
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                color: isDark ? AppColors.darkTextTertiary : const Color(0xFF9CA3AF),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.white10 : const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Whole Foods Market',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Pill-Shaped Segmented Stepper [ - ] [ 1 ] [ + ]
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
-                              borderRadius: BorderRadius.circular(100),
-                              border: Border.all(
-                                color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTapDown: (_) => setState(() => _isMinusPressed = true),
-                                  onTapUp: (_) => setState(() => _isMinusPressed = false),
-                                  onTapCancel: () => setState(() => _isMinusPressed = false),
-                                  onTap: _servings > 0.5
-                                      ? () => setState(() => _servings = (_servings - 0.5).clamp(0.5, 99.0))
-                                      : null,
-                                  child: AnimatedScale(
-                                    scale: _isMinusPressed ? 0.85 : 1.0,
-                                    duration: const Duration(milliseconds: 100),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? AppColors.darkSurfaceAlt : Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.05),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.remove_rounded,
-                                        size: 18,
-                                        color: _servings > 0.5
-                                            ? (isDark ? Colors.white : const Color(0xFF111111))
-                                            : Theme.of(context).disabledColor,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                Text(
-                                  '${_servings % 1 == 0 ? _servings.toInt() : _servings} Servings',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white : const Color(0xFF111111),
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                GestureDetector(
-                                  onTapDown: (_) => setState(() => _isPlusPressed = true),
-                                  onTapUp: (_) => setState(() => _isPlusPressed = false),
-                                  onTapCancel: () => setState(() => _isPlusPressed = false),
-                                  onTap: () => setState(() => _servings += 0.5),
-                                  child: AnimatedScale(
-                                    scale: _isPlusPressed ? 0.85 : 1.0,
-                                    duration: const Duration(milliseconds: 100),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? AppColors.darkSurfaceAlt : Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.05),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.add_rounded,
-                                        size: 18,
-                                        color: isDark ? Colors.white : const Color(0xFF111111),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                        Text(
+                          food.servingLabel,
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
                           ),
                         ),
                         const SizedBox(height: 32),
 
-                        // Neutral Macro Cards Row
+                        // Relative Portion Selector Chips & Gram Equivalent
+                        _buildServingsSelector(food, isDark),
+                        const SizedBox(height: 32),
+
+                        // Macro Cards Hierarchy: Full-width Calorie Card at top
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkSurface : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF9500).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Icon(
+                                  Icons.local_fire_department_rounded,
+                                  color: Color(0xFFFF9500),
+                                  size: 26,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'diary.caloriesUpper'.tr(),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(
+                                          '${(food.calories * _servings).round()}',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark ? Colors.white : const Color(0xFF111111),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'kcal',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Row of 3 smaller Macro Cards (Protein, Carbs, Fat)
                         Row(
                           children: [
                             _macroCard(
                               context: context,
                               isDark: isDark,
-                              icon: Icons.local_fire_department_rounded,
-                              iconColor: const Color(0xFFFF9500),
-                              value: '${(food.calories * _servings).round()}',
-                              label: 'KCAL',
-                            ),
-                            const SizedBox(width: 10),
-                            _macroCard(
-                              context: context,
-                              isDark: isDark,
-                              icon: Icons.fitness_center_rounded,
-                              iconColor: const Color(0xFFFF6B57),
+                              icon: Icons.egg_outlined,
+                              iconColor: AppColors.protein,
                               value: '${(food.proteinG * _servings).round()}g',
-                              label: 'PROTEIN',
+                              label: 'diary.proteinUpper'.tr(),
                             ),
                             const SizedBox(width: 10),
                             _macroCard(
                               context: context,
                               isDark: isDark,
-                              icon: Icons.grain_rounded,
-                              iconColor: const Color(0xFFFFC24B),
+                              icon: Icons.grain,
+                              iconColor: AppColors.carbs,
                               value: '${(food.carbsG * _servings).round()}g',
-                              label: 'CARBS',
+                              label: 'diary.carbsUpper'.tr(),
                             ),
                             const SizedBox(width: 10),
                             _macroCard(
                               context: context,
                               isDark: isDark,
-                              icon: Icons.water_drop_rounded,
-                              iconColor: const Color(0xFF7C9CFF),
+                              icon: Icons.water_drop_outlined,
+                              iconColor: AppColors.fat,
                               value: '${(food.fatG * _servings).round()}g',
-                              label: 'FAT',
+                              label: 'diary.fatUpper'.tr(),
                             ),
                           ],
                         ),
@@ -1428,7 +1396,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
 
                         // Stacked Macro Proportion Breakdown Bar
                         _buildMacroProportionBar(food, _servings, isDark),
-                        const SizedBox(height: 32),
+
+                        // Extra bottom spacing to prevent CTA overlap
+                        SizedBox(height: 32 + MediaQuery.of(context).padding.bottom),
                       ],
                     ),
                   ),
@@ -1459,25 +1429,29 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? accentColor
+                      ? AppColors.accentSoft
                       : (isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6)),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
-                        ? accentColor
+                        ? AppColors.accent
                         : (isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB)),
                     width: 1,
                   ),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  m,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563)),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _mealLabel(m),
+                    maxLines: 1,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? const Color(0xFF0E0F10)
+                          : (isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563)),
+                    ),
                   ),
                 ),
               ),
@@ -1485,6 +1459,221 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  double? _parseGramWeight(String label) {
+    final lower = label.toLowerCase().trim();
+    final regExp = RegExp(r'(\d+(?:\.\d+)?)\s*(g|gram|grams|kg)\b');
+    final match = regExp.firstMatch(lower);
+    if (match != null) {
+      final val = double.tryParse(match.group(1)!);
+      final unit = match.group(2)!;
+      if (val != null) {
+        if (unit == 'kg') {
+          return val * 1000;
+        }
+        return val;
+      }
+    }
+    return null;
+  }
+
+  String _formatGramValue(double val) {
+    if (val % 1 == 0) {
+      return val.round().toString();
+    }
+    return val.toStringAsFixed(1);
+  }
+
+  Widget _buildServingsSelector(Food food, bool isDark) {
+    final presets = [
+      {'label': '¼', 'val': 0.25},
+      {'label': '½', 'val': 0.5},
+      {'label': '1', 'val': 1.0},
+      {'label': '1½', 'val': 1.5},
+      {'label': '2', 'val': 2.0},
+    ];
+
+    final gramWeight = _parseGramWeight(food.servingLabel);
+    final gramTotal = gramWeight != null ? (gramWeight * _servings) : null;
+
+    return Column(
+      children: [
+        // Preset portion chips row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ...presets.map((p) {
+                final val = p['val'] as double;
+                final label = p['label'] as String;
+                final isSelected = !_isCustomServing && _servings == val;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isCustomServing = false;
+                        _servings = val;
+                        _customServingController.text =
+                            val % 1 == 0 ? val.toInt().toString() : val.toString();
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.accent
+                            : (isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6)),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.accent
+                              : (isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB)),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? const Color(0xFF0E0F10)
+                              : (isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563)),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              // Custom chip
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isCustomServing = true;
+                      _customServingController.text =
+                          _servings % 1 == 0 ? _servings.toInt().toString() : _servings.toString();
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _isCustomServing
+                          ? AppColors.accent
+                          : (isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6)),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isCustomServing
+                            ? AppColors.accent
+                            : (isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB)),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      'Custom',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: _isCustomServing ? FontWeight.w700 : FontWeight.w500,
+                        color: _isCustomServing
+                            ? const Color(0xFF0E0F10)
+                            : (isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Custom numeric TextField (revealed when Custom chip is tapped)
+        if (_isCustomServing) ...[
+          const SizedBox(height: 14),
+          Center(
+            child: SizedBox(
+              width: 130,
+              child: TextField(
+                controller: _customServingController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF111111),
+                ),
+                decoration: InputDecoration(
+                  hintText: '1.0',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: isDark ? AppColors.darkTextTertiary : const Color(0xFF9CA3AF),
+                  ),
+                  suffixText: 'x',
+                  suffixStyle: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
+                  ),
+                  filled: true,
+                  fillColor: isDark ? AppColors.darkSurface : const Color(0xFFF9FAFB),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.accent,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+                onChanged: (v) {
+                  final parsed = double.tryParse(v.replaceAll(',', '.'));
+                  if (parsed != null && parsed > 0) {
+                    setState(() {
+                      _servings = parsed;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+
+        // Informational gram equivalent text line
+        if (gramTotal != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            '≈ ${_formatGramValue(gramTotal)} g',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1568,7 +1757,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'MACRO PROPORTION',
+              'diary.macroProportion'.tr(),
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -1586,7 +1775,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: SizedBox(
@@ -1616,9 +1805,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _macroLegendItem('Carbs', '${carbsG.round()}g', '${(carbsPct * 100).round()}%', carbsColor, isDark),
-            _macroLegendItem('Protein', '${proG.round()}g', '${(proPct * 100).round()}%', proColor, isDark),
-            _macroLegendItem('Fat', '${fatG.round()}g', '${(fatPct * 100).round()}%', fatColor, isDark),
+            _macroLegendItem('dashboard.carbs'.tr(), '${carbsG.round()}g', '${(carbsPct * 100).round()}%', carbsColor, isDark),
+            _macroLegendItem('dashboard.protein'.tr(), '${proG.round()}g', '${(proPct * 100).round()}%', proColor, isDark),
+            _macroLegendItem('dashboard.fat'.tr(), '${fatG.round()}g', '${(fatPct * 100).round()}%', fatColor, isDark),
           ],
         ),
       ],
@@ -1627,27 +1816,24 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
 
   Widget _macroLegendItem(String label, String grams, String pct, Color color, bool isDark) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8,
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
-        Text(
-          '$label ',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : const Color(0xFF111111),
-          ),
-        ),
-        Text(
-          '($pct)',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            '$label ($pct)',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF111111),
+            ),
           ),
         ),
       ],
@@ -1686,11 +1872,11 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             ),
             alignment: Alignment.center,
             child: Text(
-              'Add Meals',
+              'diary.addMeals'.tr(),
               style: GoogleFonts.inter(
-                color: Colors.white,
+                color: const Color(0xFF0E0F10),
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 letterSpacing: 0.2,
               ),
             ),

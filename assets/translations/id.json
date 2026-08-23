@@ -1,0 +1,216 @@
+{
+  "dashboard": {
+    "hello": "Halo",
+    "dailySummary": "Ringkasan Harian",
+    "kcalLeft": "kcal sisa",
+    "consumed": "Dikonsumsi",
+    "goal": "Target",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "ofTarget": "dari {}",
+    "quickActions": "Aksi Cepat",
+    "viewAll": "Lihat semua",
+    "food": "Makanan",
+    "workout": "Latihan",
+    "weight": "Berat Badan",
+    "todaysInsights": "Wawasan Hari Ini",
+    "onPaceToday": "Sesuai target hari ini",
+    "lightResetNeeded": "Perlu penyesuaian ringan",
+    "kcalLeftKeepItUp": "{} kcal sisa hari ini. Pertahankan!",
+    "kcalOverKeepDinnerLighter": "{} kcal berlebih. Kurangi porsi makan malam.",
+    "goals": {
+      "loseWeight": "Turunkan berat badan",
+      "gainMuscle": "Bentuk otot",
+      "leanBulk": "Lean bulk",
+      "maintainWeight": "Pertahankan"
+    }
+  },
+  "auth": {
+    "welcomeBack": "Selamat Datang",
+    "loginSubtitle": "Masuk untuk melanjutkan pemantauan.",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "forgotPassword": "Lupa kata sandi?",
+    "logIn": "Masuk",
+    "or": "Atau",
+    "continueWithGoogle": "Masuk dengan Google",
+    "dontHaveAccount": "Belum punya akun? ",
+    "signUp": "Daftar",
+    "createAccount": "Buat Akun",
+    "registerSubtitle": "Daftar Calora untuk mulai memantau hari ini.",
+    "fullName": "Nama Lengkap",
+    "confirmPassword": "Konfirmasi kata sandi",
+    "createAccountButton": "Buat Akun",
+    "orSignUpWith": "Atau daftar dengan",
+    "alreadyHaveAccount": "Sudah punya akun? ",
+    "logInLink": "Masuk",
+    "passwordsDoNotMatch": "Kata sandi tidak cocok"
+  },
+  "onboarding": {
+    "defaultUser": "Pengguna Calora",
+    "seeMyPlan": "Lihat rencana saya",
+    "continue": "Lanjutkan",
+    "personalInfoTitle": "Informasi Pribadi",
+    "personalInfoSubtitle": "Harap isi nama dan jenis kelamin Anda untuk mempersonalisasi pengalaman Anda.",
+    "fullNameHint": "Nama Lengkap",
+    "male": "Laki-laki",
+    "female": "Perempuan",
+    "dobTitle": "Tanggal Lahir",
+    "dobSubtitle": "Informasi ini digunakan untuk menghitung target nutrisi harian Anda.",
+    "selectDate": "Pilih tanggal",
+    "bodyMetricsTitle": "Metrik Tubuh",
+    "bodyMetricsSubtitle": "Masukkan tinggi dan berat badan Anda untuk menentukan garis awal.",
+    "heightLabel": "Tinggi",
+    "weightLabel": "Berat",
+    "activityTitle": "Seberapa aktif Anda?",
+    "activitySubtitle": "Dalamm 1 minggu.",
+    "activity": {
+      "sedentary": {
+        "title": "Sedentari",
+        "subtitle": "Hampir tidak ada olahraga"
+      },
+      "light": {
+        "title": "Cukup aktif",
+        "subtitle": "1-3 latihan / minggu"
+      },
+      "moderate": {
+        "title": "Lumayan aktif",
+        "subtitle": "3-5 latihan / minggu"
+      },
+      "active": {
+        "title": "Aktif",
+        "subtitle": "6-7 latihan / minggu"
+      },
+      "veryActive": {
+        "title": "Sangat aktif",
+        "subtitle": "Pekerjaan fisik atau latihan 2x/hari"
+      }
+    },
+    "goalTitle": "Apa target Anda?",
+    "goalSubtitle": "Kami akan menyesuaikan target harian Anda.",
+    "goals": {
+      "loseWeightSub": "Defisit kalori untuk pembakaran lemak",
+      "maintainWeightSub": "Tetap pada berat badan Anda saat ini",
+      "gainMuscleSub": "Surplus ringan untuk massa otot",
+      "leanBulkSub": "Surplus lebih tinggi, hasil lebih cepat"
+    },
+    "youreAllSet": "Semua sudah siap, {}!",
+    "personalizedPlan": "Ini rencana harian yang dipersonalisasi untuk Anda.",
+    "dailyCalories": "Kalori Harian",
+    "disclaimer": "Target ini dihitung menggunakan persamaan Mifflin-St Jeor berdasarkan profil Anda. Ini hanya untuk referensi, bukan saran medis.",
+    "getStarted": "Mulai"
+  },
+  "diary": {
+    "meals": {
+      "breakfast": "Sarapan",
+      "lunch": "Makan Siang",
+      "snack": "Camilan",
+      "dinner": "Makan Malam"
+    },
+    "setDailyMealPlan": "Rencana makanan\nharian",
+    "loggedFoods": "Makanan Dicatat",
+    "itemCount": "{} item",
+    "recommendedCal": "Rekomendasi {}Cal",
+    "add": "+ Tambah",
+    "mealItems": "Menu {}",
+    "searchFoods": "Cari makanan...",
+    "cantFindFood": "Tidak menemukan makanan Anda?",
+    "requestFood": "Ajukan Makanan",
+    "servingsCount": "{} Porsi",
+    "caloriesUpper": "KALORI",
+    "proteinUpper": "PROTEIN",
+    "carbsUpper": "CARBS",
+    "fatUpper": "FAT",
+    "macroProportion": "PROPORSI MAKRO",
+    "addMeals": "Tambah Makanan",
+    "foodRequest": {
+      "title": "Ajukan Makanan Baru",
+      "subtitle": "Tambahkan detail nutrisi yang belum ada untuk verifikasi admin.",
+      "foodNameLabel": "Nama Makanan *",
+      "foodNameHint": "mis. Nasi Salmon Panggang",
+      "categoryLabel": "Kategori *",
+      "selectCategoryHint": "Pilih Kategori Makanan",
+      "servingSizeLabel": "Ukuran Porsi *",
+      "servingSizeHint": "mis. 100g, 1 mangkuk",
+      "caloriesLabel": "Kalori (kcal) *",
+      "caloriesHint": "mis. 350",
+      "nutritionalBreakdown": "Rincian Nutrisi (Gram)",
+      "proteinLabel": "Protein (g)",
+      "carbsLabel": "Carbs (g)",
+      "fatLabel": "Fat (g)",
+      "notesLabel": "Catatan Tambahan",
+      "notesHint": "Detail untuk membantu verifikasi admin...",
+      "submitButton": "Kirim Pengajuan Makanan",
+      "fillRequired": "Harap isi semua kolom yang wajib.",
+      "submittedSuccess": "Pengajuan makanan berhasil dikirim! Menunggu peninjauan."
+    }
+  },
+  "workout": {
+    "muscleGroups": {
+      "all": "Semua",
+      "chest": "Dada",
+      "back": "Punggung",
+      "legs": "Kaki",
+      "shoulders": "Bahu",
+      "arms": "Lengan",
+      "core": "Core"
+    },
+    "gymWorkoutSessions": "Sesi Latihan Gym",
+    "muscleFocus": "Fokus Otot  •  {}",
+    "durationMin": "{} mnt",
+    "exercisesAndSets": "{} Latihan • {} Sets",
+    "logGymSession": "Catat Sesi Gym",
+    "dailyProgressActivity": "Aktivitas Kemajuan Harian",
+    "volumeKg": "Volume (kg)",
+    "kgLiftedToday": "kg diangkat hari ini",
+    "average": "Rata-rata",
+    "setsLogged": "Sets Dicatat",
+    "setsUnit": "sets",
+    "bodyWeight": "Berat Badan",
+    "sessionMeta": "{} mnt  ·  {} latihan  ·  {} sets",
+    "focusAndNote": "Fokus: {} • {}",
+    "setItem": "Set {}",
+    "repsCount": "{} reps",
+    "sessionLoggedSuccess": "Sesi Latihan & Sets Berhasil Dicatat!",
+    "saveSessionLog": "Simpan Catatan Sesi Gym"
+  },
+  "profile": {
+    "title": "Profil",
+    "ageAndGender": "{} tahun  ·  {}",
+    "edit": "Edit",
+    "height": "Tinggi",
+    "progressUpper": "KEMAJUAN",
+    "settingsUpper": "PENGATURAN",
+    "goalsAndNutrition": "Target & Nutrisi",
+    "appearance": "Tampilan",
+    "language": "Bahasa",
+    "notifications": "Notifikasi",
+    "aboutCalora": "Tentang Calora",
+    "logOut": "Keluar",
+    "theme": {
+      "light": "Terang",
+      "dark": "Gelap",
+      "system": "Sistem"
+    },
+    "tabs": {
+      "weight": "Berat",
+      "calories": "Kalori",
+      "gymVol": "Vol Gym"
+    },
+    "editProfile": "Edit Profil",
+    "heightCmLabel": "Tinggi (cm)",
+    "weightKgLabel": "Berat (kg)",
+    "save": "Simpan",
+    "activity": {
+      "sedentary": "Sedentari",
+      "light": "Cukup aktif",
+      "moderate": "Moderat aktif",
+      "active": "Aktif",
+      "veryActive": "Sangat aktif"
+    }
+  },
+  "splash": {
+    "tagline": "Makan cerdas. Latihan keras. Pantau semuanya."
+  }
+}

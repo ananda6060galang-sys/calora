@@ -9,11 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  easy_localization: ^3.0.7
   flutter_riverpod: ^3.3.2
   google_fonts: ^8.2.0
-  intl: ^0.20.3
+  intl: ^0.20.2
   riverpod_annotation: ^4.0.3
   video_player: ^2.8.2
+  icons_plus: ^5.0.0
 
 dev_dependencies:
   flutter_test:
@@ -24,5 +27,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
-    - assets/onboarding4.png
-    - assets/head.webp
+    - assets/translations/

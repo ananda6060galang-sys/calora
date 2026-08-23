@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,7 +48,7 @@ class ProfileScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Profile',
+                    'profile.title'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -55,13 +56,41 @@ class ProfileScreen extends ConsumerWidget {
                       letterSpacing: -0.8,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () => _openSettings(context, ref, profile),
-                    child: Icon(
-                      Icons.settings_outlined,
-                      size: 22,
-                      color: textSecondary,
-                    ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          final currentLang = context.locale.languageCode;
+                          final nextLocale = currentLang == 'en' ? const Locale('id') : const Locale('en');
+                          context.setLocale(nextLocale);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: surfaceColor,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                            border: Border.all(color: dividerColor),
+                          ),
+                          child: Text(
+                            'EN / ID (${context.locale.languageCode.toUpperCase()})',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () => _openSettings(context, ref, profile),
+                        child: Icon(
+                          Icons.settings_outlined,
+                          size: 22,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -142,7 +171,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${profile.age} years old  ·  ${profile.gender == Gender.male ? 'Male' : 'Female'}',
+                          'profile.ageAndGender'.tr(args: ['${profile.age}', profile.gender == Gender.male ? 'onboarding.male'.tr() : 'onboarding.female'.tr()]),
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -161,7 +190,7 @@ class ProfileScreen extends ConsumerWidget {
                         border: Border.all(color: dividerColor),
                       ),
                       child: Text(
-                        'Edit',
+                        'profile.edit'.tr(),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -190,21 +219,21 @@ class ProfileScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     _StatColumn(
-                      label: 'Weight',
+                      label: 'dashboard.weight'.tr(),
                       value: '${profile.weightKg.toStringAsFixed(1)} kg',
                       textPrimary: textPrimary,
                       textSecondary: textTertiary,
                     ),
                     _VerticalDivider(color: dividerColor),
                     _StatColumn(
-                      label: 'Height',
+                      label: 'profile.height'.tr(),
                       value: '${profile.heightCm.round()} cm',
                       textPrimary: textPrimary,
                       textSecondary: textTertiary,
                     ),
                     _VerticalDivider(color: dividerColor),
                     _StatColumn(
-                      label: 'Target',
+                      label: 'dashboard.goal'.tr(),
                       value: '${profile.dailyCalorieTarget.round()} kcal',
                       textPrimary: textPrimary,
                       textSecondary: textTertiary,
@@ -286,7 +315,7 @@ class ProfileScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'PROGRESS',
+                    'profile.progressUpper'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -309,7 +338,7 @@ class ProfileScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'SETTINGS',
+                    'profile.settingsUpper'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -328,7 +357,7 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         _SettingsRow(
                           icon: Icons.person_outline_rounded,
-                          title: 'Personal Information',
+                          title: 'onboarding.personalInfoTitle'.tr(),
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
                           dividerColor: dividerColor,
@@ -337,7 +366,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: Icons.flag_outlined,
-                          title: 'Goals & Nutrition',
+                          title: 'profile.goalsAndNutrition'.tr(),
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
                           dividerColor: dividerColor,
@@ -346,7 +375,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: Icons.palette_outlined,
-                          title: 'Appearance',
+                          title: 'profile.appearance'.tr(),
                           trailing: _themeModeLabel(themeMode),
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
@@ -356,8 +385,8 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: Icons.translate_rounded,
-                          title: 'Language',
-                          trailing: 'English',
+                          title: 'profile.language'.tr(),
+                          trailing: context.locale.languageCode == 'en' ? 'English' : 'Indonesian',
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
                           dividerColor: dividerColor,
@@ -366,7 +395,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: Icons.notifications_none_rounded,
-                          title: 'Notifications',
+                          title: 'profile.notifications'.tr(),
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
                           dividerColor: dividerColor,
@@ -375,7 +404,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: Icons.info_outline_rounded,
-                          title: 'About Calora',
+                          title: 'profile.aboutCalora'.tr(),
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
                           dividerColor: dividerColor,
@@ -407,7 +436,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Log Out',
+                    'profile.logOut'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -442,13 +471,13 @@ class ProfileScreen extends ConsumerWidget {
   String _goalLabel(Goal goal) {
     switch (goal) {
       case Goal.loseWeight:
-        return 'Lose Weight';
+        return 'dashboard.goals.loseWeight'.tr();
       case Goal.maintainWeight:
-        return 'Maintain Weight';
+        return 'dashboard.goals.maintainWeight'.tr();
       case Goal.gainMuscle:
-        return 'Gain Muscle';
+        return 'dashboard.goals.gainMuscle'.tr();
       case Goal.leanBulk:
-        return 'Lean Bulk';
+        return 'dashboard.goals.leanBulk'.tr();
     }
   }
 
@@ -468,15 +497,15 @@ class ProfileScreen extends ConsumerWidget {
   String _activityLabel(ActivityLevel level) {
     switch (level) {
       case ActivityLevel.sedentary:
-        return 'Sedentary';
+        return 'profile.activity.sedentary'.tr();
       case ActivityLevel.light:
-        return 'Lightly active';
+        return 'profile.activity.light'.tr();
       case ActivityLevel.moderate:
-        return 'Moderately active';
+        return 'profile.activity.moderate'.tr();
       case ActivityLevel.active:
-        return 'Active';
+        return 'profile.activity.active'.tr();
       case ActivityLevel.veryActive:
-        return 'Very active';
+        return 'profile.activity.veryActive'.tr();
     }
   }
 
@@ -487,11 +516,11 @@ class ProfileScreen extends ConsumerWidget {
   String _themeModeLabel(ThemeMode mode) {
     switch (mode) {
       case ThemeMode.light:
-        return 'Light';
+        return 'profile.theme.light'.tr();
       case ThemeMode.dark:
-        return 'Dark';
+        return 'profile.theme.dark'.tr();
       case ThemeMode.system:
-        return 'System';
+        return 'profile.theme.system'.tr();
     }
   }
 
@@ -542,7 +571,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Appearance',
+              'profile.appearance'.tr(),
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -551,9 +580,9 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             for (final entry in [
-              (ThemeMode.light, 'Light', Icons.light_mode_outlined),
-              (ThemeMode.dark, 'Dark', Icons.dark_mode_outlined),
-              (ThemeMode.system, 'System', Icons.brightness_auto_outlined),
+              (ThemeMode.light, 'profile.theme.light'.tr(), Icons.light_mode_outlined),
+              (ThemeMode.dark, 'profile.theme.dark'.tr(), Icons.dark_mode_outlined),
+              (ThemeMode.system, 'profile.theme.system'.tr(), Icons.brightness_auto_outlined),
             ])
               _PickerRow(
                 icon: entry.$3,
@@ -602,7 +631,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Language',
+              'profile.language'.tr(),
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -613,18 +642,24 @@ class ProfileScreen extends ConsumerWidget {
             _PickerRow(
               icon: Icons.translate_rounded,
               label: 'English',
-              selected: true,
+              selected: context.locale.languageCode == 'en',
               textPrimary: textPrimary,
               textSecondary: textSecondary,
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                context.setLocale(const Locale('en'));
+                Navigator.pop(ctx);
+              },
             ),
             _PickerRow(
               icon: Icons.translate_rounded,
               label: 'Indonesian',
-              selected: false,
+              selected: context.locale.languageCode == 'id',
               textPrimary: textPrimary,
               textSecondary: textSecondary,
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                context.setLocale(const Locale('id'));
+                Navigator.pop(ctx);
+              },
             ),
           ],
         ),
@@ -711,7 +746,7 @@ class _ProgressSection extends StatefulWidget {
 class _ProgressSectionState extends State<_ProgressSection> {
   int _selectedIndex = 0;
   
-  final List<String> _tabs = ['Weight', 'Calories', 'Gym Vol'];
+  List<String> get _tabs => ['profile.tabs.weight'.tr(), 'profile.tabs.calories'.tr(), 'profile.tabs.gymVol'.tr()];
 
   @override
   Widget build(BuildContext context) {
@@ -1306,7 +1341,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Edit Profile',
+            'profile.editProfile'.tr(),
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -1323,7 +1358,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   controller: _nameCtrl,
                   style: GoogleFonts.inter(color: textPrimary),
                   decoration: InputDecoration(
-                    labelText: 'Full Name',
+                    labelText: 'auth.fullName'.tr(),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -1336,7 +1371,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                         keyboardType: TextInputType.number,
                         style: GoogleFonts.inter(color: textPrimary),
                         decoration: InputDecoration(
-                          labelText: 'Height (cm)',
+                          labelText: 'profile.heightCmLabel'.tr(),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -1348,7 +1383,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                         keyboardType: TextInputType.number,
                         style: GoogleFonts.inter(color: textPrimary),
                         decoration: InputDecoration(
-                          labelText: 'Weight (kg)',
+                          labelText: 'profile.weightKgLabel'.tr(),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -1360,14 +1395,14 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   initialValue: _selectedGoal,
                   style: GoogleFonts.inter(color: textPrimary, fontSize: 14),
                   decoration: InputDecoration(
-                    labelText: 'Goal',
+                    labelText: 'dashboard.goal'.tr(),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: Goal.loseWeight, child: Text('Lose Weight')),
-                    DropdownMenuItem(value: Goal.maintainWeight, child: Text('Maintain Weight')),
-                    DropdownMenuItem(value: Goal.gainMuscle, child: Text('Gain Muscle')),
-                    DropdownMenuItem(value: Goal.leanBulk, child: Text('Lean Bulk')),
+                  items: [
+                    DropdownMenuItem(value: Goal.loseWeight, child: Text('dashboard.goals.loseWeight'.tr())),
+                    DropdownMenuItem(value: Goal.maintainWeight, child: Text('dashboard.goals.maintainWeight'.tr())),
+                    DropdownMenuItem(value: Goal.gainMuscle, child: Text('dashboard.goals.gainMuscle'.tr())),
+                    DropdownMenuItem(value: Goal.leanBulk, child: Text('dashboard.goals.leanBulk'.tr())),
                   ],
                   onChanged: (v) {
                     if (v != null) setState(() => _selectedGoal = v);
@@ -1402,7 +1437,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Save',
+                    'profile.save'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

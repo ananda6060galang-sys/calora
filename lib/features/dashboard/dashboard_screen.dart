@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -73,7 +74,7 @@ class DashboardScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _MacroCard(
-                        label: 'Protein',
+                        label: 'dashboard.protein'.tr(),
                         value: '${totals.proteinG.round()}g',
                         target: '${profile.proteinTargetG.round()}g',
                         color: AppColors.protein,
@@ -84,7 +85,7 @@ class DashboardScreen extends ConsumerWidget {
                     SizedBox(width: gap),
                     Expanded(
                       child: _MacroCard(
-                        label: 'Carbs',
+                        label: 'dashboard.carbs'.tr(),
                         value: '${totals.carbsG.round()}g',
                         target: '${profile.carbsTargetG.round()}g',
                         color: AppColors.carbs,
@@ -95,7 +96,7 @@ class DashboardScreen extends ConsumerWidget {
                     SizedBox(width: gap),
                     Expanded(
                       child: _MacroCard(
-                        label: 'Fat',
+                        label: 'dashboard.fat'.tr(),
                         value: '${totals.fatG.round()}g',
                         target: '${profile.fatTargetG.round()}g',
                         color: AppColors.lavender,
@@ -109,8 +110,8 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             _SectionTitle(
-              title: 'Quick Actions',
-              action: 'View all',
+              title: 'dashboard.quickActions'.tr(),
+              action: 'dashboard.viewAll'.tr(),
               onActionTap: () {},
               isDark: isDark,
             ),
@@ -123,7 +124,7 @@ class DashboardScreen extends ConsumerWidget {
                     Expanded(
                       child: _QuickActionTile(
                         icon: Icons.add_rounded,
-                        label: 'Food',
+                        label: 'dashboard.food'.tr(),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const FoodDiaryScreen(),
@@ -136,7 +137,7 @@ class DashboardScreen extends ConsumerWidget {
                     Expanded(
                       child: _QuickActionTile(
                         icon: Icons.fitness_center_outlined,
-                        label: 'Workout',
+                        label: 'dashboard.workout'.tr(),
                         color: AppColors.lavender,
                         onTap: () {},
                         isDark: isDark,
@@ -146,7 +147,7 @@ class DashboardScreen extends ConsumerWidget {
                     Expanded(
                       child: _QuickActionTile(
                         icon: Icons.monitor_weight_outlined,
-                        label: 'Weight',
+                        label: 'dashboard.weight'.tr(),
                         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                         onTap: () {},
                         isDark: isDark,
@@ -157,7 +158,7 @@ class DashboardScreen extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 24),
-            _SectionTitle(title: "Today's Insights", isDark: isDark),
+            _SectionTitle(title: 'dashboard.todaysInsights'.tr(), isDark: isDark),
             const SizedBox(height: 12),
             _InsightCard(
               remaining: remaining,
@@ -174,13 +175,13 @@ class DashboardScreen extends ConsumerWidget {
   String _goalLabel(Goal goal) {
     switch (goal) {
       case Goal.loseWeight:
-        return 'Lose weight';
+        return 'dashboard.goals.loseWeight'.tr();
       case Goal.gainMuscle:
-        return 'Gain muscle';
+        return 'dashboard.goals.gainMuscle'.tr();
       case Goal.leanBulk:
-        return 'Lean bulk';
+        return 'dashboard.goals.leanBulk'.tr();
       case Goal.maintainWeight:
-        return 'Maintain';
+        return 'dashboard.goals.maintainWeight'.tr();
     }
   }
 }
@@ -218,7 +219,7 @@ class _DashboardHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello',
+                'dashboard.hello'.tr(),
                 style: _textStyle(
                   isDark: isDark,
                   size: 11,
@@ -276,7 +277,7 @@ class _CalorieHeroCard extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  'Daily Summary',
+                  'dashboard.dailySummary'.tr(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: _textStyle(isDark: isDark, size: 19, weight: FontWeight.w800),
@@ -336,7 +337,7 @@ class _CalorieHeroCard extends StatelessWidget {
                           style: _textStyle(isDark: isDark, size: 31, weight: FontWeight.w900),
                         ),
                         Text(
-                          'kcal left',
+                          'dashboard.kcalLeft'.tr(),
                           style: _textStyle(
                             isDark: isDark,
                             size: 12,
@@ -355,11 +356,11 @@ class _CalorieHeroCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _HeroMetric(label: 'Consumed', value: '$consumed kcal', isDark: isDark),
+                child: _HeroMetric(label: 'dashboard.consumed'.tr(), value: '$consumed kcal', isDark: isDark),
               ),
               Container(width: 1, height: 34, color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
               Expanded(
-                child: _HeroMetric(label: 'Goal', value: '$target kcal', isDark: isDark),
+                child: _HeroMetric(label: 'dashboard.goal'.tr(), value: '$target kcal', isDark: isDark),
               ),
             ],
           ),
@@ -459,7 +460,7 @@ class _MacroCard extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            'of $target',
+            'dashboard.ofTarget'.tr(args: [target]),
             style: _textStyle(
               isDark: isDark,
               size: 10,
@@ -598,14 +599,14 @@ class _InsightCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  remaining >= 0 ? 'On pace today' : 'Light reset needed',
+                  remaining >= 0 ? 'dashboard.onPaceToday'.tr() : 'dashboard.lightResetNeeded'.tr(),
                   style: _textStyle(isDark: isDark, size: 15, weight: FontWeight.w900),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   remaining >= 0
-                      ? '$remaining kcal left today. Keep it up!'
-                      : '${remaining.abs()} kcal over. Keep dinner lighter.',
+                      ? 'dashboard.kcalLeftKeepItUp'.tr(args: ['$remaining'])
+                      : 'dashboard.kcalOverKeepDinnerLighter'.tr(args: ['${remaining.abs()}']),
                   style: _textStyle(
                     isDark: isDark,
                     size: 12,

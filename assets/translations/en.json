@@ -1,0 +1,216 @@
+{
+  "dashboard": {
+    "hello": "Hello",
+    "dailySummary": "Daily Summary",
+    "kcalLeft": "kcal left",
+    "consumed": "Consumed",
+    "goal": "Goal",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "ofTarget": "of {}",
+    "quickActions": "Quick Actions",
+    "viewAll": "View all",
+    "food": "Food",
+    "workout": "Workout",
+    "weight": "Weight",
+    "todaysInsights": "Today's Insights",
+    "onPaceToday": "On pace today",
+    "lightResetNeeded": "Light reset needed",
+    "kcalLeftKeepItUp": "{} kcal left today. Keep it up!",
+    "kcalOverKeepDinnerLighter": "{} kcal over. Keep dinner lighter.",
+    "goals": {
+      "loseWeight": "Lose weight",
+      "gainMuscle": "Gain muscle",
+      "leanBulk": "Lean bulk",
+      "maintainWeight": "Maintain"
+    }
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "loginSubtitle": "Log in to keep tracking your progress.",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "logIn": "Log In",
+    "or": "Or",
+    "continueWithGoogle": "Continue with Google",
+    "dontHaveAccount": "Don't have an account? ",
+    "signUp": "Sign up",
+    "createAccount": "Create Account",
+    "registerSubtitle": "Set up Calora to start tracking today.",
+    "fullName": "Full name",
+    "confirmPassword": "Confirm password",
+    "createAccountButton": "Create Account",
+    "orSignUpWith": "Or sign up with",
+    "alreadyHaveAccount": "Already have an account? ",
+    "logInLink": "Log in",
+    "passwordsDoNotMatch": "Passwords do not match"
+  },
+  "onboarding": {
+    "defaultUser": "Calora User",
+    "seeMyPlan": "See my plan",
+    "continue": "Continue",
+    "personalInfoTitle": "Personal Information",
+    "personalInfoSubtitle": "Please provide your name and gender to personalize your experience.",
+    "fullNameHint": "Full name",
+    "male": "Male",
+    "female": "Female",
+    "dobTitle": "Date of Birth",
+    "dobSubtitle": "This information is used to calculate your daily nutritional targets.",
+    "selectDate": "Select date",
+    "bodyMetricsTitle": "Body Metrics",
+    "bodyMetricsSubtitle": "Please enter your height and weight to establish your baseline.",
+    "heightLabel": "Height",
+    "weightLabel": "Weight",
+    "activityTitle": "How active are you?",
+    "activitySubtitle": "On a typical week.",
+    "activity": {
+      "sedentary": {
+        "title": "Sedentary",
+        "subtitle": "Little to no exercise"
+      },
+      "light": {
+        "title": "Lightly active",
+        "subtitle": "1-3 workouts / week"
+      },
+      "moderate": {
+        "title": "Moderately active",
+        "subtitle": "3-5 workouts / week"
+      },
+      "active": {
+        "title": "Active",
+        "subtitle": "6-7 workouts / week"
+      },
+      "veryActive": {
+        "title": "Very active",
+        "subtitle": "Physical job or 2x/day training"
+      }
+    },
+    "goalTitle": "What's your goal?",
+    "goalSubtitle": "We'll tailor your daily targets.",
+    "goals": {
+      "loseWeightSub": "Calorie deficit for fat loss",
+      "maintainWeightSub": "Stay at your current weight",
+      "gainMuscleSub": "Modest surplus for lean mass",
+      "leanBulkSub": "Higher surplus, faster gains"
+    },
+    "youreAllSet": "You're all set, {}!",
+    "personalizedPlan": "Here's your personalized daily plan.",
+    "dailyCalories": "Daily Calories",
+    "disclaimer": "These targets are calculated using the Mifflin-St Jeor equation based on your profile. They are for reference only, not medical advice.",
+    "getStarted": "Get Started"
+  },
+  "diary": {
+    "meals": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "snack": "Snack",
+      "dinner": "Dinner"
+    },
+    "setDailyMealPlan": "Set your daily\nmeal plan",
+    "loggedFoods": "Logged Foods",
+    "itemCount": "{} item(s)",
+    "recommendedCal": "Recommended {}Cal",
+    "add": "+ Add",
+    "mealItems": "{} items",
+    "searchFoods": "Search foods...",
+    "cantFindFood": "Can't find your food?",
+    "requestFood": "Request Food",
+    "servingsCount": "{} Servings",
+    "caloriesUpper": "CALORIES",
+    "proteinUpper": "PROTEIN",
+    "carbsUpper": "CARBS",
+    "fatUpper": "FAT",
+    "macroProportion": "MACRO PROPORTION",
+    "addMeals": "Add Meals",
+    "foodRequest": {
+      "title": "Request New Food",
+      "subtitle": "Add missing nutrition details for admin verification.",
+      "foodNameLabel": "Food Name *",
+      "foodNameHint": "e.g. Grilled Salmon Bowl",
+      "categoryLabel": "Category *",
+      "selectCategoryHint": "Select Food Category",
+      "servingSizeLabel": "Serving Size *",
+      "servingSizeHint": "e.g. 100g, 1 bowl",
+      "caloriesLabel": "Calories (kcal) *",
+      "caloriesHint": "e.g. 350",
+      "nutritionalBreakdown": "Nutritional Breakdown (Grams)",
+      "proteinLabel": "Protein (g)",
+      "carbsLabel": "Carbs (g)",
+      "fatLabel": "Fat (g)",
+      "notesLabel": "Additional Notes",
+      "notesHint": "Details to assist admin verification...",
+      "submitButton": "Submit Food Request",
+      "fillRequired": "Please fill out all required fields.",
+      "submittedSuccess": "Food request submitted successfully! Pending review."
+    }
+  },
+  "workout": {
+    "muscleGroups": {
+      "all": "All",
+      "chest": "Chest",
+      "back": "Back",
+      "legs": "Legs",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "core": "Core"
+    },
+    "gymWorkoutSessions": "Gym Workout Sessions",
+    "muscleFocus": "Muscle Focus  •  {}",
+    "durationMin": "{} min",
+    "exercisesAndSets": "{} Exercises • {} Sets",
+    "logGymSession": "Log Gym Session",
+    "dailyProgressActivity": "Daily progress activity",
+    "volumeKg": "Volume (kg)",
+    "kgLiftedToday": "kg lifted today",
+    "average": "Average",
+    "setsLogged": "Sets Logged",
+    "setsUnit": "sets",
+    "bodyWeight": "Body Weight",
+    "sessionMeta": "{} min  ·  {} exercises  ·  {} sets",
+    "focusAndNote": "Focus: {} • {}",
+    "setItem": "Set {}",
+    "repsCount": "{} reps",
+    "sessionLoggedSuccess": "Gym Workout Session & Sets Logged to Database!",
+    "saveSessionLog": "Save Gym Session Log"
+  },
+  "profile": {
+    "title": "Profile",
+    "ageAndGender": "{} years old  ·  {}",
+    "edit": "Edit",
+    "height": "Height",
+    "progressUpper": "PROGRESS",
+    "settingsUpper": "SETTINGS",
+    "goalsAndNutrition": "Goals & Nutrition",
+    "appearance": "Appearance",
+    "language": "Language",
+    "notifications": "Notifications",
+    "aboutCalora": "About Calora",
+    "logOut": "Log Out",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "tabs": {
+      "weight": "Weight",
+      "calories": "Calories",
+      "gymVol": "Gym Vol"
+    },
+    "editProfile": "Edit Profile",
+    "heightCmLabel": "Height (cm)",
+    "weightKgLabel": "Weight (kg)",
+    "save": "Save",
+    "activity": {
+      "sedentary": "Sedentary",
+      "light": "Lightly active",
+      "moderate": "Moderately active",
+      "active": "Active",
+      "veryActive": "Very active"
+    }
+  },
+  "splash": {
+    "tagline": "Eat smart. Train hard. Track it all."
+  }
+}

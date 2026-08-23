@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/age_calculator.dart';
@@ -46,7 +46,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_step == _totalSteps - 1) {
       final age = calculateAge(_dateOfBirth);
       final profile = UserProfile(
-        name: _nameController.text.trim().isEmpty ? 'Calora User' : _nameController.text.trim(),
+        name: _nameController.text.trim().isEmpty ? 'onboarding.defaultUser'.tr() : _nameController.text.trim(),
         age: age,
         gender: _gender,
         heightCm: double.tryParse(_heightController.text.trim()) ?? 170.0,
@@ -151,7 +151,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                 child: AppButton(
-                  label: _step == _totalSteps - 1 ? 'See my plan' : 'Continue',
+                  label: _step == _totalSteps - 1 ? 'onboarding.seeMyPlan'.tr() : 'onboarding.continue'.tr(),
                   onPressed: _canProceed ? _next : null,
                 ),
               ),
@@ -184,8 +184,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _stepHeader(
-            "Personal Information",
-            "Please provide your name and gender to personalize your experience.",
+            "onboarding.personalInfoTitle".tr(),
+            "onboarding.personalInfoSubtitle".tr(),
           ),
           Center(
             child: Image.asset(
@@ -199,15 +199,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
             style: Theme.of(context).textTheme.bodyLarge,
-            decoration: const InputDecoration(hintText: 'Full name'),
+            decoration: InputDecoration(hintText: 'onboarding.fullNameHint'.tr()),
           ),
           const SizedBox(height: AppSpacing.xl),
           Row(
             children: [
-              _genderCard('Male', //ganti warna biru 
+              _genderCard('onboarding.male'.tr(),
               Icons.male_rounded, Gender.male),
               const SizedBox(width: AppSpacing.sm),
-              _genderCard('Female', Icons.female_rounded, Gender.female),
+              _genderCard('onboarding.female'.tr(), Icons.female_rounded, Gender.female),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -220,15 +220,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _dobStep() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasDate = _dateOfBirth != null;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _stepHeader(
-            'Date of Birth',
-            'This information is used to calculate your daily nutritional targets.',
+            'onboarding.dobTitle'.tr(),
+            'onboarding.dobSubtitle'.tr(),
           ),
           Center(
             child: Image.asset(
@@ -280,16 +279,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Text(
-                    hasDate
-                        ? DateFormat('MMMM d, y').format(_dateOfBirth!)
-                        : 'Select date',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: hasDate
-                              ? null
-                              : (isDark
-                                  ? AppColors.darkTextTertiary
-                                  : AppColors.lightTextTertiary),
-                        ),
+                    DateFormat('MMMM d, y').format(_dateOfBirth),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],
               ),
@@ -362,8 +353,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _stepHeader(
-            'Body Metrics',
-            'Please enter your height and weight to establish your baseline.',
+            'onboarding.bodyMetricsTitle'.tr(),
+            'onboarding.bodyMetricsSubtitle'.tr(),
           ),
           Center(
             child: Image.asset(
@@ -380,8 +371,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _heightController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: Theme.of(context).textTheme.bodyLarge,
-                  decoration: const InputDecoration(
-                    labelText: 'Height',
+                  decoration: InputDecoration(
+                    labelText: 'onboarding.heightLabel'.tr(),
                     suffixText: 'cm',
                   ),
                   onChanged: (_) => setState(() {}),
@@ -393,8 +384,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _weightController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: Theme.of(context).textTheme.bodyLarge,
-                  decoration: const InputDecoration(
-                    labelText: 'Weight',
+                  decoration: InputDecoration(
+                    labelText: 'onboarding.weightLabel'.tr(),
                     suffixText: 'kg',
                   ),
                   onChanged: (_) => setState(() {}),
@@ -411,59 +402,73 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // ─── Step 6: Activity Level ─────────────────────────────────
 
   Widget _activityStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    final options = const [
+      _ActivityOptionData(
+        level: ActivityLevel.sedentary,
+        icon: Icons.weekend_rounded,
+        titleKey: 'onboarding.activity.sedentary.title',
+        subtitleKey: 'onboarding.activity.sedentary.subtitle',
+        gradientColors: [Color(0xFF64748B), Color(0xFF475569)],
+      ),
+      _ActivityOptionData(
+        level: ActivityLevel.light,
+        icon: Icons.directions_walk_rounded,
+        titleKey: 'onboarding.activity.light.title',
+        subtitleKey: 'onboarding.activity.light.subtitle',
+        gradientColors: [AppColors.carbs, Color(0xFFFFD579)],
+      ),
+      _ActivityOptionData(
+        level: ActivityLevel.moderate,
+        icon: Icons.directions_run_rounded,
+        titleKey: 'onboarding.activity.moderate.title',
+        subtitleKey: 'onboarding.activity.moderate.subtitle',
+        gradientColors: [AppColors.fat, Color(0xFFB3D4FF)],
+      ),
+      _ActivityOptionData(
+        level: ActivityLevel.active,
+        icon: Icons.fitness_center_rounded,
+        titleKey: 'onboarding.activity.active.title',
+        subtitleKey: 'onboarding.activity.active.subtitle',
+        gradientColors: [AppColors.protein, AppColors.danger],
+      ),
+      _ActivityOptionData(
+        level: ActivityLevel.veryActive,
+        icon: Icons.local_fire_department_rounded,
+        titleKey: 'onboarding.activity.veryActive.title',
+        subtitleKey: 'onboarding.activity.veryActive.subtitle',
+        gradientColors: [
+          Color(0xFF00E5FF),
+          AppColors.fat,
+          AppColors.lavender,
+        ],
+      ),
+    ];
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _stepHeader('How active are you?', 'On a typical week.'),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _imageOptionTile(
-              imagePath: 'assets/sedentary.png',
-              selected: _activity == ActivityLevel.sedentary,
-              onTap: () => setState(() => _activity = ActivityLevel.sedentary),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _imageOptionTile(
-              imagePath: 'assets/light.png',
-              selected: _activity == ActivityLevel.light,
-              onTap: () => setState(() => _activity = ActivityLevel.light),
-              gradientColors: const [AppColors.carbs, Color(0xFFFFD579)],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _imageOptionTile(
-              imagePath: 'assets/moderate.png',
-              selected: _activity == ActivityLevel.moderate,
-              onTap: () => setState(() => _activity = ActivityLevel.moderate),
-              gradientColors: const [AppColors.fat, Color(0xFFB3D4FF)],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _imageOptionTile(
-              imagePath: 'assets/active.png',
-              selected: _activity == ActivityLevel.active,
-              onTap: () => setState(() => _activity = ActivityLevel.active),
-              gradientColors: const [AppColors.protein, AppColors.danger],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _imageOptionTile(
-              imagePath: 'assets/vactive.png',
-              selected: _activity == ActivityLevel.veryActive,
-              onTap: () => setState(() => _activity = ActivityLevel.veryActive),
-              gradientColors: const [
-                Color(0xFF00E5FF), // Cyan/Turquoise
-                AppColors.fat,     // Soft Blue
-                AppColors.lavender,// Soft Purple
-              ],
-            ),
-          ),
+          _stepHeader('onboarding.activityTitle'.tr(), 'onboarding.activitySubtitle'.tr()),
+          const SizedBox(height: AppSpacing.sm),
+          ...options.map((opt) {
+            final selected = _activity == opt.level;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _activityOptionTile(
+                icon: opt.icon,
+                title: opt.titleKey.tr(),
+                subtitle: opt.subtitleKey.tr(),
+                selected: selected,
+                gradientColors: opt.gradientColors,
+                onTap: () => setState(() => _activity = opt.level),
+                isDark: isDark,
+                textSecondary: textSecondary,
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -472,18 +477,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // ─── Step 7: Goal ───────────────────────────────────────────
 
   Widget _goalStep() {
-    const labels = {
-      Goal.loseWeight: ('Lose weight', 'Calorie deficit for fat loss'),
-      Goal.maintainWeight: ('Maintain weight', 'Stay at your current weight'),
-      Goal.gainMuscle: ('Gain muscle', 'Modest surplus for lean mass'),
-      Goal.leanBulk: ('Lean bulk', 'Higher surplus, faster gains'),
+    final labels = {
+      Goal.loseWeight: ('dashboard.goals.loseWeight'.tr(), 'onboarding.goals.loseWeightSub'.tr()),
+      Goal.maintainWeight: ('dashboard.goals.maintainWeight'.tr(), 'onboarding.goals.maintainWeightSub'.tr()),
+      Goal.gainMuscle: ('dashboard.goals.gainMuscle'.tr(), 'onboarding.goals.gainMuscleSub'.tr()),
+      Goal.leanBulk: ('dashboard.goals.leanBulk'.tr(), 'onboarding.goals.leanBulkSub'.tr()),
     };
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _stepHeader("What's your goal?", "We'll tailor your daily targets."),
+          _stepHeader("onboarding.goalTitle".tr(), "onboarding.goalSubtitle".tr()),
           Center(
             child: Image.asset(
               'assets/onboarding4.png',
@@ -510,24 +515,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   // ─── Shared Widgets ─────────────────────────────────────────
 
-  Widget _imageOptionTile({
-    required String imagePath,
+  Widget _activityOptionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
     required bool selected,
+    required List<Color> gradientColors,
     required VoidCallback onTap,
-    List<Color>? gradientColors,
+    required bool isDark,
+    required Color textSecondary,
   }) {
-    final colors = gradientColors ?? [AppColors.accent, AppColors.accentSoft];
-
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(3.0), // Gradient border width
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(3.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.xl),
           gradient: selected
               ? LinearGradient(
-                  colors: colors,
+                  colors: gradientColors,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -536,26 +543,103 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
         ),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(AppRadius.xl - 3.0),
+            border: selected
+                ? null
+                : Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    width: 1.0,
+                  ),
           ),
           foregroundDecoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.xl - 3.0),
             gradient: selected
                 ? LinearGradient(
-                    colors: colors.map((c) => c.withValues(alpha: 0.2)).toList(),
+                    colors: gradientColors.map((c) => c.withValues(alpha: 0.12)).toList(),
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : null,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.xl - 3.0),
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.contain,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  height: 56,
+                  width: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradientColors.first.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: textSecondary,
+                              fontSize: 13,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 22,
+                  width: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? AppColors.accent : Colors.transparent,
+                    border: Border.all(
+                      color: selected
+                          ? AppColors.accent
+                          : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                      width: selected ? 0 : 2,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: selected
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 14,
+                          color: Color(0xFF0E0F10),
+                        )
+                      : null,
+                ),
+              ],
             ),
           ),
         ),
@@ -614,4 +698,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     );
   }
+}
+
+class _ActivityOptionData {
+  final ActivityLevel level;
+  final IconData icon;
+  final String titleKey;
+  final String subtitleKey;
+  final List<Color> gradientColors;
+
+  const _ActivityOptionData({
+    required this.level,
+    required this.icon,
+    required this.titleKey,
+    required this.subtitleKey,
+    required this.gradientColors,
+  });
 }

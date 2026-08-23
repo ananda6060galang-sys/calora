@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -77,9 +78,9 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Eat smart. Train hard. Track it all.',
-                  style: TextStyle(
+                Text(
+                  'splash.tagline'.tr(),
+                  style: const TextStyle(
                     color: AppColors.darkTextSecondary,
                     fontSize: 13.5,
                     fontWeight: FontWeight.w500,
