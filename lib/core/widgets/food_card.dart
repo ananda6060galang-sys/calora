@@ -43,8 +43,6 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-
-
                 // Info
                 Expanded(
                   child: Column(
@@ -52,7 +50,8 @@ class FoodCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w700,
                               height: 1.1,
                             ),
@@ -63,11 +62,11 @@ class FoodCard extends StatelessWidget {
                       Text(
                         serving,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                              height: 1.1,
-                            ),
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                          height: 1.1,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       // Pills
@@ -75,9 +74,24 @@ class FoodCard extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          _macroPill(context, 'P', protein, const Color(0xFFFF8B7B)),
-                          _macroPill(context, 'C', carbs, const Color(0xFFFFC04D)),
-                          _macroPill(context, 'F', fat, const Color(0xFF7BAAF7)),
+                          _macroPill(
+                            context,
+                            'P',
+                            protein,
+                            const Color(0xFFFF8B7B),
+                          ),
+                          _macroPill(
+                            context,
+                            'C',
+                            carbs,
+                            const Color(0xFFFFC04D),
+                          ),
+                          _macroPill(
+                            context,
+                            'F',
+                            fat,
+                            const Color(0xFF7BAAF7),
+                          ),
                         ],
                       ),
                     ],
@@ -93,17 +107,17 @@ class FoodCard extends StatelessWidget {
                     Text(
                       '$calories',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                          ),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                     Text(
                       'kcal',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : const Color(0xFFAAAAAA),
-                          ),
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : const Color(0xFFAAAAAA),
+                      ),
                     ),
                   ],
                 ),
@@ -130,7 +144,12 @@ class FoodCard extends StatelessWidget {
     );
   }
 
-  Widget _macroPill(BuildContext context, String label, double grams, Color color) {
+  Widget _macroPill(
+    BuildContext context,
+    String label,
+    double grams,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(

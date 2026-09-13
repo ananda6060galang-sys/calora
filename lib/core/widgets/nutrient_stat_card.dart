@@ -71,11 +71,12 @@ class NutrientStatCard extends StatelessWidget {
           ),
           if (sublabel != null) ...[
             const SizedBox(height: 4),
-            Text(sublabel!,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: color)),
+            Text(
+              sublabel!,
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: color),
+            ),
           ],
         ],
       ),

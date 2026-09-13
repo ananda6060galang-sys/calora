@@ -1,41 +1,104 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../routing/root_shell.dart';
+import '../dashboard/providers/profile_provider.dart';
+import 'forgot_password_screen.dart';
+import 'providers/auth_provider.dart';
 import 'register_screen.dart';
 import '../onboarding/onboarding_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
 
   bool _loading = false;
 
   void _login() async {
+    final email = _email.text.trim();
+    final password = _password.text;
+
+    // Validation: Email not empty
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('auth.emailRequired'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validation: Password not empty
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('auth.passwordRequired'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Prevent duplicate submissions
     setState(() => _loading = true);
 
-    await Future.delayed(
-      const Duration(milliseconds: 700),
-    );
+    try {
+      final authService = ref.read(authServiceProvider);
+      final response = await authService.signIn(
+        email: email,
+        password: password,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() => _loading = false);
+      if (response.session != null && response.user != null) {
+        final profile = await ref
+            .read(profileServiceProvider)
+            .getProfile(response.user!.id);
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const OnboardingScreen(),
-      ),
-    );
+        if (!mounted) return;
+        setState(() => _loading = false);
+
+        if (profile != null) {
+          ref.read(userProfileProvider.notifier).state = profile;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const RootShell()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          );
+        }
+        return;
+      }
+
+      setState(() => _loading = false);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -47,8 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // =========================================================
     // MANUAL FORM POSITION
@@ -69,16 +131,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness:
-            isDark ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
 
-        backgroundColor:
-            isDark ? AppColors.darkBg : Colors.white,
+        backgroundColor: isDark ? AppColors.darkBg : Colors.white,
 
         body: Stack(
           children: [
@@ -91,15 +150,12 @@ class _LoginScreenState extends State<LoginScreen> {
               right: 0,
               height: heroPanelHeight,
               child: Container(
-                color: isDark
-                    ? AppColors.darkSurface
-                    : const Color(0xFFF0F391),
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF0F391),
                 child: Image.asset(
                   'assets/banner.png',
                   fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
-                  errorBuilder:
-                      (context, error, stackTrace) {
+                  errorBuilder: (context, error, stackTrace) {
                     return Container(
                       color: isDark
                           ? AppColors.darkSurface
@@ -116,15 +172,12 @@ class _LoginScreenState extends State<LoginScreen> {
             SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // =================================================
                   // MANUAL FORM POSITION
                   // =================================================
-                  const SizedBox(
-                    height: formTopPosition,
-                  ),
+                  const SizedBox(height: formTopPosition),
 
                   // =================================================
                   // CONTAINER FORM
@@ -133,12 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
 
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkBg
-                          : Colors.white,
+                      color: isDark ? AppColors.darkBg : Colors.white,
 
-                      borderRadius:
-                          const BorderRadius.vertical(
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(60),
                       ),
 
@@ -157,15 +207,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       27,
                       46,
                       27,
-                      20 +
-                          MediaQuery.of(context)
-                              .viewInsets
-                              .bottom,
+                      20 + MediaQuery.of(context).viewInsets.bottom,
                     ),
 
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // =================================================
                         // TITLE
@@ -210,10 +256,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           hint: 'auth.email'.tr(),
                           isDark: isDark,
                           controller: _email,
-                          keyboardType:
-                              TextInputType.emailAddress,
-                          prefixIcon:
-                              Icons.mail_outline_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.mail_outline_rounded,
                         ),
 
                         const SizedBox(height: 12),
@@ -226,8 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           isDark: isDark,
                           controller: _password,
                           obscureText: true,
-                          prefixIcon:
-                              Icons.lock_outline_rounded,
+                          prefixIcon: Icons.lock_outline_rounded,
                         ),
 
                         const SizedBox(height: 20),
@@ -238,21 +281,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const ForgotPasswordScreen(),
+                                ),
+                              );
+                            },
                             style: TextButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                                 vertical: 4,
                               ),
                               minimumSize: Size.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize
-                                      .shrinkWrap,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
-                              'Forgot password?',
-                              style: TextStyle(
+                            child: Text(
+                              'auth.forgotPassword'.tr(),
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF85C500),
@@ -269,26 +315,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           height: 52,
                           child: ElevatedButton(
-                            onPressed:
-                                _loading ? null : _login,
+                            onPressed: _loading ? null : _login,
 
-                            style:
-                                ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color(0xFFB8FF3B),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFB8FF3B),
 
-                              foregroundColor:
-                                  const Color(0xFF1E1E1E),
+                              foregroundColor: const Color(0xFF1E1E1E),
 
-                              disabledBackgroundColor:
-                                  const Color(0xFFB8FF3B),
+                              disabledBackgroundColor: const Color(0xFFB8FF3B),
 
                               elevation: 0,
 
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
 
@@ -296,19 +335,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? const SizedBox(
                                     width: 22,
                                     height: 22,
-                                    child:
-                                        CircularProgressIndicator(
+                                    child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      color:
-                                          Color(0xFF1E1E1E),
+                                      color: Color(0xFF1E1E1E),
                                     ),
                                   )
                                 : Text(
                                     'auth.logIn'.tr(),
                                     style: const TextStyle(
                                       fontSize: 16,
-                                      fontWeight:
-                                          FontWeight.w700,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                           ),
@@ -331,8 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
 
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
                               child: Text(
@@ -340,8 +375,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: isDark
-                                      ? AppColors
-                                          .darkTextTertiary
+                                      ? AppColors.darkTextTertiary
                                       : const Color(0xFF9CA3AF),
                                 ),
                               ),
@@ -368,18 +402,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: OutlinedButton(
                             onPressed: () {},
 
-                            style:
-                                OutlinedButton.styleFrom(
+                            style: OutlinedButton.styleFrom(
                               backgroundColor: isDark
                                   ? AppColors.darkSurface
                                   : Colors.white,
 
                               elevation: 0,
 
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
 
                               side: BorderSide(
@@ -391,16 +422,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
 
                             child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 // =================================================
                                 // GOOGLE LOGO — LIBRARY
                                 // =================================================
-                                Brand(
-                                  Brands.google,
-                                  size: 21,
-                                ),
+                                Brand(Brands.google, size: 21),
 
                                 const SizedBox(width: 12),
 
@@ -408,8 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'auth.continueWithGoogle'.tr(),
                                   style: TextStyle(
                                     fontSize: 15,
-                                    fontWeight:
-                                        FontWeight.w600,
+                                    fontWeight: FontWeight.w600,
                                     color: isDark
                                         ? Colors.white
                                         : const Color(0xFF1E1E1E),
@@ -426,16 +452,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         // REGISTER
                         // =================================================
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               'auth.dontHaveAccount'.tr(),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark
-                                    ? AppColors
-                                        .darkTextSecondary
+                                    ? AppColors.darkTextSecondary
                                     : const Color(0xFF76655C),
                               ),
                             ),
@@ -443,11 +467,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(width: 4),
 
                             GestureDetector(
-                              onTap: () =>
-                                  Navigator.of(context).push(
+                              onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const RegisterScreen(),
+                                  builder: (_) => const RegisterScreen(),
                                 ),
                               ),
 
@@ -499,8 +521,7 @@ class _AuthField extends StatefulWidget {
   final IconData? prefixIcon;
 
   @override
-  State<_AuthField> createState() =>
-      _AuthFieldState();
+  State<_AuthField> createState() => _AuthFieldState();
 }
 
 class _AuthFieldState extends State<_AuthField> {
@@ -514,10 +535,7 @@ class _AuthFieldState extends State<_AuthField> {
 
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(
-        color: borderColor,
-        width: 1.2,
-      ),
+      borderSide: BorderSide(color: borderColor, width: 1.2),
     );
 
     return TextField(
@@ -528,17 +546,13 @@ class _AuthFieldState extends State<_AuthField> {
       style: TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.w500,
-        color: widget.isDark
-            ? Colors.white
-            : const Color(0xFF1E1E1E),
+        color: widget.isDark ? Colors.white : const Color(0xFF1E1E1E),
       ),
 
       decoration: InputDecoration(
         filled: true,
 
-        fillColor: widget.isDark
-            ? AppColors.darkSurface
-            : Colors.white,
+        fillColor: widget.isDark ? AppColors.darkSurface : Colors.white,
 
         hintText: widget.hint,
 
@@ -556,14 +570,10 @@ class _AuthFieldState extends State<_AuthField> {
 
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFF85C500),
-            width: 1.6,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF85C500), width: 1.6),
         ),
 
-        contentPadding:
-            const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 15,
         ),
@@ -590,9 +600,7 @@ class _AuthFieldState extends State<_AuthField> {
                       : const Color(0xFF6B7280),
                 ),
                 onPressed: () {
-                  setState(
-                    () => _obscure = !_obscure,
-                  );
+                  setState(() => _obscure = !_obscure);
                 },
               )
             : null,

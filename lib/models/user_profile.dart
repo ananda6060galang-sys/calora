@@ -1,60 +1,109 @@
+import '../core/utils/age_calculator.dart';
+import '../core/utils/nutrition_calculator.dart';
+
 enum Gender { male, female }
 
 enum ActivityLevel { sedentary, light, moderate, active, veryActive }
 
-enum Goal { loseWeight, maintainWeight, gainMuscle, leanBulk }
+enum Goal { loseWeight, maintainWeight, gainWeight }
+
+enum GoalPace { gentle, moderate, faster }
 
 class UserProfile {
   const UserProfile({
     required this.name,
-    required this.age,
+    required this.dateOfBirth,
     required this.gender,
     required this.heightCm,
     required this.weightKg,
     required this.activityLevel,
     required this.goal,
+    this.targetWeightKg,
+    this.goalPace = GoalPace.moderate,
+    this.customCalorieTarget,
     this.isAdmin = false,
   });
 
   final String name;
-  final int age;
+  final DateTime dateOfBirth;
   final Gender gender;
   final double heightCm;
   final double weightKg;
   final ActivityLevel activityLevel;
   final Goal goal;
+  final double? targetWeightKg;
+  final GoalPace goalPace;
+  final double? customCalorieTarget;
   final bool isAdmin;
 
-  /// Mifflin-St Jeor BMR, adjusted by activity factor and goal offset.
-  double get dailyCalorieTarget {
-    final bmr = gender == Gender.male
-        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+  /// Dynamic age calculated strictly from [dateOfBirth].
+  int get age => calculateAge(dateOfBirth);
 
-    const factors = {
-      ActivityLevel.sedentary: 1.2,
-      ActivityLevel.light: 1.375,
-      ActivityLevel.moderate: 1.55,
-      ActivityLevel.active: 1.725,
-      ActivityLevel.veryActive: 1.9,
-    };
+  /// Basal Metabolic Rate (BMR) via Mifflin-St Jeor.
+  double get bmr => NutritionCalculator.calculateBmr(
+        weightKg: weightKg,
+        heightCm: heightCm,
+        age: age,
+        gender: gender,
+      );
 
-    final tdee = bmr * (factors[activityLevel] ?? 1.2);
+  /// Total Daily Energy Expenditure (TDEE).
+  double get tdee => NutritionCalculator.calculateTdee(
+        bmr: bmr,
+        activityLevel: activityLevel,
+      );
 
-    switch (goal) {
-      case Goal.loseWeight:
-        return tdee - 500;
-      case Goal.maintainWeight:
-        return tdee;
-      case Goal.gainMuscle:
-        return tdee + 250;
-      case Goal.leanBulk:
-        return tdee + 400;
-    }
+  /// Daily calorie target, clamped to never drop below BMR.
+  double get dailyCalorieTarget =>
+      NutritionCalculator.calculateDailyCalorieTarget(
+        tdee: tdee,
+        bmr: bmr,
+        goal: goal,
+        goalPace: goalPace,
+        customCalorieTarget: customCalorieTarget,
+      );
+
+  /// Computed macro targets mathematically consistent with [dailyCalorieTarget].
+  MacroTargets get macroTargets => NutritionCalculator.calculateMacros(
+        calorieTarget: dailyCalorieTarget,
+        weightKg: weightKg,
+      );
+
+  double get proteinTargetG => macroTargets.proteinG;
+  double get carbsTargetG => macroTargets.carbsG;
+  double get fatTargetG => macroTargets.fatG;
+
+  bool get isCustomTarget =>
+      customCalorieTarget != null && customCalorieTarget! > 0;
+
+  UserProfile copyWith({
+    String? name,
+    DateTime? dateOfBirth,
+    Gender? gender,
+    double? heightCm,
+    double? weightKg,
+    ActivityLevel? activityLevel,
+    Goal? goal,
+    double? targetWeightKg,
+    GoalPace? goalPace,
+    double? customCalorieTarget,
+    bool clearCustomCalorieTarget = false,
+    bool? isAdmin,
+  }) {
+    return UserProfile(
+      name: name ?? this.name,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      activityLevel: activityLevel ?? this.activityLevel,
+      goal: goal ?? this.goal,
+      targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      goalPace: goalPace ?? this.goalPace,
+      customCalorieTarget: clearCustomCalorieTarget
+          ? null
+          : (customCalorieTarget ?? this.customCalorieTarget),
+      isAdmin: isAdmin ?? this.isAdmin,
+    );
   }
-
-  double get proteinTargetG => weightKg * 1.8;
-  double get fatTargetG => (dailyCalorieTarget * 0.25) / 9;
-  double get carbsTargetG =>
-      (dailyCalorieTarget - (proteinTargetG * 4) - (fatTargetG * 9)) / 4;
 }

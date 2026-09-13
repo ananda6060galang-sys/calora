@@ -33,6 +33,8 @@ class AppColors {
 
   // Light theme surfaces
   static const Color lightBg = Color(0xFFFAFAF8);
+  static const Color lightGreenBg = Color(0xFFEFF5EB); // Soft pastel light-green background
+  static const Color darkGreenBg = Color(0xFF101612);  // Subtle tinted dark surface
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightSurfaceAlt = Color(0xFFF4F4F2);
   static const Color lightBorder = Color(0xFFECECEC);

@@ -41,5 +41,5 @@ class FoodRequestNotifier extends StateNotifier<List<FoodRequest>> {
 
 final foodRequestProvider =
     StateNotifierProvider<FoodRequestNotifier, List<FoodRequest>>(
-  (ref) => FoodRequestNotifier(),
-);
+      (ref) => FoodRequestNotifier(),
+    );

@@ -1,20 +1,22 @@
-import 'package:easy_localization/easy_localization.dart'
-    hide TextDirection;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../onboarding/onboarding_screen.dart';
+import 'providers/auth_provider.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -27,30 +29,79 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // REGISTER
   // =========================================================
   void _register() async {
+    final email = _email.text.trim();
+    final password = _password.text;
+    final confirm = _confirm.text;
+
+    // Validation: Email not empty
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('auth.emailRequired'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validation: Password not empty
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('auth.passwordRequired'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validation: Passwords match
     setState(() {
-      _confirmError =
-          _confirm.text != _password.text
-              ? 'auth.passwordsDoNotMatch'.tr()
-              : null;
+      _confirmError = confirm != password
+          ? 'auth.passwordsDoNotMatch'.tr()
+          : null;
     });
 
     if (_confirmError != null) return;
 
+    // Prevent duplicate submissions
     setState(() => _loading = true);
 
-    await Future.delayed(
-      const Duration(milliseconds: 700),
-    );
+    try {
+      final authService = ref.read(authServiceProvider);
+      final response = await authService.signUp(
+        email: email,
+        password: password,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() => _loading = false);
+      setState(() => _loading = false);
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const OnboardingScreen(),
-      ),
-    );
+      if (response.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('auth.registrationSuccessful'.tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    }
   }
 
   // =========================================================
@@ -71,8 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // =========================================================
     // MANUAL POSITION
@@ -94,22 +144,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDark
-                ? Brightness.light
-                : Brightness.dark,
-        statusBarBrightness:
-            isDark
-                ? Brightness.dark
-                : Brightness.light,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
 
-        backgroundColor:
-            isDark
-                ? AppColors.darkBg
-                : Colors.white,
+        backgroundColor: isDark ? AppColors.darkBg : Colors.white,
 
         body: Stack(
           children: [
@@ -123,29 +164,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               height: heroPanelHeight,
 
               child: Container(
-                color:
-                    isDark
-                        ? AppColors.darkSurface
-                        : const Color(0xFFF0F391),
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF0F391),
 
                 child: Image.asset(
                   'assets/banner.png',
                   fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
 
-                  errorBuilder:
-                      (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
+                  errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color:
-                          isDark
-                              ? AppColors.darkSurface
-                              : const Color(
-                                  0xFFF0F391,
-                                ),
+                      color: isDark
+                          ? AppColors.darkSurface
+                          : const Color(0xFFF0F391),
                     );
                   },
                 ),
@@ -156,20 +186,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             // 2. SCROLLABLE FORM
             // =====================================================
             SingleChildScrollView(
-              physics:
-                  const BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
 
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
 
                 children: [
                   // =================================================
                   // MANUAL FORM POSITION
                   // =================================================
-                  const SizedBox(
-                    height: formTopPosition,
-                  ),
+                  const SizedBox(height: formTopPosition),
 
                   // =================================================
                   // FORM CONTAINER
@@ -178,161 +204,113 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: double.infinity,
 
                     decoration: BoxDecoration(
-                      color:
-                          isDark
-                              ? AppColors.darkBg
-                              : Colors.white,
+                      color: isDark ? AppColors.darkBg : Colors.white,
 
-                      borderRadius:
-                          const BorderRadius.vertical(
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(60),
                       ),
 
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              Colors.black.withValues(
-                            alpha:
-                                isDark
-                                    ? 0.4
-                                    : 0.06,
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.4 : 0.06,
                           ),
                           blurRadius: 16,
-                          offset:
-                              const Offset(0, -4),
+                          offset: const Offset(0, -4),
                         ),
                       ],
                     ),
 
-                    padding:
-                        EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       27,
                       46,
                       27,
-                      20 +
-                          MediaQuery.of(
-                            context,
-                          ).viewInsets.bottom,
+                      20 + MediaQuery.of(context).viewInsets.bottom,
                     ),
 
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment
-                              .stretch,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
 
                       children: [
                         // =================================================
                         // TITLE
                         // =================================================
                         Text(
-                          'auth.createAccount'
-                              .tr(),
+                          'auth.createAccount'.tr(),
 
-                          textAlign:
-                              TextAlign.center,
+                          textAlign: TextAlign.center,
 
                           style: TextStyle(
                             fontSize: 32,
-                            fontWeight:
-                                FontWeight.w900,
+                            fontWeight: FontWeight.w900,
                             letterSpacing: -0.5,
                             height: 1.15,
 
-                            color:
-                                isDark
-                                    ? AppColors
-                                        .darkTextPrimary
-                                    : const Color(
-                                        0xFF1E1E1E,
-                                      ),
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : const Color(0xFF1E1E1E),
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         // =================================================
                         // SUBTITLE
                         // =================================================
                         Text(
-                          'auth.registerSubtitle'
-                              .tr(),
+                          'auth.registerSubtitle'.tr(),
 
-                          textAlign:
-                              TextAlign.center,
+                          textAlign: TextAlign.center,
 
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight:
-                                FontWeight.w400,
+                            fontWeight: FontWeight.w400,
 
-                            color:
-                                isDark
-                                    ? AppColors
-                                        .darkTextSecondary
-                                    : const Color(
-                                        0xFF76655C,
-                                      ),
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF76655C),
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 30,
-                        ),
+                        const SizedBox(height: 30),
 
                         // =================================================
                         // FULL NAME
                         // =================================================
                         _AuthField(
-                          hint:
-                              'auth.fullName'
-                                  .tr(),
+                          hint: 'auth.fullName'.tr(),
 
                           isDark: isDark,
 
                           controller: _name,
 
-                          prefixIcon:
-                              Icons
-                                  .person_outline_rounded,
+                          prefixIcon: Icons.person_outline_rounded,
                         ),
 
-                        const SizedBox(
-                          height: 12,
-                        ),
+                        const SizedBox(height: 12),
 
                         // =================================================
                         // EMAIL
                         // =================================================
                         _AuthField(
-                          hint:
-                              'auth.email'.tr(),
+                          hint: 'auth.email'.tr(),
 
                           isDark: isDark,
 
                           controller: _email,
 
-                          keyboardType:
-                              TextInputType
-                                  .emailAddress,
+                          keyboardType: TextInputType.emailAddress,
 
-                          prefixIcon:
-                              Icons
-                                  .mail_outline_rounded,
+                          prefixIcon: Icons.mail_outline_rounded,
                         ),
 
-                        const SizedBox(
-                          height: 12,
-                        ),
+                        const SizedBox(height: 12),
 
                         // =================================================
                         // PASSWORD
                         // =================================================
                         _AuthField(
-                          hint:
-                              'auth.password'
-                                  .tr(),
+                          hint: 'auth.password'.tr(),
 
                           isDark: isDark,
 
@@ -340,22 +318,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           obscureText: true,
 
-                          prefixIcon:
-                              Icons
-                                  .lock_outline_rounded,
+                          prefixIcon: Icons.lock_outline_rounded,
                         ),
 
-                        const SizedBox(
-                          height: 12,
-                        ),
+                        const SizedBox(height: 12),
 
                         // =================================================
                         // CONFIRM PASSWORD
                         // =================================================
                         _AuthField(
-                          hint:
-                              'auth.confirmPassword'
-                                  .tr(),
+                          hint: 'auth.confirmPassword'.tr(),
 
                           isDark: isDark,
 
@@ -363,17 +335,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           obscureText: true,
 
-                          prefixIcon:
-                              Icons
-                                  .lock_outline_rounded,
+                          prefixIcon: Icons.lock_outline_rounded,
 
-                          errorText:
-                              _confirmError,
+                          errorText: _confirmError,
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         // =================================================
                         // CREATE ACCOUNT BUTTON
@@ -381,78 +348,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         SizedBox(
                           height: 52,
 
-                          child:
-                              ElevatedButton(
-                            onPressed:
-                                _loading
-                                    ? null
-                                    : _register,
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : _register,
 
-                            style:
-                                ElevatedButton
-                                    .styleFrom(
-                              backgroundColor:
-                                  const Color(
-                                0xFFB8FF3B,
-                              ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFB8FF3B),
 
-                              foregroundColor:
-                                  const Color(
-                                0xFF1E1E1E,
-                              ),
+                              foregroundColor: const Color(0xFF1E1E1E),
 
-                              disabledBackgroundColor:
-                                  const Color(
-                                0xFFB8FF3B,
-                              ),
+                              disabledBackgroundColor: const Color(0xFFB8FF3B),
 
                               elevation: 0,
 
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  14,
-                                ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
 
-                            child:
-                                _loading
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
 
-                                        child:
-                                            CircularProgressIndicator(
-                                          strokeWidth:
-                                              2.5,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
 
-                                          color:
-                                              Color(
-                                            0xFF1E1E1E,
-                                          ),
-                                        ),
-                                      )
-                                    : Text(
-                                        'auth.createAccountButton'
-                                            .tr(),
+                                      color: Color(0xFF1E1E1E),
+                                    ),
+                                  )
+                                : Text(
+                                    'auth.createAccountButton'.tr(),
 
-                                        style:
-                                            const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight:
-                                              FontWeight
-                                                  .w700,
-                                        ),
-                                      ),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         // =================================================
                         // DIVIDER
@@ -461,60 +396,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           children: [
                             Expanded(
                               child: Divider(
-                                color:
-                                    isDark
-                                        ? AppColors
-                                            .darkBorder
-                                        : const Color(
-                                            0xFFE5E7EB,
-                                          ),
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : const Color(0xFFE5E7EB),
                                 thickness: 1,
                               ),
                             ),
 
                             Padding(
-                              padding:
-                                  const EdgeInsets
-                                      .symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
 
                               child: Text(
                                 'auth.or'.tr(),
 
-                                style:
-                                    TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
 
-                                  color:
-                                      isDark
-                                          ? AppColors
-                                              .darkTextTertiary
-                                          : const Color(
-                                              0xFF9CA3AF,
-                                            ),
+                                  color: isDark
+                                      ? AppColors.darkTextTertiary
+                                      : const Color(0xFF9CA3AF),
                                 ),
                               ),
                             ),
 
                             Expanded(
                               child: Divider(
-                                color:
-                                    isDark
-                                        ? AppColors
-                                            .darkBorder
-                                        : const Color(
-                                            0xFFE5E7EB,
-                                          ),
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : const Color(0xFFE5E7EB),
                                 thickness: 1,
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         // =================================================
                         // GOOGLE BUTTON
@@ -522,77 +440,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         SizedBox(
                           height: 52,
 
-                          child:
-                              OutlinedButton(
+                          child: OutlinedButton(
                             onPressed: () {},
 
-                            style:
-                                OutlinedButton
-                                    .styleFrom(
-                              backgroundColor:
-                                  isDark
-                                      ? AppColors
-                                          .darkSurface
-                                      : Colors.white,
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
 
                               elevation: 0,
 
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  14,
-                                ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
 
                               side: BorderSide(
-                                color:
-                                    isDark
-                                        ? AppColors
-                                            .darkBorder
-                                        : const Color(
-                                            0xFFE0E0E0,
-                                          ),
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : const Color(0xFFE0E0E0),
                                 width: 1.2,
                               ),
                             ),
 
                             child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment
-                                      .center,
+                              mainAxisAlignment: MainAxisAlignment.center,
 
                               children: [
                                 // Google logo
                                 // dari icons_plus
-                                Brand(
-                                  Brands.google,
-                                  size: 21,
-                                ),
+                                Brand(Brands.google, size: 21),
 
-                                const SizedBox(
-                                  width: 12,
-                                ),
+                                const SizedBox(width: 12),
 
                                 Text(
-                                  'auth.continueWithGoogle'
-                                      .tr(),
+                                  'auth.continueWithGoogle'.tr(),
 
-                                  style:
-                                      TextStyle(
+                                  style: TextStyle(
                                     fontSize: 15,
-                                    fontWeight:
-                                        FontWeight
-                                            .w600,
+                                    fontWeight: FontWeight.w600,
 
-                                    color:
-                                        isDark
-                                            ? Colors
-                                                .white
-                                            : const Color(
-                                                0xFF1E1E1E,
-                                              ),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1E1E1E),
                                   ),
                                 ),
                               ],
@@ -600,40 +489,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 24,
-                        ),
+                        const SizedBox(height: 24),
 
                         // =================================================
                         // FOOTER
                         // =================================================
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment
-                                  .center,
+                          mainAxisAlignment: MainAxisAlignment.center,
 
                           children: [
                             Text(
-                              'auth.alreadyHaveAccount'
-                                  .tr(),
+                              'auth.alreadyHaveAccount'.tr(),
 
-                              style:
-                                  TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
 
-                                color:
-                                    isDark
-                                        ? AppColors
-                                            .darkTextSecondary
-                                        : const Color(
-                                            0xFF76655C,
-                                          ),
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : const Color(0xFF76655C),
                               ),
                             ),
 
-                            const SizedBox(
-                              width: 4,
-                            ),
+                            const SizedBox(width: 4),
 
                             GestureDetector(
                               onTap: _goBack,
@@ -641,25 +518,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: const Text(
                                 'Log in',
 
-                                style:
-                                    TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight:
-                                      FontWeight
-                                          .w700,
-                                  color:
-                                      Color(
-                                    0xFF85C500,
-                                  ),
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF85C500),
                                 ),
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(
-                          height: 30,
-                        ),
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ),
@@ -679,11 +548,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             // dan bisa menerima tap.
             // =====================================================
             Positioned(
-              top:
-                  MediaQuery.of(context)
-                      .padding
-                      .top +
-                  12,
+              top: MediaQuery.of(context).padding.top + 12,
 
               left: 16,
 
@@ -693,23 +558,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: InkWell(
                   onTap: _goBack,
 
-                  borderRadius:
-                      BorderRadius.circular(50),
+                  borderRadius: BorderRadius.circular(50),
 
                   child: Container(
                     width: 42,
                     height: 42,
 
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          Colors.black
-                              .withValues(
-                        alpha: 0.28,
-                      ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.28),
 
-                      shape:
-                          BoxShape.circle,
+                      shape: BoxShape.circle,
                     ),
 
                     child: const Icon(
@@ -752,198 +610,130 @@ class _AuthField extends StatefulWidget {
   final String? errorText;
 
   @override
-  State<_AuthField> createState() =>
-      _AuthFieldState();
+  State<_AuthField> createState() => _AuthFieldState();
 }
 
-class _AuthFieldState
-    extends State<_AuthField> {
-  late bool _obscure =
-      widget.obscureText;
+class _AuthFieldState extends State<_AuthField> {
+  late bool _obscure = widget.obscureText;
 
   @override
   Widget build(BuildContext context) {
-    final borderColor =
-        widget.isDark
-            ? AppColors.darkBorder
-            : const Color(0xFFD1D5DB);
+    final borderColor = widget.isDark
+        ? AppColors.darkBorder
+        : const Color(0xFFD1D5DB);
 
-    final errorColor =
-        AppColors.danger;
+    final errorColor = AppColors.danger;
 
-    final hasError =
-        widget.errorText != null &&
-        widget.errorText!.isNotEmpty;
+    final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
 
-    final border =
-        OutlineInputBorder(
-      borderRadius:
-          BorderRadius.circular(14),
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
 
       borderSide: BorderSide(
-        color:
-            hasError
-                ? errorColor
-                : borderColor,
+        color: hasError ? errorColor : borderColor,
 
         width: 1.2,
       ),
     );
 
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
         TextField(
-          controller:
-              widget.controller,
+          controller: widget.controller,
 
-          obscureText:
-              _obscure,
+          obscureText: _obscure,
 
-          keyboardType:
-              widget.keyboardType,
+          keyboardType: widget.keyboardType,
 
           style: TextStyle(
             fontSize: 15,
-            fontWeight:
-                FontWeight.w500,
+            fontWeight: FontWeight.w500,
 
-            color:
-                widget.isDark
-                    ? Colors.white
-                    : const Color(
-                        0xFF1E1E1E,
-                      ),
+            color: widget.isDark ? Colors.white : const Color(0xFF1E1E1E),
           ),
 
-          decoration:
-              InputDecoration(
+          decoration: InputDecoration(
             filled: true,
 
-            fillColor:
-                widget.isDark
-                    ? AppColors.darkSurface
-                    : Colors.white,
+            fillColor: widget.isDark ? AppColors.darkSurface : Colors.white,
 
-            hintText:
-                widget.hint,
+            hintText: widget.hint,
 
-            hintStyle:
-                TextStyle(
+            hintStyle: TextStyle(
               fontSize: 15,
-              fontWeight:
-                  FontWeight.w400,
+              fontWeight: FontWeight.w400,
 
-              color:
-                  widget.isDark
-                      ? AppColors
-                          .darkTextTertiary
-                      : const Color(
-                          0xFF9CA3AF,
-                        ),
+              color: widget.isDark
+                  ? AppColors.darkTextTertiary
+                  : const Color(0xFF9CA3AF),
             ),
 
-            border:
-                border,
+            border: border,
 
-            enabledBorder:
-                border,
+            enabledBorder: border,
 
-            focusedBorder:
-                OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(
-                14,
-              ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
 
-              borderSide:
-                  const BorderSide(
-                color:
-                    Color(0xFF85C500),
+              borderSide: const BorderSide(
+                color: Color(0xFF85C500),
                 width: 1.6,
               ),
             ),
 
-            contentPadding:
-                const EdgeInsets
-                    .symmetric(
+            contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 15,
             ),
 
-            prefixIcon:
-                widget.prefixIcon !=
-                        null
-                    ? Icon(
-                        widget.prefixIcon,
-                        size: 20,
+            prefixIcon: widget.prefixIcon != null
+                ? Icon(
+                    widget.prefixIcon,
+                    size: 20,
 
-                        color:
-                            widget.isDark
-                                ? AppColors
-                                    .darkTextSecondary
-                                : const Color(
-                                    0xFF6B7280,
-                                  ),
-                      )
-                    : null,
+                    color: widget.isDark
+                        ? AppColors.darkTextSecondary
+                        : const Color(0xFF6B7280),
+                  )
+                : null,
 
-            suffixIcon:
-                widget.obscureText
-                    ? IconButton(
-                        icon: Icon(
-                          _obscure
-                              ? Icons
-                                  .visibility_off_rounded
-                              : Icons
-                                  .visibility_rounded,
+            suffixIcon: widget.obscureText
+                ? IconButton(
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
 
-                          size: 20,
+                      size: 20,
 
-                          color:
-                              widget.isDark
-                                  ? AppColors
-                                      .darkTextSecondary
-                                  : const Color(
-                                      0xFF6B7280,
-                                    ),
-                        ),
+                      color: widget.isDark
+                          ? AppColors.darkTextSecondary
+                          : const Color(0xFF6B7280),
+                    ),
 
-                        onPressed: () {
-                          setState(
-                            () =>
-                                _obscure =
-                                    !_obscure,
-                          );
-                        },
-                      )
-                    : null,
+                    onPressed: () {
+                      setState(() => _obscure = !_obscure);
+                    },
+                  )
+                : null,
           ),
         ),
 
         if (hasError) ...[
-          const SizedBox(
-            height: 5,
-          ),
+          const SizedBox(height: 5),
 
           Padding(
-            padding:
-                const EdgeInsets.only(
-              left: 12,
-            ),
+            padding: const EdgeInsets.only(left: 12),
 
             child: Text(
               widget.errorText!,
 
-              style:
-                  TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                fontWeight:
-                    FontWeight.w500,
-                color:
-                    errorColor,
+                fontWeight: FontWeight.w500,
+                color: errorColor,
               ),
             ),
           ),

@@ -28,7 +28,8 @@ class ProgressRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final track = trackColor ??
+    final track =
+        trackColor ??
         (isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt);
 
     return SizedBox(

@@ -33,28 +33,33 @@ class _WebmPlayerState extends State<WebmPlayer> {
   }
 
   void _initPlayer() {
-    final isVideo = widget.assetPath.endsWith('.webm') || widget.assetPath.endsWith('.mp4');
+    final isVideo =
+        widget.assetPath.endsWith('.webm') || widget.assetPath.endsWith('.mp4');
     if (!isVideo) {
       return;
     }
 
     _controller = VideoPlayerController.asset(widget.assetPath)
-      ..initialize().then((_) {
-        debugPrint('WebmPlayer: Initialized video player for ${widget.assetPath}');
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
+      ..initialize()
+          .then((_) {
+            debugPrint(
+              'WebmPlayer: Initialized video player for ${widget.assetPath}',
+            );
+            if (mounted) {
+              setState(() {
+                _isInitialized = true;
+              });
+              _controller?.setLooping(true);
+              _controller?.play();
+            }
+          })
+          .catchError((dynamic error) {
+            if (mounted) {
+              setState(() {
+                _hasError = true;
+              });
+            }
           });
-          _controller?.setLooping(true);
-          _controller?.play();
-        }
-      }).catchError((dynamic error) {
-        if (mounted) {
-          setState(() {
-            _hasError = true;
-          });
-        }
-      });
   }
 
   @override
@@ -65,10 +70,13 @@ class _WebmPlayerState extends State<WebmPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    final isVideo = widget.assetPath.endsWith('.webm') || widget.assetPath.endsWith('.mp4');
+    final isVideo =
+        widget.assetPath.endsWith('.webm') || widget.assetPath.endsWith('.mp4');
 
     if (!isVideo || !_isInitialized || _hasError) {
-      final String imageAsset = isVideo ? (widget.fallbackAsset ?? 'assets/banner.png') : widget.assetPath;
+      final String imageAsset = isVideo
+          ? (widget.fallbackAsset ?? 'assets/banner.png')
+          : widget.assetPath;
 
       return Image.asset(
         imageAsset,
@@ -88,10 +96,8 @@ class _WebmPlayerState extends State<WebmPlayer> {
                 width: widget.width,
                 height: widget.height,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => SizedBox(
-                  width: widget.width,
-                  height: widget.height,
-                ),
+                errorBuilder: (context, error, stackTrace) =>
+                    SizedBox(width: widget.width, height: widget.height),
               ),
             );
           }
@@ -100,10 +106,8 @@ class _WebmPlayerState extends State<WebmPlayer> {
             width: widget.width,
             height: widget.height,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => SizedBox(
-              width: widget.width,
-              height: widget.height,
-            ),
+            errorBuilder: (context, error, stackTrace) =>
+                SizedBox(width: widget.width, height: widget.height),
           );
         },
       );
@@ -114,9 +118,7 @@ class _WebmPlayerState extends State<WebmPlayer> {
       height: widget.height,
       child: AspectRatio(
         aspectRatio: _controller!.value.aspectRatio,
-        child: RepaintBoundary(
-          child: VideoPlayer(_controller!),
-        ),
+        child: RepaintBoundary(child: VideoPlayer(_controller!)),
       ),
     );
   }

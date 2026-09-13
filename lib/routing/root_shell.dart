@@ -4,8 +4,8 @@ import '../core/theme/app_spacing.dart';
 
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/diary/food_diary_screen.dart';
+import '../features/insights/insights_screen.dart';
 import '../features/profile/profile_screen.dart';
-import '../features/workout/workout_screen.dart';
 
 /// The main authenticated app shell.
 class RootShell extends StatefulWidget {
@@ -21,14 +21,14 @@ class _RootShellState extends State<RootShell> {
   static const _tabs = [
     DashboardScreen(),
     FoodDiaryScreenNoAppBar(),
-    WorkoutScreen(),
+    InsightsScreen(),
     ProfileScreen(),
   ];
 
   static const _destinations = [
     _NavDestination(icon: Icons.dashboard_rounded, label: 'Home'),
     _NavDestination(icon: Icons.restaurant_menu_rounded, label: 'Diary'),
-    _NavDestination(icon: Icons.fitness_center_rounded, label: 'Workout'),
+    _NavDestination(icon: Icons.insights_rounded, label: 'Insights'),
     _NavDestination(icon: Icons.person_rounded, label: 'Profile'),
   ];
 
@@ -237,5 +237,6 @@ class FoodDiaryScreenNoAppBar extends StatelessWidget {
   const FoodDiaryScreenNoAppBar({super.key});
 
   @override
-  Widget build(BuildContext context) => const FoodDiaryScreen(showBackButton: false);
+  Widget build(BuildContext context) =>
+      const FoodDiaryScreen(showBackButton: false);
 }

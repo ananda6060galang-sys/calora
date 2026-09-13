@@ -56,7 +56,12 @@ class DashboardScreen extends ConsumerWidget {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 124),
           children: [
-            _DashboardHeader(profile: profile, isDark: isDark),
+            _DashboardHeader(
+              profile: profile,
+              isDark: isDark,
+              onSearchTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
+              onNotificationTap: () {},
+            ),
             const SizedBox(height: 22),
             _CalorieHeroCard(
               consumed: totals.calories,
@@ -110,52 +115,32 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             _SectionTitle(
-              title: 'dashboard.quickActions'.tr(),
-              action: 'dashboard.viewAll'.tr(),
-              onActionTap: () {},
+              title: 'dashboard.quickAdd'.tr(),
               isDark: isDark,
             ),
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final gap = constraints.maxWidth < 340 ? 8.0 : 10.0;
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _QuickActionTile(
-                        icon: Icons.add_rounded,
-                        label: 'dashboard.food'.tr(),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const FoodDiaryScreen(),
-                          ),
-                        ),
-                        isDark: isDark,
-                      ),
-                    ),
-                    SizedBox(width: gap),
-                    Expanded(
-                      child: _QuickActionTile(
-                        icon: Icons.fitness_center_outlined,
-                        label: 'dashboard.workout'.tr(),
-                        color: AppColors.lavender,
-                        onTap: () {},
-                        isDark: isDark,
-                      ),
-                    ),
-                    SizedBox(width: gap),
-                    Expanded(
-                      child: _QuickActionTile(
-                        icon: Icons.monitor_weight_outlined,
-                        label: 'dashboard.weight'.tr(),
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                        onTap: () {},
-                        isDark: isDark,
-                      ),
-                    ),
-                  ],
-                );
-              },
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionTile(
+                    assetPath: 'assets/log.png',
+                    title: 'dashboard.logFood'.tr(),
+                    subtitle: 'dashboard.logFoodSubtitle'.tr(),
+                    onTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionTile(
+                    assetPath: 'assets/scan.png',
+                    title: 'dashboard.scanFood'.tr(),
+                    subtitle: 'dashboard.scanFoodSubtitle'.tr(),
+                    onTap: () => FoodDiaryScreen.openAiScannerSheet(context),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             _SectionTitle(title: 'dashboard.todaysInsights'.tr(), isDark: isDark),
@@ -176,21 +161,26 @@ class DashboardScreen extends ConsumerWidget {
     switch (goal) {
       case Goal.loseWeight:
         return 'dashboard.goals.loseWeight'.tr();
-      case Goal.gainMuscle:
-        return 'dashboard.goals.gainMuscle'.tr();
-      case Goal.leanBulk:
-        return 'dashboard.goals.leanBulk'.tr();
       case Goal.maintainWeight:
         return 'dashboard.goals.maintainWeight'.tr();
+      case Goal.gainWeight:
+        return 'dashboard.goals.gainWeight'.tr();
     }
   }
 }
 
 class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader({required this.profile, required this.isDark});
+  const _DashboardHeader({
+    required this.profile,
+    required this.isDark,
+    this.onSearchTap,
+    this.onNotificationTap,
+  });
 
   final UserProfile profile;
   final bool isDark;
+  final VoidCallback? onSearchTap;
+  final VoidCallback? onNotificationTap;
 
   @override
   Widget build(BuildContext context) {
@@ -238,9 +228,17 @@ class _DashboardHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        _CircleIconButton(icon: Icons.search_rounded, isDark: isDark),
+        _CircleIconButton(
+          icon: Icons.search_rounded,
+          isDark: isDark,
+          onTap: onSearchTap,
+        ),
         const SizedBox(width: 8),
-        _CircleIconButton(icon: Icons.notifications_none_rounded, isDark: isDark),
+        _CircleIconButton(
+          icon: Icons.notifications_none_rounded,
+          isDark: isDark,
+          onTap: onNotificationTap,
+        ),
       ],
     );
   }
@@ -327,10 +325,10 @@ class _CalorieHeroCard extends StatelessWidget {
                     child: Column(
                       children: [
                         const Icon(
-                          Icons.local_fire_department_rounded,
-                          size: 18,
-                          color: AppColors.warning,
-                        ),
+                            Icons.local_fire_department_rounded,
+                            size: 30,
+                            color: AppColors.warning,
+                          ),
                         const SizedBox(height: 2),
                         Text(
                           '$remaining',
@@ -475,11 +473,9 @@ class _MacroCard extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, this.action, this.onActionTap, required this.isDark});
+  const _SectionTitle({required this.title, required this.isDark});
 
   final String title;
-  final String? action;
-  final VoidCallback? onActionTap;
   final bool isDark;
 
   @override
@@ -490,21 +486,6 @@ class _SectionTitle extends StatelessWidget {
         Flexible(
           child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: _textStyle(isDark: isDark, size: 17, weight: FontWeight.w900)),
         ),
-        if (action != null) ...[
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onActionTap,
-            child: Text(
-              action!,
-              style: _textStyle(
-                isDark: isDark,
-                size: 12,
-                weight: FontWeight.w800,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -512,49 +493,60 @@ class _SectionTitle extends StatelessWidget {
 
 class _QuickActionTile extends StatelessWidget {
   const _QuickActionTile({
-    required this.icon,
-    required this.label,
+    required this.assetPath,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
-    this.color = AppColors.accent,
     required this.isDark,
   });
 
-  final IconData icon;
-  final String label;
+  final String assetPath;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
-  final Color color;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final isPrimaryColor = color == AppColors.lightTextPrimary || color == AppColors.darkTextPrimary;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        height: 82,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        decoration: _cardDecoration(isDark: isDark, radius: 22, blur: 16, offset: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: _cardDecoration(isDark: isDark, radius: 28, blur: 20, offset: 8),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 34,
-              width: 34,
-              decoration: BoxDecoration(
-                color: color.withValues(
-                  alpha: isPrimaryColor ? 0.08 : 0.18,
+            Center(
+              child: SizedBox(
+                height: 76,
+                child: Image.asset(
+                  assetPath,
+                  fit: BoxFit.contain,
                 ),
-                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 18, color: color),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
-              label,
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: _textStyle(isDark: isDark, size: 11, weight: FontWeight.w800),
+              textAlign: TextAlign.left,
+              style: _textStyle(isDark: isDark, size: 14, weight: FontWeight.w800),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.left,
+              style: _textStyle(
+                isDark: isDark,
+                size: 11,
+                weight: FontWeight.w600,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
             ),
           ],
         ),
@@ -625,22 +617,35 @@ class _InsightCard extends StatelessWidget {
 }
 
 class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.isDark});
+  const _CircleIconButton({
+    required this.icon,
+    required this.isDark,
+    this.onTap,
+  });
 
   final IconData icon;
   final bool isDark;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 38,
-      width: 38,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        shape: BoxShape.circle,
-        boxShadow: _softShadow(isDark: isDark, blur: 16, offset: 6),
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Ink(
+          height: 38,
+          width: 38,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            shape: BoxShape.circle,
+            boxShadow: _softShadow(isDark: isDark, blur: 16, offset: 6),
+          ),
+          child: Icon(icon, size: 18, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+        ),
       ),
-      child: Icon(icon, size: 18, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
     );
   }
 }

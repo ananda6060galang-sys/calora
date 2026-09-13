@@ -1,19 +1,21 @@
 import 'food.dart';
 import 'user_profile.dart';
 
-final demoProfile = const UserProfile(
+final demoProfile = UserProfile(
   name: 'TESTT',
-  age: 24,
+  dateOfBirth: DateTime(2002, 5, 15),
   gender: Gender.male,
   heightCm: 174,
   weightKg: 71,
   activityLevel: ActivityLevel.moderate,
-  goal: Goal.leanBulk,
+  goal: Goal.gainWeight,
+  goalPace: GoalPace.moderate,
+  targetWeightKg: 75,
 );
 
 final demoFoods = <Food>[
   const Food(
-    id: 'f1',
+    id: 'local_f1',
     name: 'Grilled Chicken Breast',
     servingLabel: '100 g',
     calories: 165,
@@ -21,9 +23,11 @@ final demoFoods = <Food>[
     carbsG: 0,
     fatG: 3.6,
     category: 'Protein',
+    portionGrams: 100,
+    source: 'local',
   ),
   const Food(
-    id: 'f2',
+    id: 'local_f2',
     name: 'Steamed White Rice',
     servingLabel: '1 cup (158 g)',
     calories: 205,
@@ -31,9 +35,11 @@ final demoFoods = <Food>[
     carbsG: 45,
     fatG: 0.4,
     category: 'Carbs',
+    portionGrams: 158,
+    source: 'local',
   ),
   const Food(
-    id: 'f3',
+    id: 'local_f3',
     name: 'Avocado',
     servingLabel: '1/2 fruit (100 g)',
     calories: 160,
@@ -41,9 +47,11 @@ final demoFoods = <Food>[
     carbsG: 8.5,
     fatG: 14.7,
     category: 'Fats',
+    portionGrams: 100,
+    source: 'local',
   ),
   const Food(
-    id: 'f4',
+    id: 'local_f4',
     name: 'Greek Yogurt Plain',
     servingLabel: '170 g cup',
     calories: 100,
@@ -51,9 +59,11 @@ final demoFoods = <Food>[
     carbsG: 6,
     fatG: 0.5,
     category: 'Dairy',
+    portionGrams: 170,
+    source: 'local',
   ),
   const Food(
-    id: 'f5',
+    id: 'local_f5',
     name: 'Banana',
     servingLabel: '1 medium (118 g)',
     calories: 105,
@@ -61,5 +71,7 @@ final demoFoods = <Food>[
     carbsG: 27,
     fatG: 0.4,
     category: 'Fruit',
+    portionGrams: 118,
+    source: 'local',
   ),
 ];

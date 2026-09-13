@@ -1,13 +1,33 @@
+import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'features/splash/splash_screen.dart';
 
+List<CameraDescription> appCameras = [];
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  // On mobile, pre-fetching available cameras is helpful. On web, do it lazily in scanner to conserve memory.
+  if (!kIsWeb) {
+    try {
+      appCameras = await availableCameras();
+    } catch (e) {
+      debugPrint('availableCameras error: $e');
+    }
+  }
+
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.publishableKey,
+  );
 
   runApp(
     EasyLocalization(

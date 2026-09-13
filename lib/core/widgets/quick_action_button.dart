@@ -33,7 +33,8 @@ class QuickActionButton extends StatelessWidget {
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
             ),
             child: Column(
               children: [
@@ -47,9 +48,11 @@ class QuickActionButton extends StatelessWidget {
                   child: Icon(icon, size: 18, color: c),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(label,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelSmall),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
               ],
             ),
           ),

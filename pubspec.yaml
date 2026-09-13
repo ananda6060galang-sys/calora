@@ -17,6 +17,10 @@ dependencies:
   riverpod_annotation: ^4.0.3
   video_player: ^2.8.2
   icons_plus: ^5.0.0
+  supabase_flutter: ^2.17.2
+  image_picker: ^1.2.3
+  camera: ^0.11.0+2
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

@@ -27,7 +27,8 @@ class MacroCard extends StatelessWidget {
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +42,12 @@ class MacroCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelSmall),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
               ),
             ],
           ),
@@ -64,8 +70,9 @@ class MacroCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor:
-                  isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
+              backgroundColor: isDark
+                  ? AppColors.darkSurfaceAlt
+                  : AppColors.lightSurfaceAlt,
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),

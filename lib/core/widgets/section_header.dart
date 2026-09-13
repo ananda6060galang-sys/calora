@@ -43,11 +43,11 @@ class SectionHeader extends StatelessWidget {
               child: Text(
                 trailing!,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],

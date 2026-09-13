@@ -43,7 +43,8 @@ class AppButton extends StatelessWidget {
         bg = Colors.transparent;
         fg = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
         border = Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder);
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        );
         break;
       case AppButtonVariant.danger:
         bg = AppColors.danger.withValues(alpha: 0.12);
@@ -65,11 +66,12 @@ class AppButton extends StatelessWidget {
                 Icon(icon, size: 19, color: fg),
                 const SizedBox(width: AppSpacing.sm),
               ],
-              Text(label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(color: fg)),
+              Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: fg),
+              ),
             ],
           );
 

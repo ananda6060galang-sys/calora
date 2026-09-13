@@ -19,7 +19,10 @@ class MealTag extends StatelessWidget {
     final color = _colors[meal] ?? AppColors.mealDinner;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -27,9 +30,9 @@ class MealTag extends StatelessWidget {
       child: Text(
         meal,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

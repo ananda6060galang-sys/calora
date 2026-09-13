@@ -7,19 +7,28 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_header.dart';
 import '../../models/user_profile.dart';
 import '../dashboard/providers/profile_provider.dart';
 
 String _muscleGroupLabel(String mg) {
   switch (mg.toLowerCase()) {
-    case 'all': return 'workout.muscleGroups.all'.tr();
-    case 'chest': return 'workout.muscleGroups.chest'.tr();
-    case 'back': return 'workout.muscleGroups.back'.tr();
-    case 'legs': return 'workout.muscleGroups.legs'.tr();
-    case 'shoulders': return 'workout.muscleGroups.shoulders'.tr();
-    case 'arms': return 'workout.muscleGroups.arms'.tr();
-    case 'core': return 'workout.muscleGroups.core'.tr();
-    default: return mg;
+    case 'all':
+      return 'workout.muscleGroups.all'.tr();
+    case 'chest':
+      return 'workout.muscleGroups.chest'.tr();
+    case 'back':
+      return 'workout.muscleGroups.back'.tr();
+    case 'legs':
+      return 'workout.muscleGroups.legs'.tr();
+    case 'shoulders':
+      return 'workout.muscleGroups.shoulders'.tr();
+    case 'arms':
+      return 'workout.muscleGroups.arms'.tr();
+    case 'core':
+      return 'workout.muscleGroups.core'.tr();
+    default:
+      return mg;
   }
 }
 
@@ -258,7 +267,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     final selectedGroup = _muscleGroups[_selectedMuscleIndex];
     return _sessions.where((s) {
       return s.muscleGroup.toLowerCase() == selectedGroup.toLowerCase() ||
-          s.exercises.any((e) => e.muscleGroup.toLowerCase() == selectedGroup.toLowerCase());
+          s.exercises.any(
+            (e) => e.muscleGroup.toLowerCase() == selectedGroup.toLowerCase(),
+          );
     }).toList();
   }
 
@@ -287,8 +298,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     isDark
                         ? const Color(0xFF2C4A26)
                         : const Color.fromARGB(255, 214, 253, 150),
-                    (isDark ? AppColors.darkBg : AppColors.lightBg)
-                        .withValues(alpha: 0.0),
+                    (isDark ? AppColors.darkBg : AppColors.lightBg).withValues(
+                      alpha: 0.0,
+                    ),
                   ],
                 ),
               ),
@@ -301,23 +313,33 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
               children: [
-                // ── 1. Header (Identical to Home Dashboard Header) ───────────
-                _WorkoutHeader(profile: profile, isDark: isDark),
+                // ── 1. Header (Unified AppHeader) ───────────────────────────
+                AppHeader(
+                  profile: profile,
+                  isDark: isDark,
+                  onSearchTap: () {
+                    // Quick feedback or filter
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('workout.searchExercise'.tr()),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 20),
 
                 // ── 2. Hero Gym Workout Session Card ─────────────────────────
                 _HeroProgressWorkoutCard(
                   session: heroSession,
                   isDark: isDark,
-                  onStart: () => _openRecordGymSessionSheet(context, heroSession),
+                  onStart: () =>
+                      _openRecordGymSessionSheet(context, heroSession),
                 ),
                 const SizedBox(height: 24),
 
                 // ── 3. Daily Progress Activity Bento Grid (PRD Gym Volume) ───
-                _DailyProgressActivitySection(
-                  profile: profile,
-                  isDark: isDark,
-                ),
+                _DailyProgressActivitySection(profile: profile, isDark: isDark),
                 const SizedBox(height: 24),
 
                 // ── 4. Muscle Group Workout Sessions (PRD Exercises & Sets) ──
@@ -335,35 +357,46 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     itemCount: _muscleGroups.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: 8),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 8),
                     itemBuilder: (context, index) {
                       final isSelected = _selectedMuscleIndex == index;
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedMuscleIndex = index),
+                        onTap: () =>
+                            setState(() => _selectedMuscleIndex = index),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppColors.accent
-                                : (isDark ? AppColors.darkSurface : Colors.white),
+                                : (isDark
+                                      ? AppColors.darkSurface
+                                      : Colors.white),
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.accent
-                                  : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  : (isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder),
                             ),
                           ),
                           child: Text(
                             _muscleGroupLabel(_muscleGroups[index]),
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               color: isSelected
                                   ? const Color(0xFF0E0F10)
                                   : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary),
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary),
                             ),
                           ),
                         ),
@@ -402,109 +435,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   }
 }
 
-// ─── 1. Header Component (Identical to Home Dashboard) ───────────────────────
-
-class _WorkoutHeader extends StatelessWidget {
-  const _WorkoutHeader({required this.profile, required this.isDark});
-
-  final UserProfile profile;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final displayName = profile.name.isNotEmpty ? profile.name : 'Jenny Wilson';
-
-    return Row(
-      children: [
-        // User Avatar Circle on Left (Height 46, Width 46, AppColors.accent)
-        Container(
-          height: 46,
-          width: 46,
-          decoration: const BoxDecoration(
-            color: AppColors.accent,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            displayName[0].toUpperCase(),
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.lightTextPrimary,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-
-        // Greeting Column (Hello / Name)
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'dashboard.hello'.tr(),
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                displayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-
-        // Search Button Circle
-        Container(
-          height: 42,
-          width: 42,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            ),
-          ),
-          child: Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          ),
-        ),
-        const SizedBox(width: 8),
-
-        // Bell Notification Button Circle
-        Container(
-          height: 42,
-          width: 42,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            ),
-          ),
-          child: Icon(
-            Icons.notifications_none_rounded,
-            size: 20,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 // ─── 2. Hero Progress Gym Session Card ────────────────────────────────────────
 
@@ -544,13 +474,18 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
-                  'workout.muscleFocus'.tr(args: [_muscleGroupLabel(session.muscleGroup)]),
+                  'workout.muscleFocus'.tr(
+                    args: [_muscleGroupLabel(session.muscleGroup)],
+                  ),
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -602,7 +537,9 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'workout.durationMin'.tr(args: ['${session.durationMinutes}']),
+                          'workout.durationMin'.tr(
+                            args: ['${session.durationMinutes}'],
+                          ),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -617,7 +554,12 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'workout.exercisesAndSets'.tr(args: ['${session.exercises.length}', '${session.totalSets}']),
+                          'workout.exercisesAndSets'.tr(
+                            args: [
+                              '${session.exercises.length}',
+                              '${session.totalSets}',
+                            ],
+                          ),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -644,7 +586,9 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                         value: session.progressPercent / 100,
                         strokeWidth: 6,
                         backgroundColor: Colors.white12,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.accent,
+                        ),
                         strokeCap: StrokeCap.round,
                       ),
                     ),
@@ -732,13 +676,17 @@ class _DailyProgressActivitySection extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
             ),
             Icon(
               Icons.more_vert_rounded,
               size: 20,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ],
         ),
@@ -751,7 +699,8 @@ class _DailyProgressActivitySection extends StatelessWidget {
             color: isDark ? AppColors.darkSurface : const Color(0xFFF2F4F7),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: (isDark ? AppColors.darkBorder : AppColors.lightBorder).withValues(alpha: 0.8),
+              color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
+                  .withValues(alpha: 0.8),
             ),
           ),
           child: Row(
@@ -790,7 +739,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                             child: Icon(
                               Icons.fitness_center_outlined,
                               size: 18,
-                              color: isDark ? AppColors.accent : const Color(0xFF2C4A26),
+                              color: isDark
+                                  ? AppColors.accent
+                                  : const Color(0xFF2C4A26),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -800,7 +751,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
                               ),
                             ),
                           ),
@@ -817,7 +770,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                               child: CustomPaint(
                                 painter: _SemiCircleGaugePainter(
                                   progress: 0.72,
-                                  trackColor: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
+                                  trackColor: isDark
+                                      ? AppColors.darkBorder
+                                      : const Color(0xFFE5E7EB),
                                   progressColor: AppColors.accent,
                                 ),
                               ),
@@ -828,7 +783,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
-                                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
                               ),
                             ),
                             Text(
@@ -836,7 +793,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
                               ),
                             ),
                           ],
@@ -852,7 +811,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
+                              color: isDark
+                                  ? AppColors.darkTextTertiary
+                                  : AppColors.lightTextTertiary,
                             ),
                           ),
                           Text(
@@ -860,7 +821,9 @@ class _DailyProgressActivitySection extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
                             ),
                           ),
                         ],
@@ -968,7 +931,9 @@ class _BentoStatCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -977,7 +942,9 @@ class _BentoStatCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                     children: [
                       TextSpan(text: value),
@@ -987,7 +954,9 @@ class _BentoStatCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                         ),
                     ],
@@ -1078,7 +1047,8 @@ class _WorkoutProgramCard extends StatelessWidget {
           color: isDark ? AppColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: (isDark ? AppColors.darkBorder : AppColors.lightBorder).withValues(alpha: 0.8),
+            color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
+                .withValues(alpha: 0.8),
           ),
           boxShadow: [
             BoxShadow(
@@ -1096,11 +1066,14 @@ class _WorkoutProgramCard extends StatelessWidget {
               width: 96,
               child: () {
                 final name = session.name.toLowerCase();
-                final String? assetPath = (name.contains('leg') || name.contains('lower'))
+                final String? assetPath =
+                    (name.contains('leg') || name.contains('lower'))
                     ? 'assets/Lower.png'
-                    : (name.contains('push') || name.contains('chest') || name.contains('upper'))
-                        ? 'assets/push.png'
-                        : null;
+                    : (name.contains('push') ||
+                          name.contains('chest') ||
+                          name.contains('upper'))
+                    ? 'assets/push.png'
+                    : null;
 
                 if (assetPath != null) {
                   return Stack(
@@ -1114,7 +1087,9 @@ class _WorkoutProgramCard extends StatelessWidget {
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppColors.accent.withValues(alpha: isDark ? 0.38 : 0.28),
+                              AppColors.accent.withValues(
+                                alpha: isDark ? 0.38 : 0.28,
+                              ),
                               AppColors.accent.withValues(alpha: 0.0),
                             ],
                             stops: const [0.25, 1.0],
@@ -1145,12 +1120,16 @@ class _WorkoutProgramCard extends StatelessWidget {
                     width: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.accent.withValues(alpha: isDark ? 0.18 : 0.12),
+                      color: AppColors.accent.withValues(
+                        alpha: isDark ? 0.18 : 0.12,
+                      ),
                     ),
                     child: Icon(
                       Icons.fitness_center_rounded,
                       size: 26,
-                      color: isDark ? AppColors.accent : const Color(0xFF2C4A26),
+                      color: isDark
+                          ? AppColors.accent
+                          : const Color(0xFF2C4A26),
                     ),
                   ),
                 );
@@ -1171,20 +1150,30 @@ class _WorkoutProgramCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                       height: 1.2,
                     ),
                   ),
                   const SizedBox(height: 6),
                   // Meta info row
                   Text(
-                    'workout.sessionMeta'.tr(args: ['${session.durationMinutes}', '${session.exercises.length}', '${session.totalSets}']),
+                    'workout.sessionMeta'.tr(
+                      args: [
+                        '${session.durationMinutes}',
+                        '${session.exercises.length}',
+                        '${session.totalSets}',
+                      ],
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1200,7 +1189,9 @@ class _WorkoutProgramCard extends StatelessWidget {
                             backgroundColor: isDark
                                 ? AppColors.darkBorder
                                 : AppColors.lightSurfaceAlt,
-                            valueColor: AlwaysStoppedAnimation<Color>(session.color),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              session.color,
+                            ),
                           ),
                         ),
                       ),
@@ -1210,7 +1201,9 @@ class _WorkoutProgramCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                         ),
                       ),
                     ],
@@ -1225,7 +1218,9 @@ class _WorkoutProgramCard extends StatelessWidget {
               height: 36,
               width: 36,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
+                color: isDark
+                    ? AppColors.darkSurfaceAlt
+                    : AppColors.lightSurfaceAlt,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -1234,7 +1229,9 @@ class _WorkoutProgramCard extends StatelessWidget {
               child: Icon(
                 Icons.north_east_rounded,
                 size: 16,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
             ),
           ],
@@ -1267,7 +1264,9 @@ class _SectionHeaderTitle extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w900,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
         ),
         if (action != null)
@@ -1357,16 +1356,25 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 19,
                         fontWeight: FontWeight.w900,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'workout.focusAndNote'.tr(args: [_muscleGroupLabel(widget.session.muscleGroup), widget.session.note]),
+                      'workout.focusAndNote'.tr(
+                        args: [
+                          _muscleGroupLabel(widget.session.muscleGroup),
+                          widget.session.note,
+                        ],
+                      ),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                   ],
@@ -1392,7 +1400,9 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                     color: isDark ? AppColors.darkSurface : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                   ),
                   child: Column(
@@ -1414,23 +1424,32 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                                 style: GoogleFonts.inter(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
-                                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary,
                                 ),
                               ),
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accent.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(AppRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                             ),
                             child: Text(
                               _muscleGroupLabel(ex.muscleGroup),
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: isDark ? AppColors.accent : const Color(0xFF2C4A26),
+                                color: isDark
+                                    ? AppColors.accent
+                                    : const Color(0xFF2C4A26),
                               ),
                             ),
                           ),
@@ -1446,18 +1465,26 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                             children: [
                               Container(
                                 width: 50,
-                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
+                                  color: isDark
+                                      ? AppColors.darkSurfaceAlt
+                                      : AppColors.lightSurfaceAlt,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'workout.setItem'.tr(args: ['${setObj.setNumber}']),
+                                  'workout.setItem'.tr(
+                                    args: ['${setObj.setNumber}'],
+                                  ),
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                    color: isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary,
                                   ),
                                 ),
                               ),
@@ -1466,37 +1493,58 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                               // Weight Kg Input Display
                               Expanded(
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? AppColors.darkBg : const Color(0xFFF8F9FA),
+                                    color: isDark
+                                        ? AppColors.darkBg
+                                        : const Color(0xFFF8F9FA),
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                                      color: isDark
+                                          ? AppColors.darkBorder
+                                          : AppColors.lightBorder,
                                     ),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         '${setObj.weightKg} kg',
                                         style: GoogleFonts.inter(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
-                                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                          color: isDark
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.lightTextPrimary,
                                         ),
                                       ),
                                       Row(
                                         children: [
                                           InkWell(
                                             onTap: setObj.weightKg > 2.5
-                                                ? () => setState(() => setObj.weightKg -= 2.5)
+                                                ? () => setState(
+                                                    () =>
+                                                        setObj.weightKg -= 2.5,
+                                                  )
                                                 : null,
-                                            child: const Icon(Icons.remove_rounded, size: 14),
+                                            child: const Icon(
+                                              Icons.remove_rounded,
+                                              size: 14,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           InkWell(
-                                            onTap: () => setState(() => setObj.weightKg += 2.5),
-                                            child: const Icon(Icons.add_rounded, size: 14),
+                                            onTap: () => setState(
+                                              () => setObj.weightKg += 2.5,
+                                            ),
+                                            child: const Icon(
+                                              Icons.add_rounded,
+                                              size: 14,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1509,37 +1557,59 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                               // Reps Display
                               Expanded(
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? AppColors.darkBg : const Color(0xFFF8F9FA),
+                                    color: isDark
+                                        ? AppColors.darkBg
+                                        : const Color(0xFFF8F9FA),
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                                      color: isDark
+                                          ? AppColors.darkBorder
+                                          : AppColors.lightBorder,
                                     ),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        'workout.repsCount'.tr(args: ['${setObj.reps}']),
+                                        'workout.repsCount'.tr(
+                                          args: ['${setObj.reps}'],
+                                        ),
                                         style: GoogleFonts.inter(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
-                                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                          color: isDark
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.lightTextPrimary,
                                         ),
                                       ),
                                       Row(
                                         children: [
                                           InkWell(
                                             onTap: setObj.reps > 1
-                                                ? () => setState(() => setObj.reps -= 1)
+                                                ? () => setState(
+                                                    () => setObj.reps -= 1,
+                                                  )
                                                 : null,
-                                            child: const Icon(Icons.remove_rounded, size: 14),
+                                            child: const Icon(
+                                              Icons.remove_rounded,
+                                              size: 14,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           InkWell(
-                                            onTap: () => setState(() => setObj.reps += 1),
-                                            child: const Icon(Icons.add_rounded, size: 14),
+                                            onTap: () => setState(
+                                              () => setObj.reps += 1,
+                                            ),
+                                            child: const Icon(
+                                              Icons.add_rounded,
+                                              size: 14,
+                                            ),
                                           ),
                                         ],
                                       ),

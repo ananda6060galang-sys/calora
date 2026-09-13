@@ -43,4 +43,23 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AI & Agent Tools
+.agents/
 AGENTS.md
+CLAUDE.md
+.claude/
+.gemini/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.aider*
+.continue/
+.copilot/
+copilot-instructions.md
+skills-lock.json
+skills/
+repomix*
+design.md
+*.prompt.md

@@ -45,7 +45,10 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
     final serving = _servingCtrl.text.trim();
     final cals = int.tryParse(_caloriesCtrl.text.trim()) ?? 0;
 
-    if (name.isEmpty || serving.isEmpty || cals <= 0 || _selectedCategoryId == null) {
+    if (name.isEmpty ||
+        serving.isEmpty ||
+        cals <= 0 ||
+        _selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('diary.foodRequest.fillRequired'.tr()),
@@ -55,7 +58,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
       return;
     }
 
-    widget.ref.read(foodRequestProvider.notifier).add(
+    widget.ref
+        .read(foodRequestProvider.notifier)
+        .add(
           foodName: name,
           categoryId: _selectedCategoryId!,
           servingLabel: serving,
@@ -118,7 +123,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       icon: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 18,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -128,13 +135,18 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                     ),
                   ],
                 ),
               ),
-              Divider(height: 1, color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              Divider(
+                height: 1,
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
 
               // Form Scroll Area (Smooth hardware accelerated scrolling)
               Expanded(
@@ -147,7 +159,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -168,7 +182,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -176,23 +192,41 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       initialValue: _selectedCategoryId,
                       decoration: InputDecoration(
                         hintText: 'diary.foodRequest.selectCategoryHint'.tr(),
-                        hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.lightTextTertiary),
-                        prefixIcon: const Icon(Icons.category_rounded, size: 18),
-                        fillColor: isDark ? AppColors.darkSurface : Colors.white,
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.lightTextTertiary,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.category_rounded,
+                          size: 18,
+                        ),
+                        fillColor: isDark
+                            ? AppColors.darkSurface
+                            : Colors.white,
                         filled: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
-                            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+                          borderSide: const BorderSide(
+                            color: AppColors.accent,
+                            width: 1.5,
+                          ),
                         ),
                       ),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: mockFoodCategories.map((cat) {
                         return DropdownMenuItem(
                           value: cat.id,
@@ -201,12 +235,15 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
                             ),
                           ),
                         );
                       }).toList(),
-                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      onChanged: (val) =>
+                          setState(() => _selectedCategoryId = val),
                     ),
                     const SizedBox(height: 16),
 
@@ -243,7 +280,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -254,7 +293,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             controller: _proteinCtrl,
                             label: 'diary.foodRequest.proteinLabel'.tr(),
                             hint: '0',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             isDark: isDark,
                           ),
                         ),
@@ -264,7 +305,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             controller: _carbsCtrl,
                             label: 'diary.foodRequest.carbsLabel'.tr(),
                             hint: '0',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             isDark: isDark,
                           ),
                         ),
@@ -274,7 +317,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             controller: _fatCtrl,
                             label: 'diary.foodRequest.fatLabel'.tr(),
                             hint: '0',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             isDark: isDark,
                           ),
                         ),
@@ -362,7 +407,9 @@ class _SheetField extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
           ),
         ),
         const SizedBox(height: 6),
@@ -373,15 +420,23 @@ class _SheetField extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.lightTextTertiary),
+            hintStyle: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.lightTextTertiary,
+            ),
             prefixIcon: icon != null ? Icon(icon, size: 18) : null,
             fillColor: isDark ? AppColors.darkSurface : Colors.white,
             filled: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(

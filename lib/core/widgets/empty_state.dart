@@ -25,7 +25,9 @@ class EmptyState extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.xxxl, horizontal: AppSpacing.xl),
+        vertical: AppSpacing.xxxl,
+        horizontal: AppSpacing.xl,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -33,23 +35,31 @@ class EmptyState extends StatelessWidget {
             height: 72,
             width: 72,
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
+              color: isDark
+                  ? AppColors.darkSurfaceAlt
+                  : AppColors.lightSurfaceAlt,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon,
-                size: 30,
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary),
+            child: Icon(
+              icon,
+              size: 30,
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(title,
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: AppSpacing.xs),
-          Text(message,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: AppSpacing.xl),
             AppButton(

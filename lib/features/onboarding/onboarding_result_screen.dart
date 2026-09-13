@@ -27,28 +27,14 @@ class OnboardingResultScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const SizedBox(height: AppSpacing.xxxl),
-
-              // ─── Celebration Icon ───────────────────────────
-              Container(
-                height: 64,
-                width: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 30,
-                  color: Color(0xFF0E0F10),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.lg),
 
               // ─── Heading ────────────────────────────────────
               Text(
                 'onboarding.youreAllSet'.tr(args: [_firstName]),
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -58,7 +44,17 @@ class OnboardingResultScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: AppSpacing.section),
+              const SizedBox(height: AppSpacing.lg),
+
+              // ─── BMI Illustration ───────────────────────────
+              Image.asset(
+                'assets/onboarding5.png',
+                width: double.infinity,
+                height: 220,
+                fit: BoxFit.contain,
+              ),
+
+              const SizedBox(height: AppSpacing.lg),
 
               // ─── Calorie Target Hero ────────────────────────
               Container(
@@ -84,17 +80,13 @@ class OnboardingResultScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${profile.dailyCalorieTarget.round()}',
-                      style:
-                          Theme.of(context).textTheme.displayLarge?.copyWith(
-                                fontSize: 48,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.accent,
-                              ),
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.accent,
+                      ),
                     ),
-                    Text(
-                      'kcal',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    Text('kcal', style: Theme.of(context).textTheme.bodyMedium),
                   ],
                 ),
               ),
@@ -126,6 +118,178 @@ class OnboardingResultScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              // ─── BMR & TDEE Read-only Baseline ──────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurface
+                            : AppColors.lightSurface,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'onboarding.bmrCardTitle'.tr(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                    ),
+                              ),
+                              const Spacer(),
+                              const Icon(
+                                Icons.lock_outline_rounded,
+                                size: 13,
+                                color: AppColors.accent,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${profile.bmr.round()} kcal',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'onboarding.bmrCardDesc'.tr(),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  fontSize: 10,
+                                  color: isDark
+                                      ? AppColors.darkTextTertiary
+                                      : AppColors.lightTextTertiary,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurface
+                            : AppColors.lightSurface,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'onboarding.tdeeCardTitle'.tr(),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                    ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${profile.tdee.round()} kcal',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'onboarding.tdeeCardDesc'.tr(),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 10,
+                                      color: isDark
+                                          ? AppColors.darkTextTertiary
+                                          : AppColors.lightTextTertiary,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // BMR Floor Safety Notice
+              if (profile.goal == Goal.loseWeight &&
+                  profile.dailyCalorieTarget == profile.bmr) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(
+                      color: AppColors.accent.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.shield_outlined,
+                        size: 16,
+                        color: AppColors.accent,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'onboarding.bmrFloorNotice'.tr(
+                            args: ['${profile.bmr.round()}'],
+                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: AppSpacing.section),
 

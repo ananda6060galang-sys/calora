@@ -474,10 +474,8 @@ class ProfileScreen extends ConsumerWidget {
         return 'dashboard.goals.loseWeight'.tr();
       case Goal.maintainWeight:
         return 'dashboard.goals.maintainWeight'.tr();
-      case Goal.gainMuscle:
-        return 'dashboard.goals.gainMuscle'.tr();
-      case Goal.leanBulk:
-        return 'dashboard.goals.leanBulk'.tr();
+      case Goal.gainWeight:
+        return 'dashboard.goals.gainWeight'.tr();
     }
   }
 
@@ -487,9 +485,7 @@ class ProfileScreen extends ConsumerWidget {
         return Icons.trending_down_rounded;
       case Goal.maintainWeight:
         return Icons.balance_rounded;
-      case Goal.gainMuscle:
-        return Icons.fitness_center_outlined;
-      case Goal.leanBulk:
+      case Goal.gainWeight:
         return Icons.trending_up_rounded;
     }
   }
@@ -537,7 +533,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _EditProfileSheet(profile: profile),
+      builder: (_) => EditProfileSheet(profile: profile),
     );
   }
 
@@ -1277,16 +1273,16 @@ class _PickerRow extends StatelessWidget {
 // EDIT PROFILE BOTTOM SHEET
 // ════════════════════════════════════════════════════════════════
 
-class _EditProfileSheet extends StatefulWidget {
-  const _EditProfileSheet({required this.profile});
+class EditProfileSheet extends StatefulWidget {
+  const EditProfileSheet({super.key, required this.profile});
 
   final UserProfile profile;
 
   @override
-  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+  State<EditProfileSheet> createState() => _EditProfileSheetState();
 }
 
-class _EditProfileSheetState extends State<_EditProfileSheet> {
+class _EditProfileSheetState extends State<EditProfileSheet> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _heightCtrl;
   late final TextEditingController _weightCtrl;
@@ -1401,8 +1397,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   items: [
                     DropdownMenuItem(value: Goal.loseWeight, child: Text('dashboard.goals.loseWeight'.tr())),
                     DropdownMenuItem(value: Goal.maintainWeight, child: Text('dashboard.goals.maintainWeight'.tr())),
-                    DropdownMenuItem(value: Goal.gainMuscle, child: Text('dashboard.goals.gainMuscle'.tr())),
-                    DropdownMenuItem(value: Goal.leanBulk, child: Text('dashboard.goals.leanBulk'.tr())),
+                    DropdownMenuItem(value: Goal.gainWeight, child: Text('dashboard.goals.gainWeight'.tr())),
                   ],
                   onChanged: (v) {
                     if (v != null) setState(() => _selectedGoal = v);
@@ -1416,13 +1411,10 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             builder: (context, ref, _) {
               return GestureDetector(
                 onTap: () {
-                  final p = UserProfile(
+                  final p = widget.profile.copyWith(
                     name: _nameCtrl.text.trim(),
-                    age: widget.profile.age,
-                    gender: widget.profile.gender,
                     heightCm: double.tryParse(_heightCtrl.text) ?? widget.profile.heightCm,
                     weightKg: double.tryParse(_weightCtrl.text) ?? widget.profile.weightKg,
-                    activityLevel: widget.profile.activityLevel,
                     goal: _selectedGoal,
                   );
                   ref.read(userProfileProvider.notifier).state = p;

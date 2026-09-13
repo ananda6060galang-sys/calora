@@ -49,16 +49,20 @@ class _AppTextFieldState extends State<AppTextField> {
           decoration: InputDecoration(
             hintText: widget.hint,
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon,
+                ? Icon(
+                    widget.prefixIcon,
                     size: 20,
                     color: isDark
                         ? AppColors.darkTextTertiary
-                        : AppColors.lightTextTertiary)
+                        : AppColors.lightTextTertiary,
+                  )
                 : null,
             suffixIcon: widget.obscureText
                 ? IconButton(
                     icon: Icon(
-                      _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      _obscure
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
                       size: 20,
                       color: isDark
                           ? AppColors.darkTextTertiary
@@ -77,11 +81,12 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
         if (hasError) ...[
           const SizedBox(height: AppSpacing.xs),
-          Text(widget.errorText!,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: AppColors.danger)),
+          Text(
+            widget.errorText!,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: AppColors.danger),
+          ),
         ],
       ],
     );
