@@ -479,6 +479,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                       // ── 4. HORIZONTAL 7-DAY DATE CALENDAR ───────────────
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: List.generate(_sevenDays.length, (index) {
                           final date = _sevenDays[index];
                           final isSelected =
@@ -491,32 +492,34 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             behavior: HitTestBehavior.opaque,
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
-                              width: isSelected ? 46 : 42,
-                              height: isSelected ? 74 : 64,
-                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              width: isSelected ? 48 : 41,
+                              height: isSelected ? 82 : 64,
+                              padding: const EdgeInsets.symmetric(vertical: 6),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? Colors.white
                                     : (isDark
                                         ? AppColors.darkSurface
-                                            .withValues(alpha: 0.55)
+                                            .withValues(alpha: 0.50)
                                         : Colors.white
-                                            .withValues(alpha: 0.65)),
-                                borderRadius: BorderRadius.circular(24),
+                                            .withValues(alpha: 0.58)),
+                                borderRadius: BorderRadius.circular(
+                                  isSelected ? 26 : 22,
+                                ),
                                 border: Border.all(
                                   color: isSelected
                                       ? Colors.white
                                       : Colors.white
-                                          .withValues(alpha: 0.25),
-                                  width: 0.8,
+                                          .withValues(alpha: 0.30),
+                                  width: isSelected ? 1.0 : 0.8,
                                 ),
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
                                           color: Colors.black
-                                              .withValues(alpha: 0.12),
-                                          blurRadius: 14,
-                                          offset: const Offset(0, 5),
+                                              .withValues(alpha: 0.15),
+                                          blurRadius: 18,
+                                          offset: const Offset(0, 6),
                                         ),
                                       ]
                                     : null,
@@ -527,8 +530,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Container(
-                                          width: 32,
-                                          height: 32,
+                                          width: 34,
+                                          height: 34,
                                           decoration: const BoxDecoration(
                                             color: Color(0xFF17382B),
                                             shape: BoxShape.circle,
@@ -541,7 +544,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                               Text(
                                                 dateNum,
                                                 style: GoogleFonts.inter(
-                                                  fontSize: 13,
+                                                  fontSize: 13.5,
                                                   fontWeight: FontWeight.w800,
                                                   color: Colors.white,
                                                   height: 1.0,
@@ -549,8 +552,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                               ),
                                               const SizedBox(height: 2),
                                               Container(
-                                                width: 3,
-                                                height: 3,
+                                                width: 3.5,
+                                                height: 3.5,
                                                 decoration: const BoxDecoration(
                                                   color: Colors.white,
                                                   shape: BoxShape.circle,
@@ -559,11 +562,11 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 6),
                                         Text(
                                           dayName,
                                           style: GoogleFonts.inter(
-                                            fontSize: 11.5,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.w700,
                                             color: const Color(0xFF17382B),
                                           ),
@@ -589,7 +592,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                         Text(
                                           dateNum,
                                           style: GoogleFonts.inter(
-                                            fontSize: 14,
+                                            fontSize: 14.5,
                                             fontWeight: FontWeight.w700,
                                             color: isDark
                                                 ? AppColors
@@ -604,14 +607,14 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                         }),
                       ),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 26),
                     ],
                   ),
                 ),
 
                 // ── PART A: ONE DOMINANT WHITE NUTRITION SUMMARY SURFACE ─
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   child: NutritionSummaryCard(
                     consumedCalories: consumedCalories,
                     targetCalories: targetCalories,
@@ -633,54 +636,66 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
                 // ── PART B: CALORA ANALYTICS DETAIL ─────────────────────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 120),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 13. 7-Day Calorie Intake
-                      _buildSectionCard(
+                      // 14. 7-Day Calorie Intake
+                      CalorieOverviewCard(
+                        averageCalories: insightsState.averageCalories,
+                        targetCalories: targetCalories,
+                        history: insightsState.calorieHistory,
+                        loggedDaysCount: insightsState.loggedDaysCount,
                         isDark: isDark,
-                        child: CalorieOverviewCard(
-                          averageCalories: insightsState.averageCalories,
-                          targetCalories: targetCalories,
-                          history: insightsState.calorieHistory,
-                          loggedDaysCount: insightsState.loggedDaysCount,
-                          isDark: isDark,
-                        ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // 14. Macro Breakdown / Progress
-                      _buildSectionCard(
-                        isDark: isDark,
-                        child: MacroBreakdownCard(
-                          protein: insightsState.protein,
-                          carbs: insightsState.carbs,
-                          fat: insightsState.fat,
-                          isDark: isDark,
-                        ),
+                      const SizedBox(height: 36),
+                      Divider(
+                        height: 1,
+                        thickness: 0.8,
+                        color: isDark
+                            ? AppColors.darkBorder.withValues(alpha: 0.5)
+                            : const Color(0xFFEBECEF),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
 
-                      // 15. Food Logging Consistency
-                      _buildSectionCard(
+                      // 15. Macro Progress
+                      MacroBreakdownCard(
+                        protein: insightsState.protein,
+                        carbs: insightsState.carbs,
+                        fat: insightsState.fat,
                         isDark: isDark,
-                        child: LoggingConsistencyCard(
-                          loggedDaysCount: insightsState.loggedDaysCount,
-                          totalDaysCount: insightsState.totalDaysCount,
-                          history: insightsState.calorieHistory,
-                          isDark: isDark,
-                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 36),
+                      Divider(
+                        height: 1,
+                        thickness: 0.8,
+                        color: isDark
+                            ? AppColors.darkBorder.withValues(alpha: 0.5)
+                            : const Color(0xFFEBECEF),
+                      ),
+                      const SizedBox(height: 32),
 
-                      // 16. Smart Insights
-                      _buildSectionCard(
+                      // 16. Food Logging Consistency
+                      LoggingConsistencyCard(
+                        loggedDaysCount: insightsState.loggedDaysCount,
+                        totalDaysCount: insightsState.totalDaysCount,
+                        history: insightsState.calorieHistory,
                         isDark: isDark,
-                        child: SmartInsightsSection(
-                          items: insightsState.smartInsights,
-                          isDark: isDark,
-                        ),
+                      ),
+                      const SizedBox(height: 36),
+                      Divider(
+                        height: 1,
+                        thickness: 0.8,
+                        color: isDark
+                            ? AppColors.darkBorder.withValues(alpha: 0.5)
+                            : const Color(0xFFEBECEF),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // 17. Smart Insights
+                      SmartInsightsSection(
+                        items: insightsState.smartInsights,
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -690,37 +705,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSectionCard({
-    required Widget child,
-    required bool isDark,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(20),
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkBorder.withValues(alpha: 0.70)
-              : const Color(0xFFEBECEF),
-          width: 1.0,
-        ),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 20,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-      ),
-      child: child,
     );
   }
 }
