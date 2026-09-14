@@ -33,7 +33,7 @@ class AppButton extends StatelessWidget {
     switch (variant) {
       case AppButtonVariant.primary:
         bg = AppColors.accent;
-        fg = const Color(0xFF0E0F10);
+        fg = const Color(0xFF0F1410);
         break;
       case AppButtonVariant.secondary:
         bg = isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;

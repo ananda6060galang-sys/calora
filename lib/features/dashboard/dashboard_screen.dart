@@ -42,7 +42,7 @@ class DashboardScreen extends ConsumerWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     isDark
-                        ? const Color(0xFF2C4A26) // Dark sage
+                        ? const Color(0xFF1C2B1E) // Dark botanical sage
                         : const Color.fromARGB(255, 214, 253, 150), // Light sage / soft green
                     (isDark ? AppColors.darkBg : AppColors.lightBg).withValues(alpha: 0.0), // Fade to bg
                   ],
@@ -199,7 +199,7 @@ class _DashboardHeader extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0E0F10),
+              color: const Color(0xFF0F1410),
             ),
           ),
         ),
@@ -682,7 +682,7 @@ class _SegmentedGaugePainter extends CustomPainter {
       final paint = Paint()
         ..color = isActive
             ? Color.lerp(AppColors.lavender, AppColors.accent, t)!
-            : (isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt)
+            : (isDark ? AppColors.darkElevated : AppColors.lightSurfaceAlt)
         ..strokeWidth = 7
         ..strokeCap = StrokeCap.round;
 

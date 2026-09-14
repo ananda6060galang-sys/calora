@@ -22,19 +22,20 @@ class AppColors {
   static const Color warning = Color(0xFFFFB020);
   static const Color danger = Color(0xFFFF5A5F);
 
-  // Dark theme surfaces
-  static const Color darkBg = Color(0xFF0E0F10);
-  static const Color darkSurface = Color(0xFF17181A);
-  static const Color darkSurfaceAlt = Color(0xFF1F2123);
-  static const Color darkBorder = Color(0xFF2A2C2F);
-  static const Color darkTextPrimary = Color(0xFFF5F6F5);
-  static const Color darkTextSecondary = Color(0xFFA0A4A8);
-  static const Color darkTextTertiary = Color(0xFF6B6F73);
+  // Dark theme surfaces (Dark Botanical / Dark Nutrition)
+  static const Color darkBg = Color(0xFF0F1410);
+  static const Color darkSurface = Color(0xFF181E19);
+  static const Color darkSurfaceAlt = Color(0xFF202820);
+  static const Color darkElevated = Color(0xFF293329);
+  static const Color darkBorder = Color(0xFF303830);
+  static const Color darkTextPrimary = Color(0xFFF3F5EF);
+  static const Color darkTextSecondary = Color(0xFFA5AEA3);
+  static const Color darkTextTertiary = Color(0xFF7E897C);
 
   // Light theme surfaces
   static const Color lightBg = Color(0xFFFAFAF8);
   static const Color lightGreenBg = Color(0xFFEFF5EB); // Soft pastel light-green background
-  static const Color darkGreenBg = Color(0xFF101612);  // Subtle tinted dark surface
+  static const Color darkGreenBg = Color(0xFF0F1410);  // Subtle tinted dark surface
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightSurfaceAlt = Color(0xFFF4F4F2);
   static const Color lightBorder = Color(0xFFECECEC);

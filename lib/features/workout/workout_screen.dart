@@ -296,7 +296,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     isDark
-                        ? const Color(0xFF2C4A26)
+                        ? const Color(0xFF1C2B1E)
                         : const Color.fromARGB(255, 214, 253, 150),
                     (isDark ? AppColors.darkBg : AppColors.lightBg).withValues(
                       alpha: 0.0,
@@ -393,7 +393,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                   ? FontWeight.w800
                                   : FontWeight.w600,
                               color: isSelected
-                                  ? const Color(0xFF0E0F10)
+                                  ? const Color(0xFF0F1410)
                                   : (isDark
                                         ? AppColors.darkTextSecondary
                                         : AppColors.lightTextSecondary),
@@ -625,7 +625,7 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0E0F10),
+                      color: const Color(0xFF0F1410),
                     ),
                   ),
                   Container(
@@ -638,7 +638,7 @@ class _HeroProgressWorkoutCard extends StatelessWidget {
                     child: const Icon(
                       Icons.north_east_rounded,
                       size: 18,
-                      color: Color(0xFF0E0F10),
+                      color: Color(0xFF0F1410),
                     ),
                   ),
                 ],
@@ -1653,7 +1653,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0E0F10),
+                  color: const Color(0xFF0F1410),
                 ),
               ),
             ),

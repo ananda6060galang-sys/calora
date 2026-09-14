@@ -360,7 +360,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0E0F10),
+                            color: const Color(0xFF0F1410),
                           ),
                         ),
                       ),

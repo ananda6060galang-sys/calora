@@ -49,7 +49,7 @@ class SettingsScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          context.locale.languageCode == 'id' ? 'Pengaturan' : 'Settings',
+          'profile.settings'.tr(),
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -73,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     isDark
-                        ? const Color(0xFF2C4A26) // Dark sage
+                        ? const Color(0xFF1C2B1E) // Dark botanical sage
                         : const Color.fromARGB(255, 214, 253, 150), // Light sage / soft green
                     bgColor.withValues(alpha: 0.0), // Fade to bg
                   ],
@@ -150,7 +150,11 @@ class SettingsScreen extends ConsumerWidget {
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Notifications settings updated'),
+                          content: Text(
+                            context.locale.languageCode == 'id'
+                                ? 'Pengaturan notifikasi diperbarui'
+                                : 'Notification settings updated',
+                          ),
                           duration: const Duration(seconds: 2),
                         ),
                       );

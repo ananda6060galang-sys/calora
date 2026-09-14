@@ -6,9 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/theme/theme_provider.dart';
 import '../../models/user_profile.dart';
 import '../dashboard/providers/profile_provider.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -16,7 +16,6 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
-    final themeMode = ref.watch(themeModeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
@@ -81,13 +80,22 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       GestureDetector(
-                        onTap: () => _openSettings(context, ref, profile),
-                        child: Icon(
-                          Icons.settings_outlined,
-                          size: 22,
-                          color: textSecondary,
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _openSettings(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: surfaceColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: dividerColor),
+                          ),
+                          child: Icon(
+                            Icons.settings_outlined,
+                            size: 18,
+                            color: textPrimary,
+                          ),
                         ),
                       ),
                     ],
@@ -110,7 +118,7 @@ class ProfileScreen extends ConsumerWidget {
                         height: 64,
                         width: 64,
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2A2C2F) : const Color(0xFFF0F0EE),
+                          color: isDark ? AppColors.darkElevated : const Color(0xFFF0F0EE),
                           shape: BoxShape.circle,
                           image: profileImageUrl != null
                               ? DecorationImage(
@@ -248,60 +256,64 @@ class ProfileScreen extends ConsumerWidget {
             // ── CURRENT GOAL SECTION ───────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: dividerColor, width: 0.5),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openEditProfile(context, profile),
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: dividerColor, width: 0.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 40,
+                        width: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          _goalIcon(profile.goal),
+                          size: 20,
+                          color: isDark ? AppColors.accent : const Color(0xFF3D6B2E),
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        _goalIcon(profile.goal),
-                        size: 20,
-                        color: isDark ? AppColors.accent : const Color(0xFF3D6B2E),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            goalLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: textPrimary,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              goalLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Est. BMR $bmr kcal · ${_activityLabel(profile.activityLevel)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: textSecondary,
+                            const SizedBox(height: 2),
+                            Text(
+                              'Est. BMR $bmr kcal · ${_activityLabel(profile.activityLevel)}',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: textSecondary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: textTertiary,
-                    ),
-                  ],
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: textTertiary,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -326,138 +338,6 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 10),
                   const _ProgressSection(),
                 ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ── SETTINGS LIST ──────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'profile.settingsUpper'.tr(),
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: textTertiary,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: surfaceColor,
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: dividerColor, width: 0.5),
-                    ),
-                    child: Column(
-                      children: [
-                        _SettingsRow(
-                          icon: Icons.person_outline_rounded,
-                          title: 'onboarding.personalInfoTitle'.tr(),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          dividerColor: dividerColor,
-                          showDivider: true,
-                          onTap: () => _openEditProfile(context, profile),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.flag_outlined,
-                          title: 'profile.goalsAndNutrition'.tr(),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          dividerColor: dividerColor,
-                          showDivider: true,
-                          onTap: () => _openEditProfile(context, profile),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.palette_outlined,
-                          title: 'profile.appearance'.tr(),
-                          trailing: _themeModeLabel(themeMode),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          dividerColor: dividerColor,
-                          showDivider: true,
-                          onTap: () => _showAppearancePicker(context, ref, themeMode, isDark),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.translate_rounded,
-                          title: 'profile.language'.tr(),
-                          trailing: context.locale.languageCode == 'en' ? 'English' : 'Indonesian',
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          dividerColor: dividerColor,
-                          showDivider: true,
-                          onTap: () => _showLanguagePicker(context, isDark),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.notifications_none_rounded,
-                          title: 'profile.notifications'.tr(),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          dividerColor: dividerColor,
-                          showDivider: true,
-                          onTap: () {},
-                        ),
-                        _SettingsRow(
-                          icon: Icons.info_outline_rounded,
-                          title: 'profile.aboutCalora'.tr(),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          dividerColor: dividerColor,
-                          showDivider: false,
-                          onTap: () => _showAbout(context, isDark),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ── LOG OUT ────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GestureDetector(
-                onTap: () {},
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(
-                      color: AppColors.danger.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'profile.logOut'.tr(),
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.danger,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── VERSION ────────────────────────────────────────
-            Center(
-              child: Text(
-                'Calora v1.0.0',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: textTertiary,
-                ),
               ),
             ),
           ],
@@ -509,21 +389,12 @@ class ProfileScreen extends ConsumerWidget {
     return (10 * p.weightKg + 6.25 * p.heightCm - 5 * p.age + (p.gender == Gender.male ? 5 : -161)).round();
   }
 
-  String _themeModeLabel(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'profile.theme.light'.tr();
-      case ThemeMode.dark:
-        return 'profile.theme.dark'.tr();
-      case ThemeMode.system:
-        return 'profile.theme.system'.tr();
-    }
-  }
-
-  // ─── Sheet: Settings (just opens edit profile for now) ──────
-
-  void _openSettings(BuildContext context, WidgetRef ref, UserProfile profile) {
-    _openEditProfile(context, profile);
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const SettingsScreen(),
+      ),
+    );
   }
 
   // ─── Sheet: Edit Profile ────────────────────────────────────
@@ -534,196 +405,6 @@ class ProfileScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => EditProfileSheet(profile: profile),
-    );
-  }
-
-  // ─── Sheet: Appearance Picker ───────────────────────────────
-
-  void _showAppearancePicker(BuildContext context, WidgetRef ref, ThemeMode current, bool isDark) {
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'profile.appearance'.tr(),
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: textPrimary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            for (final entry in [
-              (ThemeMode.light, 'profile.theme.light'.tr(), Icons.light_mode_outlined),
-              (ThemeMode.dark, 'profile.theme.dark'.tr(), Icons.dark_mode_outlined),
-              (ThemeMode.system, 'profile.theme.system'.tr(), Icons.brightness_auto_outlined),
-            ])
-              _PickerRow(
-                icon: entry.$3,
-                label: entry.$2,
-                selected: current == entry.$1,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                onTap: () {
-                  ref.read(themeModeProvider.notifier).state = entry.$1;
-                  Navigator.pop(ctx);
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── Sheet: Language Picker ─────────────────────────────────
-
-  void _showLanguagePicker(BuildContext context, bool isDark) {
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'profile.language'.tr(),
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: textPrimary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            _PickerRow(
-              icon: Icons.translate_rounded,
-              label: 'English',
-              selected: context.locale.languageCode == 'en',
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              onTap: () {
-                context.setLocale(const Locale('en'));
-                Navigator.pop(ctx);
-              },
-            ),
-            _PickerRow(
-              icon: Icons.translate_rounded,
-              label: 'Indonesian',
-              selected: context.locale.languageCode == 'id',
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              onTap: () {
-                context.setLocale(const Locale('id'));
-                Navigator.pop(ctx);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── Dialog: About ──────────────────────────────────────────
-
-  void _showAbout(BuildContext context, bool isDark) {
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Calora',
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Version 1.0.0',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: textSecondary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'A calorie & gym workout tracker built with Flutter, Supabase, and Riverpod. Designed for gym-focused users who value simplicity.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -844,7 +525,7 @@ class _ProgressSectionState extends State<_ProgressSection> {
         painter: _BarChartPainter(
           data: data,
           labels: days,
-          barColor: isDark ? const Color(0xFF6B7280) : const Color(0xFFAFA79C),
+          barColor: isDark ? AppColors.darkTextTertiary : const Color(0xFFAFA79C),
           textColor: textColor,
           isDark: isDark,
         ),
@@ -873,7 +554,7 @@ class _LineChartPainter extends CustomPainter {
     if (data.isEmpty) return;
 
     final gridPaint = Paint()
-      ..color = isDark ? const Color(0xFF2A2C2F) : const Color(0xFFECECEC)
+      ..color = isDark ? AppColors.darkBorder : const Color(0xFFECECEC)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
       
@@ -889,7 +570,7 @@ class _LineChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
       
     final dotBgPaint = Paint()
-      ..color = isDark ? const Color(0xFF17181A) : Colors.white
+      ..color = isDark ? AppColors.darkSurface : Colors.white
       ..style = PaintingStyle.fill;
 
     const bottomPadding = 24.0;
@@ -993,7 +674,7 @@ class _BarChartPainter extends CustomPainter {
     if (data.isEmpty) return;
 
     final gridPaint = Paint()
-      ..color = isDark ? const Color(0xFF2A2C2F) : const Color(0xFFECECEC)
+      ..color = isDark ? AppColors.darkBorder : const Color(0xFFECECEC)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
       
@@ -1002,7 +683,7 @@ class _BarChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
       
     final barBgPaint = Paint()
-      ..color = isDark ? const Color(0xFF2A2C2F).withValues(alpha: 0.5) : const Color(0xFFECECEC).withValues(alpha: 0.5)
+      ..color = isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : const Color(0xFFECECEC).withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     const bottomPadding = 24.0;
@@ -1146,133 +827,6 @@ class _VerticalDivider extends StatelessWidget {
   }
 }
 
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.icon,
-    required this.title,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.dividerColor,
-    required this.showDivider,
-    required this.onTap,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? trailing;
-  final Color textPrimary;
-  final Color textSecondary;
-  final Color dividerColor;
-  final bool showDivider;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-            child: Row(
-              children: [
-                Icon(icon, size: 20, color: textSecondary),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-                ),
-                if (trailing != null) ...[
-                  Text(
-                    trailing!,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 13,
-                  color: textSecondary.withValues(alpha: 0.5),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (showDivider)
-          Padding(
-            padding: const EdgeInsets.only(left: 50),
-            child: Divider(height: 0.5, thickness: 0.5, color: dividerColor),
-          ),
-      ],
-    );
-  }
-}
-
-class _PickerRow extends StatelessWidget {
-  const _PickerRow({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final Color textPrimary;
-  final Color textSecondary;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: textSecondary),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-            ),
-            if (selected)
-              const Icon(
-                Icons.check_rounded,
-                size: 20,
-                color: AppColors.accent,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// EDIT PROFILE BOTTOM SHEET
-// ════════════════════════════════════════════════════════════════
-
 class EditProfileSheet extends StatefulWidget {
   const EditProfileSheet({super.key, required this.profile});
 
@@ -1314,9 +868,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
-      padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.viewInsetsOf(context).bottom + 24),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -1433,7 +987,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0E0F10),
+                      color: const Color(0xFF0F1410),
                     ),
                   ),
                 ),

@@ -148,7 +148,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                 end: Alignment.bottomCenter,
                 colors: [
                   isDark
-                      ? const Color(0xFF2C4A26) // Dark sage
+                      ? const Color(0xFF1C2B1E) // Dark botanical sage
                       : const Color.fromARGB(
                           255,
                           214,
@@ -175,7 +175,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back),
-                        color: isDark ? Colors.white : Colors.black,
+                        color: isDark ? AppColors.darkTextPrimary : Colors.black,
                         onPressed: () {
                           Navigator.maybePop(context);
                         },
@@ -209,7 +209,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                   fontSize: 24,
                                   fontWeight: FontWeight.w700,
                                   color: isDark
-                                      ? Colors.white
+                                      ? AppColors.darkTextPrimary
                                       : const Color(0xFF1E2022),
                                   height: 1.25,
                                   letterSpacing: -0.3,
@@ -306,15 +306,6 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                 decoration: BoxDecoration(
                                   color: AppColors.accent,
                                   borderRadius: BorderRadius.circular(18),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.accent.withValues(
-                                        alpha: 0.35,
-                                      ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
                                 ),
                                 alignment: Alignment.center,
                                 child: Stack(
@@ -322,12 +313,12 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                   children: [
                                     Icon(
                                       Icons.crop_free_rounded,
-                                      color: isDark ? Colors.black : Colors.white,
+                                      color: isDark ? const Color(0xFF0F1410) : Colors.white,
                                       size: 26,
                                     ),
                                     Icon(
                                       Icons.camera_alt_rounded,
-                                      color: isDark ? Colors.black : Colors.white,
+                                      color: isDark ? const Color(0xFF0F1410) : Colors.white,
                                       size: 13,
                                     ),
                                   ],
@@ -385,7 +376,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                                     .copyWith(
                                                       primary: AppColors.accent,
                                                       onPrimary: const Color(
-                                                        0xFF0E0F10,
+                                                        0xFF0F1410,
                                                       ),
                                                     ),
                                               ),
@@ -412,7 +403,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.w800,
                                                   color: isDark
-                                                      ? Colors.white
+                                                      ? AppColors.darkTextPrimary
                                                       : Colors.black,
                                                 ),
                                           ),
@@ -421,7 +412,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                             Icons.keyboard_arrow_down_rounded,
                                             size: 18,
                                             color: isDark
-                                                ? Colors.white60
+                                                ? AppColors.darkTextSecondary
                                                 : Colors.black54,
                                           ),
                                         ],
@@ -689,8 +680,8 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected
-                ? (isDark ? Colors.white : Colors.black)
-                : (isDark ? Colors.white54 : Colors.black54),
+                ? (isDark ? AppColors.darkTextPrimary : Colors.black)
+                : (isDark ? AppColors.darkTextTertiary : Colors.black54),
           ),
         ),
         if (isSelected) ...[
@@ -698,7 +689,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
           Container(
             height: 2,
             width: 32,
-            color: isDark ? Colors.white : Colors.black,
+            color: isDark ? AppColors.accent : Colors.black,
           ),
         ] else ...[
           const SizedBox(height: 6),
@@ -783,7 +774,7 @@ class _DayCard extends StatelessWidget {
                             ? FontWeight.w800
                             : FontWeight.w600,
                         color: isSelected
-                            ? const Color(0xFF0E0F10)
+                            ? const Color(0xFF0F1410)
                             : (isDark
                                   ? AppColors.darkTextSecondary
                                   : Colors.black54),
@@ -799,8 +790,8 @@ class _DayCard extends StatelessWidget {
                             ? FontWeight.w800
                             : FontWeight.w700,
                         color: isSelected
-                            ? const Color(0xFF0E0F10)
-                            : (isDark ? Colors.white : Colors.black),
+                            ? const Color(0xFF0F1410)
+                            : (isDark ? AppColors.darkTextPrimary : Colors.black),
                       ),
                     ),
                   ],
@@ -1037,7 +1028,7 @@ class _MealCard extends StatelessWidget {
                 child: Text(
                   'diary.add'.tr(),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: const Color(0xFF0E0F10),
+                    color: const Color(0xFF0F1410),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1678,7 +1669,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                 label: Text('diary.retry'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.accent,
-                  foregroundColor: const Color(0xFF0E0F10),
+                  foregroundColor: const Color(0xFF0F1410),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -2214,7 +2205,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                             color: isSelected
-                                ? const Color(0xFF0E0F10)
+                                ? const Color(0xFF0F1410)
                                 : (isDark
                                     ? AppColors.darkTextPrimary
                                     : const Color(0xFF1F2937)),
@@ -2290,7 +2281,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                           ? FontWeight.w700
                           : FontWeight.w500,
                       color: isSelected
-                          ? const Color(0xFF0E0F10)
+                          ? const Color(0xFF0F1410)
                           : (isDark
                                 ? AppColors.darkTextSecondary
                                 : const Color(0xFF4B5563)),
@@ -2405,7 +2396,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: isSelected
-                              ? const Color(0xFF0E0F10)
+                              ? const Color(0xFF0F1410)
                               : (isDark
                                     ? AppColors.darkTextSecondary
                                     : const Color(0xFF4B5563)),
@@ -2458,7 +2449,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                             ? FontWeight.w700
                             : FontWeight.w500,
                         color: _isCustomServing
-                            ? const Color(0xFF0E0F10)
+                            ? const Color(0xFF0F1410)
                             : (isDark
                                   ? AppColors.darkTextSecondary
                                   : const Color(0xFF4B5563)),
@@ -2797,7 +2788,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
             child: Text(
               'diary.addMeals'.tr(),
               style: GoogleFonts.inter(
-                color: const Color(0xFF0E0F10),
+                color: const Color(0xFF0F1410),
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.2,

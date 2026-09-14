@@ -692,7 +692,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accent,
-                      foregroundColor: const Color(0xFF0E0F10),
+                      foregroundColor: const Color(0xFF0F1410),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -782,7 +782,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                     Icons.photo_camera_outlined,
                     size: 18,
                     color: _isCameraMode
-                        ? const Color(0xFF0E0F10)
+                        ? const Color(0xFF0F1410)
                         : Colors.white.withValues(alpha: 0.85),
                   ),
                   if (_isCameraMode) ...[
@@ -792,7 +792,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0E0F10),
+                        color: const Color(0xFF0F1410),
                       ),
                     ),
                   ],
@@ -829,7 +829,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                     Icons.add_photo_alternate_outlined,
                     size: 19,
                     color: !_isCameraMode
-                        ? const Color(0xFF0E0F10)
+                        ? const Color(0xFF0F1410)
                         : Colors.white.withValues(alpha: 0.85),
                   ),
                   if (!_isCameraMode) ...[
@@ -839,7 +839,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0E0F10),
+                        color: const Color(0xFF0F1410),
                       ),
                     ),
                   ],
@@ -1046,7 +1046,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
-                foregroundColor: const Color(0xFF0E0F10),
+                foregroundColor: const Color(0xFF0F1410),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1371,7 +1371,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.accent,
-                                  foregroundColor: const Color(0xFF0E0F10),
+                                  foregroundColor: const Color(0xFF0F1410),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(28),
                                   ),
@@ -1383,7 +1383,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                   style: GoogleFonts.inter(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF0E0F10),
+                                    color: const Color(0xFF0F1410),
                                   ),
                                 ),
                               ),
@@ -1700,7 +1700,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                               fontWeight:
                                                   isSel ? FontWeight.w700 : FontWeight.w500,
                                               color: isSel
-                                                  ? const Color(0xFF0E0F10)
+                                                  ? const Color(0xFF0F1410)
                                                   : (isDark
                                                       ? AppColors.darkTextSecondary
                                                       : AppColors.lightTextSecondary),
@@ -1829,7 +1829,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.accent,
-                                    foregroundColor: const Color(0xFF0E0F10),
+                                    foregroundColor: const Color(0xFF0F1410),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
@@ -1866,7 +1866,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                     style: GoogleFonts.inter(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF0E0F10),
+                                      color: const Color(0xFF0F1410),
                                     ),
                                   ),
                                 ),

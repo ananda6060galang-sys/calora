@@ -337,7 +337,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     data: Theme.of(context).copyWith(
                       colorScheme: Theme.of(context).colorScheme.copyWith(
                         primary: AppColors.accent,
-                        onPrimary: const Color(0xFF0E0F10),
+                        onPrimary: const Color(0xFF0F1410),
                       ),
                     ),
                     child: child!,
@@ -743,7 +743,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                         style: const TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w800,
-                                          color: Color(0xFF0E0F10),
+                                          color: Color(0xFF0F1410),
                                         ),
                                       ),
                                     ),

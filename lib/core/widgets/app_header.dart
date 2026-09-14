@@ -47,7 +47,7 @@ class AppHeader extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0E0F10), // Dark color on lime
+              color: const Color(0xFF0F1410), // Dark color on lime
             ),
           ),
         ),

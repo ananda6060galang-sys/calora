@@ -68,6 +68,7 @@ class _PillBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Container(
@@ -93,11 +94,14 @@ class _PillBottomNavigation extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F1F1F),
+                  color: isDark ? AppColors.darkSurface : const Color(0xFF1F1F1F),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
+                  border: isDark
+                      ? Border.all(color: AppColors.darkBorder, width: 1)
+                      : null,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.18),
                       blurRadius: 22,
                       offset: const Offset(0, 10),
                     ),
@@ -115,8 +119,8 @@ class _PillBottomNavigation extends StatelessWidget {
                           activeWidth: activeWidth,
                           inactiveWidth: inactiveWidth,
                           activeFill: AppColors.accent,
-                          selectedColor: AppColors.lightTextPrimary,
-                          inactiveColor: Colors.white,
+                          selectedColor: const Color(0xFF0F1410),
+                          inactiveColor: isDark ? AppColors.darkTextSecondary : Colors.white,
                           textStyle: theme.textTheme.labelSmall,
                           duration: _duration,
                           onTap: () => onSelected(i),
