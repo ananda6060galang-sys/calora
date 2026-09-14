@@ -28,9 +28,9 @@ class MacroBreakdownCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header (Matching reference "RECOVERY FACTORS")
+        // Section Header
         Text(
-          'NUTRITION BREAKDOWN',
+          'MACRO PROGRESS',
           style: GoogleFonts.inter(
             fontSize: 10.5,
             fontWeight: FontWeight.w700,

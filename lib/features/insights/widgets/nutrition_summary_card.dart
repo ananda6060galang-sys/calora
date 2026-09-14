@@ -84,30 +84,19 @@ class NutritionSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── 1. HEADER: Icon + "Nutrition Summary" ────────────────────
+          // ── 1. HEADER: Minimal Line-art Leaf Icon + "Nutrition AI Summary" ──
           Row(
             children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1B3828)
-                      : const Color(0xFFEBF7EE),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.eco_outlined,
-                  size: 16,
-                  color: isDark ? AppColors.accent : const Color(0xFF266E44),
-                ),
+              Icon(
+                Icons.eco_outlined,
+                size: 19,
+                color: isDark ? AppColors.accent : const Color(0xFF266E44),
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 8),
               Text(
                 'Nutrition AI Summary',
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.w700,
                   color: textPrimary,
                   letterSpacing: -0.2,

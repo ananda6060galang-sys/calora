@@ -18,6 +18,8 @@ class SmartInsightsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final textPrimary =
         isDark ? AppColors.darkTextPrimary : const Color(0xFF111613);
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : const Color(0xFF8C988F);
     final borderColor =
         isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : const Color(0xFFEBECEF);
 
@@ -26,17 +28,17 @@ class SmartInsightsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title: Smart Insights
+        // Title: SMART INSIGHTS
         Text(
-          'Smart Insights',
+          'SMART INSIGHTS',
           style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: textPrimary,
-            letterSpacing: -0.4,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: textTertiary,
+            letterSpacing: 1.2,
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
 
         // Items with subtle separators
         for (int i = 0; i < displayItems.length; i++) ...[
