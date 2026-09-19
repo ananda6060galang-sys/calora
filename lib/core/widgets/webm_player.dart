@@ -7,7 +7,7 @@ class WebmPlayer extends StatefulWidget {
   const WebmPlayer({
     super.key,
     required this.assetPath,
-    this.fallbackAsset = 'assets/banner.png',
+    this.fallbackAsset = 'assets/banner.webp',
     this.width,
     this.height,
   });
@@ -75,7 +75,7 @@ class _WebmPlayerState extends State<WebmPlayer> {
 
     if (!isVideo || !_isInitialized || _hasError) {
       final String imageAsset = isVideo
-          ? (widget.fallbackAsset ?? 'assets/banner.png')
+          ? (widget.fallbackAsset ?? 'assets/banner.webp')
           : widget.assetPath;
 
       return Image.asset(
@@ -85,14 +85,14 @@ class _WebmPlayerState extends State<WebmPlayer> {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           debugPrint('WebmPlayer: Failed to load image $imageAsset: $error');
-          if (imageAsset != 'assets/banner.png') {
+          if (imageAsset != 'assets/banner.webp') {
             return Image.asset(
-              'assets/banner.png',
+              'assets/banner.webp',
               width: widget.width,
               height: widget.height,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Image.asset(
-                'assets/onboarding.png',
+                'assets/onboarding.webp',
                 width: widget.width,
                 height: widget.height,
                 fit: BoxFit.cover,
@@ -102,7 +102,7 @@ class _WebmPlayerState extends State<WebmPlayer> {
             );
           }
           return Image.asset(
-            'assets/onboarding.png',
+            'assets/onboarding.webp',
             width: widget.width,
             height: widget.height,
             fit: BoxFit.cover,

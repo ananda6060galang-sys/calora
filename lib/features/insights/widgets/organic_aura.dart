@@ -33,7 +33,7 @@ class ScreenBackgroundMesh extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 1. BASE DEEP BOTANICAL FOREST GRADIENT (Top-Left to Bottom-Right)
+              // 1. BASE FRESH BOTANICAL CALORA GRADIENT (Top-Left to Bottom-Right)
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -41,17 +41,17 @@ class ScreenBackgroundMesh extends StatelessWidget {
                     end: const Alignment(0.6, 1.0),
                     colors: isDark
                         ? [
-                            const Color(0xFF0F1E14),
-                            const Color(0xFF142C1C),
-                            const Color(0xFF1A3824).withValues(alpha: 0.70),
-                            const Color(0xFF122317).withValues(alpha: 0.30),
+                            const Color(0xFF142416),
+                            const Color(0xFF1E3822),
+                            const Color(0xFF26482D).withValues(alpha: 0.85),
+                            const Color(0xFF1A331E).withValues(alpha: 0.35),
                             bgColor.withValues(alpha: 0.0),
                           ]
                         : [
-                            const Color(0xFF163C29), // Deep rich forest green (top-left)
-                            const Color(0xFF1E4E36), // Saturated botanical emerald
-                            const Color(0xFF336C4E).withValues(alpha: 0.90),
-                            const Color(0xFF6B9F84).withValues(alpha: 0.45),
+                            const Color(0xFF2E7548), // Fresh crisp leafy green
+                            const Color(0xFF45965E), // Lively fresh botanical green
+                            const Color(0xFF6EBA80).withValues(alpha: 0.90), // Soft bright leafy green
+                            const Color(0xFFA2DCAB).withValues(alpha: 0.50), // Soft pale lime-green mist
                             bgColor.withValues(alpha: 0.0),
                           ],
                     stops: const [0.0, 0.28, 0.58, 0.82, 1.0],
@@ -59,7 +59,7 @@ class ScreenBackgroundMesh extends StatelessWidget {
                 ),
               ),
 
-              // 2. LARGE ORGANIC AMBIENT GLOW TOWARD THE RIGHT (Matching Image 1)
+              // 2. LARGE ORGANIC AMBIENT GLOW TOWARD THE RIGHT (Fresh Calora Lime Bloom)
               Positioned(
                 top: -60,
                 right: -50,
@@ -75,15 +75,15 @@ class ScreenBackgroundMesh extends StatelessWidget {
                         radius: 0.75,
                         colors: isDark
                             ? [
-                                AppColors.accent.withValues(alpha: 0.08),
-                                const Color(0xFF1F432A).withValues(alpha: 0.45),
-                                const Color(0xFF163220).withValues(alpha: 0.15),
+                                AppColors.accent.withValues(alpha: 0.12),
+                                const Color(0xFF2E5E38).withValues(alpha: 0.50),
+                                const Color(0xFF1E3E24).withValues(alpha: 0.20),
                                 Colors.transparent,
                               ]
                             : [
-                                const Color(0xFF4A946D).withValues(alpha: 0.70), // Luminous sage
-                                AppColors.accent.withValues(alpha: 0.15),       // Subtle Calora lime glow
-                                const Color(0xFF2C6345).withValues(alpha: 0.35),
+                                const Color(0xFF88D960).withValues(alpha: 0.65), // Fresh sunny lime bloom
+                                AppColors.accent.withValues(alpha: 0.28),       // Signature Calora lime glow (#B8FF3B)
+                                const Color(0xFF5ABF77).withValues(alpha: 0.35), // Fresh light spring green
                                 Colors.transparent,
                               ],
                         stops: const [0.0, 0.35, 0.65, 1.0],
@@ -93,7 +93,7 @@ class ScreenBackgroundMesh extends StatelessWidget {
                 ),
               ),
 
-              // 3. VELVETY DEEP CORNER ACCENT (Top-Left richness)
+              // 3. CRISP TOP-LEFT ACCENT (Subtle organic depth without heaviness)
               Positioned(
                 top: -40,
                 left: -40,
@@ -107,8 +107,8 @@ class ScreenBackgroundMesh extends StatelessWidget {
                       gradient: RadialGradient(
                         colors: [
                           (isDark
-                              ? const Color(0xFF0A150D)
-                              : const Color(0xFF0F2B1D)).withValues(alpha: 0.75),
+                              ? const Color(0xFF0F1E14)
+                              : const Color(0xFF24603B)).withValues(alpha: 0.55),
                           Colors.transparent,
                         ],
                       ),

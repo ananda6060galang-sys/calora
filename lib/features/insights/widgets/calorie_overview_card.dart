@@ -13,6 +13,7 @@ class CalorieOverviewCard extends StatelessWidget {
     required this.history,
     required this.loggedDaysCount,
     required this.isDark,
+    this.showHeader = true,
   });
 
   final double averageCalories;
@@ -20,6 +21,7 @@ class CalorieOverviewCard extends StatelessWidget {
   final List<DailyCalorieData> history;
   final int loggedDaysCount;
   final bool isDark;
+  final bool showHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -33,17 +35,19 @@ class CalorieOverviewCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header
-        Text(
-          '7-DAY CALORIE INTAKE',
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: textTertiary,
-            letterSpacing: 1.1,
+        if (showHeader) ...[
+          // Section Header
+          Text(
+            '7-DAY CALORIE INTAKE',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: textTertiary,
+              letterSpacing: 1.1,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
+        ],
 
         // Large 7-Day Calorie Chart (Directly on canvas with ample room to breathe)
         RepaintBoundary(

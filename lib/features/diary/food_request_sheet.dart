@@ -154,6 +154,16 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
                   children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Image.asset(
+                          'assets/notfound.webp',
+                          height: 96,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
                     Text(
                       'diary.foodRequest.subtitle'.tr(),
                       style: GoogleFonts.inter(

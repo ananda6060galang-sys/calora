@@ -48,7 +48,7 @@ class OnboardingResultScreen extends StatelessWidget {
 
               // ─── BMI Illustration ───────────────────────────
               Image.asset(
-                'assets/onboarding5.png',
+                'assets/onboarding5.webp',
                 width: double.infinity,
                 height: 220,
                 fit: BoxFit.contain,

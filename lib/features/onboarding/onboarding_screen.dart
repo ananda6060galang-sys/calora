@@ -268,7 +268,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           Center(
             child: Image.asset(
-              'assets/onboarding.png',
+              'assets/onboarding.webp',
               height: 240,
               fit: BoxFit.contain,
             ),
@@ -319,7 +319,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           Center(
             child: Image.asset(
-              'assets/onboarding2.png',
+              'assets/onboarding2.webp',
               height: 240,
               fit: BoxFit.contain,
             ),
@@ -452,7 +452,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           Center(
             child: Image.asset(
-              'assets/onboarding3.png',
+              'assets/onboarding3.webp',
               height: 200,
               fit: BoxFit.contain,
             ),
@@ -508,31 +508,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final options = const [
       _ActivityOptionData(
         level: ActivityLevel.sedentary,
-        imagePath: 'assets/sedentary.png',
+        imagePath: 'assets/sedentary.webp',
         titleKey: 'onboarding.activity.sedentary.title',
         subtitleKey: 'onboarding.activity.sedentary.subtitle',
       ),
       _ActivityOptionData(
         level: ActivityLevel.light,
-        imagePath: 'assets/light.png',
+        imagePath: 'assets/light.webp',
         titleKey: 'onboarding.activity.light.title',
         subtitleKey: 'onboarding.activity.light.subtitle',
       ),
       _ActivityOptionData(
         level: ActivityLevel.moderate,
-        imagePath: 'assets/moderately.png',
+        imagePath: 'assets/moderately.webp',
         titleKey: 'onboarding.activity.moderate.title',
         subtitleKey: 'onboarding.activity.moderate.subtitle',
       ),
       _ActivityOptionData(
         level: ActivityLevel.active,
-        imagePath: 'assets/active.png',
+        imagePath: 'assets/active.webp',
         titleKey: 'onboarding.activity.active.title',
         subtitleKey: 'onboarding.activity.active.subtitle',
       ),
       _ActivityOptionData(
         level: ActivityLevel.veryActive,
-        imagePath: 'assets/vactive.png',
+        imagePath: 'assets/vactive.webp',
         titleKey: 'onboarding.activity.veryActive.title',
         subtitleKey: 'onboarding.activity.veryActive.subtitle',
       ),
@@ -600,7 +600,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           Center(
             child: Image.asset(
-              'assets/onboarding4.png',
+              'assets/onboarding4.webp',
               height: 220,
               fit: BoxFit.contain,
             ),

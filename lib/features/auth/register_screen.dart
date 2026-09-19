@@ -167,7 +167,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 color: isDark ? AppColors.darkSurface : const Color(0xFFF0F391),
 
                 child: Image.asset(
-                  'assets/banner.png',
+                  'assets/banner.webp',
                   fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
 

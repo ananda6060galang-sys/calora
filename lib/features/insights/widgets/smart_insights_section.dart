@@ -16,8 +16,6 @@ class SmartInsightsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : const Color(0xFF111613);
     final textTertiary =
         isDark ? AppColors.darkTextTertiary : const Color(0xFF8C988F);
     final borderColor =

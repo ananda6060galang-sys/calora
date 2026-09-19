@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/user_profile.dart';
 import '../theme/app_colors.dart';
+import 'calora_avatar.dart';
 
 /// Unified user greeting header used across Dashboard and Workout screens.
 class AppHeader extends StatelessWidget {
@@ -28,28 +29,15 @@ class AppHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayName =
         profile.name.trim().isNotEmpty ? profile.name.trim() : 'Calora User';
-    final initialLetter =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : 'C';
 
     return Row(
       children: [
-        // User Avatar Circle (Accent with dark contrasting letter)
-        Container(
-          height: 44,
-          width: 44,
-          decoration: const BoxDecoration(
-            color: AppColors.accent,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            initialLetter,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0F1410), // Dark color on lime
-            ),
-          ),
+        // User Avatar Circle
+        CaloraAvatar(
+          avatarUrl: profile.avatarUrl,
+          displayName: displayName,
+          size: 44,
+          isDark: isDark,
         ),
         const SizedBox(width: 12),
 

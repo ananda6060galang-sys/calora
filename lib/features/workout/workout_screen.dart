@@ -1068,11 +1068,11 @@ class _WorkoutProgramCard extends StatelessWidget {
                 final name = session.name.toLowerCase();
                 final String? assetPath =
                     (name.contains('leg') || name.contains('lower'))
-                    ? 'assets/Lower.png'
+                    ? 'assets/Lower.webp'
                     : (name.contains('push') ||
                           name.contains('chest') ||
                           name.contains('upper'))
-                    ? 'assets/push.png'
+                    ? 'assets/push.webp'
                     : null;
 
                 if (assetPath != null) {

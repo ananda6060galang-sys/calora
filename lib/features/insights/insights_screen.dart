@@ -1,20 +1,15 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/calora_avatar.dart';
 import '../dashboard/providers/profile_provider.dart';
-import '../diary/food_diary_screen.dart';
 import '../diary/providers/diary_provider.dart';
-import 'models/insights_state.dart';
-import 'providers/insights_provider.dart';
-import 'widgets/calorie_overview_card.dart';
-import 'widgets/logging_consistency_card.dart';
-import 'widgets/macro_breakdown_card.dart';
+import 'insights_detail_screen.dart';
 import 'widgets/nutrition_summary_card.dart';
 import 'widgets/organic_aura.dart';
-import 'widgets/smart_insights_section.dart';
 
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
@@ -66,170 +61,18 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     required double proteinTarget,
   }) {
     if (consumed == 0) {
-      return 'No meals logged for this day yet.';
+      return 'insights.noMealsLogged'.tr();
     }
     if (consumed > target * 1.05) {
-      return "You've exceeded your daily calorie target today.";
+      return 'insights.exceededTarget'.tr();
     }
     if (consumed >= target * 0.85 && consumed <= target * 1.05) {
-      return "You're on track with your calorie target today. Keep it up!";
+      return 'insights.onTrackToday'.tr();
     }
     if (proteinConsumed < proteinTarget * 0.7) {
-      return "Your protein intake is still below today's target.";
+      return 'insights.proteinBelowTarget'.tr();
     }
-    return "You're getting close to your calorie target today.";
-  }
-
-  void _openSmartInsightsSheet(
-    BuildContext context,
-    InsightsState insightsState,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return Container(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 36),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: AppColors.accent,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 18,
-                      color: Color(0xFF0F1410),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Today's Smart Insights",
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : const Color(0xFF131814),
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...insightsState.smartInsights.take(3).map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkElevated
-                              : const Color(0xFFF7F8FA),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.eco_outlined,
-                              size: 20,
-                              color: Color(0xFF266E44),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.title,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? AppColors.darkTextPrimary
-                                          : const Color(0xFF131814),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    item.description,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      color: isDark
-                                          ? AppColors.darkTextSecondary
-                                          : const Color(0xFF6B7280),
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    FoodDiaryScreen.openAddFoodSheet(context, ref);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: const Color(0xFF0F1410),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: Text(
-                    "Log a meal",
-                    style: GoogleFonts.inter(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F1410),
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    return 'insights.closeToTarget'.tr();
   }
 
   @override
@@ -241,7 +84,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     // Real Calora Data from Providers
     final profile = ref.watch(userProfileProvider);
     final diaryTotals = ref.watch(diaryTotalsForDateProvider(_selectedDate));
-    final insightsState = ref.watch(insightsProvider);
 
     final consumedCalories = diaryTotals.calories;
     final targetCalories = profile.dailyCalorieTarget;
@@ -317,24 +159,11 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.accent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    profile.name.isNotEmpty
-                                        ? profile.name[0].toUpperCase()
-                                        : 'C',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF0F1410),
-                                    ),
-                                  ),
+                                CaloraAvatar(
+                                  avatarUrl: profile.avatarUrl,
+                                  displayName: profile.name,
+                                  size: 34,
+                                  isDark: isDark,
                                 ),
                                 const SizedBox(width: 8),
                                 Column(
@@ -344,7 +173,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                     Text(
                                       profile.name.isNotEmpty
                                           ? profile.name
-                                          : 'Calora User',
+                                          : 'onboarding.defaultUser'.tr(),
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w800,
@@ -355,7 +184,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                       ),
                                     ),
                                     Text(
-                                      'Premium User',
+                                      'insights.premiumUser'.tr(),
                                       style: GoogleFonts.inter(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w600,
@@ -449,7 +278,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              DateFormat('MMMM yyyy').format(_selectedDate),
+                              DateFormat.yMMMM(context.locale.languageCode).format(_selectedDate),
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -484,7 +313,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           final date = _sevenDays[index];
                           final isSelected =
                               DateUtils.isSameDay(date, _selectedDate);
-                          final dayName = DateFormat('E').format(date);
+                          final dayName = DateFormat.E(context.locale.languageCode).format(date);
                           final dateNum = date.day.toString();
 
                           return GestureDetector(
@@ -497,7 +326,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 6),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.white
+                                    ? (isDark ? AppColors.darkSurface : Colors.white)
                                     : (isDark
                                         ? AppColors.darkSurface
                                             .withValues(alpha: 0.50)
@@ -508,16 +337,17 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                 ),
                                 border: Border.all(
                                   color: isSelected
-                                      ? Colors.white
-                                      : Colors.white
-                                          .withValues(alpha: 0.30),
-                                  width: isSelected ? 1.0 : 0.8,
+                                      ? (isDark ? AppColors.accent : Colors.white)
+                                      : (isDark
+                                          ? AppColors.darkBorder
+                                          : Colors.white.withValues(alpha: 0.30)),
+                                  width: isSelected ? 1.2 : 0.8,
                                 ),
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
                                           color: Colors.black
-                                              .withValues(alpha: 0.15),
+                                              .withValues(alpha: isDark ? 0.35 : 0.15),
                                           blurRadius: 18,
                                           offset: const Offset(0, 6),
                                         ),
@@ -532,8 +362,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                         Container(
                                           width: 34,
                                           height: 34,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF17382B),
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? AppColors.accent
+                                                : const Color(0xFF17382B),
                                             shape: BoxShape.circle,
                                           ),
                                           alignment: Alignment.center,
@@ -546,7 +378,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                                 style: GoogleFonts.inter(
                                                   fontSize: 13.5,
                                                   fontWeight: FontWeight.w800,
-                                                  color: Colors.white,
+                                                  color: isDark
+                                                      ? const Color(0xFF0F1410)
+                                                      : Colors.white,
                                                   height: 1.0,
                                                 ),
                                               ),
@@ -554,8 +388,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                               Container(
                                                 width: 3.5,
                                                 height: 3.5,
-                                                decoration: const BoxDecoration(
-                                                  color: Colors.white,
+                                                decoration: BoxDecoration(
+                                                  color: isDark
+                                                      ? const Color(0xFF0F1410)
+                                                      : Colors.white,
                                                   shape: BoxShape.circle,
                                                 ),
                                               ),
@@ -568,7 +404,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                           style: GoogleFonts.inter(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF17382B),
+                                            color: isDark
+                                                ? AppColors.accent
+                                                : const Color(0xFF17382B),
                                           ),
                                         ),
                                       ],
@@ -612,9 +450,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   ),
                 ),
 
-                // ── PART A: ONE DOMINANT WHITE NUTRITION SUMMARY SURFACE ─
+                // ── ONE DOMINANT WHITE NUTRITION SUMMARY SURFACE ─────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
                   child: NutritionSummaryCard(
                     consumedCalories: consumedCalories,
                     targetCalories: targetCalories,
@@ -625,79 +463,14 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     fatConsumed: fatConsumed,
                     fatTarget: fatTarget,
                     insightMessage: dailyInsight,
-                    ctaLabel: "See Today's Insights",
+                    ctaLabel: 'insights.seeTodaysInsights'.tr(),
                     isDark: isDark,
-                    onActionTap: () => _openSmartInsightsSheet(
+                    onActionTap: () => Navigator.push(
                       context,
-                      insightsState,
+                      MaterialPageRoute(
+                        builder: (_) => const InsightsDetailScreen(),
+                      ),
                     ),
-                  ),
-                ),
-
-                // ── PART B: CALORA ANALYTICS DETAIL ─────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 14. 7-Day Calorie Intake
-                      CalorieOverviewCard(
-                        averageCalories: insightsState.averageCalories,
-                        targetCalories: targetCalories,
-                        history: insightsState.calorieHistory,
-                        loggedDaysCount: insightsState.loggedDaysCount,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 36),
-                      Divider(
-                        height: 1,
-                        thickness: 0.8,
-                        color: isDark
-                            ? AppColors.darkBorder.withValues(alpha: 0.5)
-                            : const Color(0xFFEBECEF),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // 15. Macro Progress
-                      MacroBreakdownCard(
-                        protein: insightsState.protein,
-                        carbs: insightsState.carbs,
-                        fat: insightsState.fat,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 36),
-                      Divider(
-                        height: 1,
-                        thickness: 0.8,
-                        color: isDark
-                            ? AppColors.darkBorder.withValues(alpha: 0.5)
-                            : const Color(0xFFEBECEF),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // 16. Food Logging Consistency
-                      LoggingConsistencyCard(
-                        loggedDaysCount: insightsState.loggedDaysCount,
-                        totalDaysCount: insightsState.totalDaysCount,
-                        history: insightsState.calorieHistory,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 36),
-                      Divider(
-                        height: 1,
-                        thickness: 0.8,
-                        color: isDark
-                            ? AppColors.darkBorder.withValues(alpha: 0.5)
-                            : const Color(0xFFEBECEF),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // 17. Smart Insights
-                      SmartInsightsSection(
-                        items: insightsState.smartInsights,
-                        isDark: isDark,
-                      ),
-                    ],
                   ),
                 ),
               ],

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/calora_avatar.dart';
 import '../../models/user_profile.dart';
 import '../diary/food_diary_screen.dart';
 import '../diary/providers/diary_provider.dart';
@@ -123,7 +124,7 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _QuickActionTile(
-                    assetPath: 'assets/log.png',
+                    assetPath: 'assets/log.webp',
                     title: 'dashboard.logFood'.tr(),
                     subtitle: 'dashboard.logFoodSubtitle'.tr(),
                     onTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
@@ -133,7 +134,7 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _QuickActionTile(
-                    assetPath: 'assets/scan.png',
+                    assetPath: 'assets/scan.webp',
                     title: 'dashboard.scanFood'.tr(),
                     subtitle: 'dashboard.scanFoodSubtitle'.tr(),
                     onTap: () => FoodDiaryScreen.openAiScannerSheet(context),
@@ -186,22 +187,12 @@ class _DashboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          height: 46,
-          width: 46,
-          decoration: const BoxDecoration(
-            color: AppColors.accent,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'C',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0F1410),
-            ),
-          ),
+        CaloraAvatar(
+          avatarUrl: profile.avatarUrl,
+          displayName: profile.name,
+          size: 46,
+          isDark: isDark,
+          showBorder: false,
         ),
         const SizedBox(width: 12),
         Expanded(

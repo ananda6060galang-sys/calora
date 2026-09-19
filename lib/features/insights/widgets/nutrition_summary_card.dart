@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -94,7 +95,7 @@ class NutritionSummaryCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Nutrition AI Summary',
+                'insights.nutritionAiSummary'.tr(),
                 style: GoogleFonts.inter(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
@@ -129,7 +130,7 @@ class NutritionSummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'consumed',
+                      'insights.consumed'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -169,7 +170,7 @@ class NutritionSummaryCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'kcal total',
+                          'insights.kcalTotal'.tr(),
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
@@ -197,7 +198,7 @@ class NutritionSummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'target',
+                      'insights.target'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -217,7 +218,7 @@ class NutritionSummaryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _MacroBarItem(
-                  label: 'Carbohydrates',
+                  label: 'dashboard.carbs'.tr(),
                   currentG: carbsConsumed.round(),
                   targetG: carbsTarget.round(),
                   color: AppColors.carbs,
@@ -229,7 +230,7 @@ class NutritionSummaryCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _MacroBarItem(
-                  label: 'Protein',
+                  label: 'dashboard.protein'.tr(),
                   currentG: proteinConsumed.round(),
                   targetG: proteinTarget.round(),
                   color: AppColors.protein,
@@ -241,7 +242,7 @@ class NutritionSummaryCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _MacroBarItem(
-                  label: 'Fat',
+                  label: 'dashboard.fat'.tr(),
                   currentG: fatConsumed.round(),
                   targetG: fatTarget.round(),
                   color: AppColors.fat,
@@ -282,9 +283,11 @@ class NutritionSummaryCard extends StatelessWidget {
               onPressed: onActionTap,
               style: ElevatedButton.styleFrom(
                 backgroundColor: isDark
-                    ? const Color(0xFF1E3A2B)
+                    ? AppColors.accent
                     : const Color(0xFF17382B),
-                foregroundColor: Colors.white,
+                foregroundColor: isDark
+                    ? const Color(0xFF0F1410)
+                    : Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -294,8 +297,8 @@ class NutritionSummaryCard extends StatelessWidget {
                 ctaLabel,
                 style: GoogleFonts.inter(
                   fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? const Color(0xFF0F1410) : Colors.white,
                   letterSpacing: -0.2,
                 ),
               ),

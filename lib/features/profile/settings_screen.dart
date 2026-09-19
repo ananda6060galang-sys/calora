@@ -488,7 +488,7 @@ class SettingsScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/logout.png',
+                'assets/logout.webp',
                 height: 140,
                 fit: BoxFit.contain,
               ),

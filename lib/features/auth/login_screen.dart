@@ -152,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Container(
                 color: isDark ? AppColors.darkSurface : const Color(0xFFF0F391),
                 child: Image.asset(
-                  'assets/banner.png',
+                  'assets/banner.webp',
                   fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
                   errorBuilder: (context, error, stackTrace) {

@@ -1023,8 +1023,12 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 40),
-            const SizedBox(height: 10),
+            Image.asset(
+              'assets/notfound.webp',
+              height: 84,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 12),
             Text(
               'diary.somethingWentWrong'.tr(),
               style: GoogleFonts.inter(
@@ -1259,9 +1263,10 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                 ],
                               ),
                               alignment: Alignment.center,
-                              child: const Text(
-                                '🔥',
-                                style: TextStyle(fontSize: 18),
+                              child: const Icon(
+                                Icons.local_fire_department_rounded,
+                                size: 20,
+                                color: AppColors.warning,
                               ),
                             ),
                           ],
