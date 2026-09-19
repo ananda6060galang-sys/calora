@@ -1,7 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for Supabase (auth, profiles, diary, storage) and for the
+         Supabase Edge Functions that back the AI Food Scanner and Food Search.
+         Without this, release builds cannot reach the network at all. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <application
-        android:label="calora"
+        android:label="Calora"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
