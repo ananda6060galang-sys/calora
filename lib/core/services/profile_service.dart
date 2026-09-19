@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/user_profile.dart';
@@ -49,6 +50,7 @@ class ProfileService {
     final goalPace = _goalPaceFromDb(goalPaceStr);
     final customCalorieTarget = (response['custom_calorie_target'] as num?)?.toDouble();
     final role = response['role'] as String? ?? 'user';
+    final avatarUrl = response['avatar_url'] as String?;
 
     return UserProfile(
       name: fullName,
@@ -62,6 +64,7 @@ class ProfileService {
       goalPace: goalPace,
       customCalorieTarget: customCalorieTarget,
       isAdmin: role == 'admin',
+      avatarUrl: avatarUrl,
     );
   }
 
@@ -101,11 +104,104 @@ class ProfileService {
       'protein_target_g': profile.proteinTargetG,
       'carbs_target_g': profile.carbsTargetG,
       'fat_target_g': profile.fatTargetG,
+      'avatar_url': profile.avatarUrl,
       'role': profile.isAdmin ? 'admin' : 'user',
       'updated_at': DateTime.now().toIso8601String(),
     };
 
     await _client.from('profiles').upsert(payload);
+  }
+
+  /// Max file size allowed for profile avatar uploads (5 MB).
+  static const int maxAvatarSizeBytes = 5 * 1024 * 1024;
+
+  /// Allowed image extensions for avatar uploads.
+  static const Set<String> allowedAvatarExtensions = {'jpg', 'jpeg', 'png', 'webp'};
+
+  /// Uploads user profile image bytes to Supabase Storage in the `avatars` bucket.
+  /// Stores in a user-isolated folder: `avatars/{userId}/avatar_{timestamp}.{ext}`.
+  /// Returns the permanent public URL.
+  Future<String> uploadAvatar({
+    required String userId,
+    required Uint8List bytes,
+    required String fileExtension,
+    String? mimeType,
+  }) async {
+    if (bytes.length > maxAvatarSizeBytes) {
+      throw ArgumentError('File size exceeds the 5 MB limit (${bytes.length} bytes).');
+    }
+
+    final ext = fileExtension.toLowerCase().replaceAll('.', '').trim();
+    if (!allowedAvatarExtensions.contains(ext)) {
+      throw ArgumentError('Unsupported file type: .$ext. Allowed types: jpg, jpeg, png, webp.');
+    }
+
+    final contentType = mimeType ??
+        (ext == 'png'
+            ? 'image/png'
+            : ext == 'webp'
+                ? 'image/webp'
+                : 'image/jpeg');
+
+    final filename = 'avatar_${DateTime.now().millisecondsSinceEpoch}.$ext';
+    final storagePath = '$userId/$filename';
+
+    await _client.storage.from('avatars').uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: contentType,
+            upsert: true,
+          ),
+        );
+
+    final publicUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+    return publicUrl;
+  }
+
+  /// Safely removes an avatar file from Supabase Storage `avatars` bucket.
+  /// Extracts the relative storage path if a full public URL is supplied.
+  /// Strictly verifies that the target file belongs to the authenticated user's directory.
+  Future<void> deleteAvatarFile(
+    String avatarUrlOrPath, {
+    required String userId,
+  }) async {
+    final clean = avatarUrlOrPath.trim();
+    if (clean.isEmpty) return;
+
+    String relativePath = clean;
+    final uri = Uri.tryParse(clean);
+    if (uri != null && uri.pathSegments.isNotEmpty) {
+      final segments = uri.pathSegments;
+      final avatarsIdx = segments.indexOf('avatars');
+      if (avatarsIdx != -1 && avatarsIdx < segments.length - 1) {
+        relativePath = segments.sublist(avatarsIdx + 1).join('/');
+      }
+    }
+
+    if (relativePath.contains('?')) {
+      relativePath = relativePath.split('?').first;
+    }
+
+    // Security check: verify that the path strictly resides in the authenticated user's directory
+    if (!relativePath.startsWith('$userId/')) {
+      throw ArgumentError(
+        'Access denied: cannot delete avatar outside user directory ($relativePath).',
+      );
+    }
+
+    await _client.storage.from('avatars').remove([relativePath]);
+  }
+
+  /// Directly updates the user's `profiles.avatar_url` column in Supabase.
+  Future<void> updateAvatarUrl({
+    required String userId,
+    required String? avatarUrl,
+  }) async {
+    await _client.from('profiles').update({
+      'avatar_url': avatarUrl,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
   }
 
   /// Helper to convert ActivityLevel enum to DB string matching CHECK constraint.

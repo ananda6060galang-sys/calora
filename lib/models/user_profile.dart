@@ -22,6 +22,7 @@ class UserProfile {
     this.goalPace = GoalPace.moderate,
     this.customCalorieTarget,
     this.isAdmin = false,
+    this.avatarUrl,
   });
 
   final String name;
@@ -35,6 +36,7 @@ class UserProfile {
   final GoalPace goalPace;
   final double? customCalorieTarget;
   final bool isAdmin;
+  final String? avatarUrl;
 
   /// Dynamic age calculated strictly from [dateOfBirth].
   int get age => calculateAge(dateOfBirth);
@@ -89,6 +91,8 @@ class UserProfile {
     double? customCalorieTarget,
     bool clearCustomCalorieTarget = false,
     bool? isAdmin,
+    String? avatarUrl,
+    bool clearAvatarUrl = false,
   }) {
     return UserProfile(
       name: name ?? this.name,
@@ -104,6 +108,7 @@ class UserProfile {
           ? null
           : (customCalorieTarget ?? this.customCalorieTarget),
       isAdmin: isAdmin ?? this.isAdmin,
+      avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
     );
   }
 }
