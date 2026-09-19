@@ -2,7 +2,7 @@ import 'food.dart';
 import 'user_profile.dart';
 
 final demoProfile = UserProfile(
-  name: 'TESTT',
+  name: 'Calora User',
   dateOfBirth: DateTime(2002, 5, 15),
   gender: Gender.male,
   heightCm: 174,
