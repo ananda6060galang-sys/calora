@@ -1,0 +1,35 @@
+# Normalize all text files to LF in the repository.
+# Prevents the LF/CRLF churn that previously turned every real diff into a
+# 100%-changed file (see workout_screen.dart: 1665 insertions / 1665 deletions
+# for a zero-content change).
+* text=auto eol=lf
+
+# Windows scripts must keep CRLF or cmd.exe misbehaves.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets — git must never attempt text normalization on these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.webm binary
+*.mov binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.jar binary
+*.apk binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.pdf binary
+
+# Keep generated/vendored trees out of diffs.
+build/** -text
+.dart_tool/** -text
