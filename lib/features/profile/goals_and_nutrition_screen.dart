@@ -14,154 +14,248 @@ import '../../models/user_profile.dart';
 import '../../models/weight_log.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
+import '../onboarding/onboarding_screen.dart';
 import 'providers/weight_log_provider.dart';
 import 'widgets/weight_journey_chart.dart';
 
-/// CALORA — GOALS & NUTRITION SCREEN (COMPLETE REDESIGN)
+/// CALORA — GOALS & NUTRITION SCREEN
 ///
-/// Follows Calora's "Help the user make a decision, not show a database form" principle:
-/// 1. Primary Goal Selection: Lose, Maintain, Gain (Card selector with clear active state)
-/// 2. Target Weight: Clear Current vs Target comparison (for Lose/Gain)
-/// 3. Goal Pace: Gentle, Moderate (Recommended), Faster with simple human descriptions
-/// 4. Calculated Target & Transparency: Clear Calora calculation with BMR safety clamping
-/// 5. Supporting Macros: Non-dominant Protein, Carbs, Fat breakdown consistent with Food Diary
-/// 6. Primary Action: Sticky bottom "Save Plan" persisting directly to Riverpod & Supabase
-class GoalsAndNutritionScreen extends ConsumerStatefulWidget {
+/// Editorial, calm personal nutrition plan & progress overview screen.
+/// - Overview First: Shows active plan, weight progress, and daily nutrition targets clearly.
+/// - Honest Progress: Weight history strictly reflects actual recorded logs (with clean empty state).
+/// - High Contrast: Strictly adheres to Calora design tokens and dark-text-on-accent rules.
+/// - Actionable: Non-intrusive modal bottom sheets for "Adjust Plan" and "Log Weight".
+class GoalsAndNutritionScreen extends ConsumerWidget {
   const GoalsAndNutritionScreen({super.key});
 
-  @override
-  ConsumerState<GoalsAndNutritionScreen> createState() =>
-      _GoalsAndNutritionScreenState();
-}
+  String _goalLabel(Goal goal) {
+    switch (goal) {
+      case Goal.loseWeight:
+        return 'dashboard.goals.loseWeight'.tr();
+      case Goal.maintainWeight:
+        return 'dashboard.goals.maintainWeight'.tr();
+      case Goal.gainWeight:
+        return 'dashboard.goals.gainWeight'.tr();
+    }
+  }
 
-class _GoalsAndNutritionScreenState
-    extends ConsumerState<GoalsAndNutritionScreen> {
-  late Goal _goal;
-  late GoalPace _pace;
-  late double _targetWeight;
-  late final TextEditingController _customCalorieCtrl;
-  bool _isCustomCalorie = false;
-  bool _isSaving = false;
+  String _paceLabel(GoalPace pace) {
+    switch (pace) {
+      case GoalPace.gentle:
+        return '${'onboarding.paces.gentle'.tr()} · ±0.25 kg';
+      case GoalPace.moderate:
+        return '${'onboarding.paces.moderate'.tr()} · ±0.5 kg';
+      case GoalPace.faster:
+        return '${'onboarding.paces.faster'.tr()} · ±0.75 kg';
+    }
+  }
 
-  @override
-  void initState() {
-    super.initState();
-    final profile = ref.read(userProfileProvider);
-    _goal = profile.goal;
-    _pace = profile.goalPace;
-    _targetWeight = profile.targetWeightKg ?? profile.weightKg;
-    _isCustomCalorie = profile.isCustomTarget;
-    _customCalorieCtrl = TextEditingController(
-      text: profile.customCalorieTarget != null
-          ? profile.customCalorieTarget!.round().toString()
-          : '',
+  void _openAdjustPlanSheet(
+      BuildContext context, WidgetRef ref, UserProfile profile) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _AdjustPlanSheet(profile: profile),
     );
   }
 
-  @override
-  void dispose() {
-    _customCalorieCtrl.dispose();
-    super.dispose();
-  }
-
-  String _formatNumber(num val) {
-    return val.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
+  void _openLogWeightSheet(
+      BuildContext context, WidgetRef ref, UserProfile profile) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _LogWeightSheet(profile: profile),
     );
   }
 
-  void _savePlan(UserProfile currentProfile) async {
-    final customVal = double.tryParse(_customCalorieCtrl.text.trim());
-
-    // Validation: if custom calorie enabled, verify >= BMR
-    if (_isCustomCalorie && (customVal == null || customVal < currentProfile.bmr)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Target kalori minimal adalah BMR (${currentProfile.bmr.round()} kcal) demi keamanan metabolisme.',
+  void _confirmRestartSetup(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'profile.confirmResetTitle'.tr(),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
           ),
-          backgroundColor: AppColors.danger,
         ),
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    final updatedProfile = currentProfile.copyWith(
-      goal: _goal,
-      goalPace: _pace,
-      targetWeightKg: _goal == Goal.maintainWeight ? currentProfile.weightKg : _targetWeight,
-      customCalorieTarget: _isCustomCalorie ? customVal : null,
-      clearCustomCalorieTarget: !_isCustomCalorie,
-    );
-
-    ref.read(userProfileProvider.notifier).state = updatedProfile;
-
-    final currentUser = ref.read(currentUserProvider);
-    if (currentUser != null) {
-      try {
-        await ref.read(profileServiceProvider).saveProfile(
-              userId: currentUser.id,
-              profile: updatedProfile,
-            );
-      } catch (_) {
-        // Fallback: local state already saved
-      }
-    }
-
-    if (!mounted) return;
-    setState(() => _isSaving = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Target & rencana nutrisi berhasil diperbarui!'),
-        backgroundColor: const Color(0xFF1B2A18),
-        duration: const Duration(seconds: 2),
+        content: Text(
+          'profile.confirmResetMessage'.tr(),
+          style: GoogleFonts.inter(
+            fontSize: 13.5,
+            height: 1.45,
+            color:
+                isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text(
+              'profile.cancel'.tr(),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.accent : const Color(0xFF1B3D22),
+              foregroundColor: isDark ? const Color(0xFF0F1410) : Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'profile.continueAction'.tr(),
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
       ),
     );
+  }
 
-    Navigator.of(context).pop();
+  void _confirmDeleteLog(
+      BuildContext context, WidgetRef ref, WeightLog log) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'profile.deleteWeightConfirmTitle'.tr(),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          ),
+        ),
+        content: Text(
+          'profile.deleteWeightConfirmMessage'.tr(args: [
+            log.weightKg.toStringAsFixed(1),
+            DateFormat('d MMMM yyyy').format(log.loggedDate),
+          ]),
+          style: GoogleFonts.inter(
+            fontSize: 13.5,
+            color:
+                isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text(
+              'profile.cancel'.tr(),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(weightLogProvider.notifier).deleteWeightLog(log.id);
+              Navigator.of(dialogCtx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('profile.weightDeletedSuccess'.tr()),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'profile.delete'.tr(),
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
     final weightLogs = ref.watch(weightLogProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final bgColor = isDark ? AppColors.darkBg : AppColors.lightBg;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final surfaceAlt = isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
+    final surfaceAlt =
+        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
     final dividerColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textTertiary =
+        isDark ? AppColors.darkTextTertiary : const Color(0xFF8C988F);
 
-    // Temporary reactive profile to calculate live preview values
-    final customVal = double.tryParse(_customCalorieCtrl.text.trim());
-    final previewProfile = profile.copyWith(
-      goal: _goal,
-      goalPace: _pace,
-      targetWeightKg: _goal == Goal.maintainWeight ? profile.weightKg : _targetWeight,
-      customCalorieTarget: _isCustomCalorie ? customVal : null,
-      clearCustomCalorieTarget: !_isCustomCalorie,
-    );
+    final plan = NutritionCalculator.calculateGoalRoadmap(profile);
+    final isCustom = profile.isCustomTarget;
 
-    final plan = NutritionCalculator.calculateGoalRoadmap(previewProfile);
-    final calculatedTarget = previewProfile.dailyCalorieTarget.round();
-    final bmr = previewProfile.bmr.round();
-    final tdee = previewProfile.tdee.round();
-    final isBmrClamped = calculatedTarget <= bmr && _goal == Goal.loseWeight;
+    // Weight calculations
+    final startWeight =
+        weightLogs.isNotEmpty ? weightLogs.first.weightKg : profile.weightKg;
+    final currentWeight = profile.weightKg;
+    final targetWeight = profile.targetWeightKg ?? profile.weightKg;
+    final remainingDelta = (targetWeight - currentWeight).abs();
+    final isGoalReached = remainingDelta < 0.2;
 
-    // Macro proportions
-    final pG = previewProfile.proteinTargetG.round();
-    final cG = previewProfile.carbsTargetG.round();
-    final fG = previewProfile.fatTargetG.round();
-    final totalMacroKcal = (pG * 4) + (cG * 4) + (fG * 9);
-    final pRatio = totalMacroKcal > 0 ? (pG * 4) / totalMacroKcal : 0.3;
-    final cRatio = totalMacroKcal > 0 ? (cG * 4) / totalMacroKcal : 0.45;
-    final fRatio = totalMacroKcal > 0 ? (fG * 9) / totalMacroKcal : 0.25;
+    // Progress percentage
+    final totalDelta = (targetWeight - startWeight).abs();
+    final progress = totalDelta > 0.05
+        ? ((startWeight - currentWeight).abs() / totalDelta).clamp(0.0, 1.0)
+        : 1.0;
+
+    // Daily Calorie & Macro calculations
+    final calculatedCalories = profile.dailyCalorieTarget.round();
+    final bmr = profile.bmr.round();
+    final tdee = profile.tdee.round();
+    final isBmrClamped =
+        calculatedCalories <= bmr && profile.goal == Goal.loseWeight;
+
+    final pG = profile.proteinTargetG.round();
+    final cG = profile.carbsTargetG.round();
+    final fG = profile.fatTargetG.round();
+    final pKcal = pG * 4;
+    final cKcal = cG * 4;
+    final fKcal = fG * 9;
+    final totalMacroKcal = pKcal + cKcal + fKcal;
+    final pPct =
+        totalMacroKcal > 0 ? (pKcal / totalMacroKcal * 100).round() : 30;
+    final cPct =
+        totalMacroKcal > 0 ? (cKcal / totalMacroKcal * 100).round() : 45;
+    final fPct =
+        totalMacroKcal > 0 ? (fKcal / totalMacroKcal * 100).round() : 25;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -188,329 +282,72 @@ class _GoalsAndNutritionScreenState
             ),
           ),
         ),
-        title: Text(
-          'profile.goalsAndNutrition'.tr(),
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textPrimary,
-            letterSpacing: -0.3,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 18),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.accent.withValues(alpha: 0.15)
-                      : const Color(0xFFE8F8D0),
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.accent.withValues(alpha: 0.3)
-                        : const Color(0xFFC7F464),
-                    width: 0.8,
-                  ),
-                ),
-                child: Text(
-                  _goalLabel(_goal),
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-                  ),
-                ),
-              ),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'profile.goalsAndNutrition'.tr(),
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: textPrimary,
+              letterSpacing: -0.3,
             ),
           ),
-        ],
+        ),
       ),
-      body: Stack(
+      body: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 48),
         children: [
-          ListView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 120),
-            children: [
-              // ── 0. WEIGHT JOURNEY & HISTORICAL PROGRESS ──────────────
-              _SectionTitleHeader(
-                title: 'Perjalanan & Progres Berat',
-                subtitle: 'Pantau perubahan berat badanmu menuju target akhir',
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                trailing: TextButton.icon(
-                  onPressed: () => _openLogWeightSheet(context, ref, profile),
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 15),
-                  label: Text(
-                    'Catat Berat',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor:
-                        isDark ? AppColors.accent : const Color(0xFF2E6319),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    minimumSize: const Size(44, 36),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Journey Overview Card (Start -> Current -> Target)
-              _WeightProgressOverviewCard(
-                logs: weightLogs,
-                profile: previewProfile,
-                targetWeight: _goal == Goal.maintainWeight ? profile.weightKg : _targetWeight,
-                goal: _goal,
-                plan: plan,
-                isDark: isDark,
-                surfaceColor: surfaceColor,
-                surfaceAlt: surfaceAlt,
-                dividerColor: dividerColor,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              ),
-
-              const SizedBox(height: 14),
-
-              // Embedded Apple Health-Style Weight Journey Chart
-              if (weightLogs.isNotEmpty) ...[
-                WeightJourneyChart(
-                  logs: weightLogs,
-                  profile: previewProfile,
-                  isDark: isDark,
-                ),
-                const SizedBox(height: 32),
-              ],
-
-              // ── PLAN CONFIGURATION SECTION HEADER ────────────────────
-              _SectionTitleHeader(
-                title: 'Rencana & Konfigurasi Target',
-                subtitle: 'Sesuaikan tujuan, target berat, dan alokasi kalori harianmu',
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              ),
-              const SizedBox(height: 16),
-
-              // ── STEP 1: WHAT IS YOUR GOAL? ──────────────────────────
-              _StepHeader(
-                step: '1',
-                title: 'onboarding.goalTitle'.tr(),
-                subtitle: 'onboarding.goalSubtitle'.tr(),
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _GoalCard(
-                      label: 'dashboard.goals.loseWeight'.tr(),
-                      subtitle: 'Defisit kalori',
-                      icon: Icons.trending_down_rounded,
-                      isSelected: _goal == Goal.loseWeight,
-                      isDark: isDark,
-                      surfaceColor: surfaceColor,
-                      dividerColor: dividerColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      onTap: () {
-                        setState(() {
-                          _goal = Goal.loseWeight;
-                          if (_targetWeight >= profile.weightKg) {
-                            _targetWeight = math.max(25.0, profile.weightKg - 3.0);
-                          }
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _GoalCard(
-                      label: 'dashboard.goals.maintainWeight'.tr(),
-                      subtitle: 'Stabil & seimbang',
-                      icon: Icons.balance_rounded,
-                      isSelected: _goal == Goal.maintainWeight,
-                      isDark: isDark,
-                      surfaceColor: surfaceColor,
-                      dividerColor: dividerColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      onTap: () {
-                        setState(() {
-                          _goal = Goal.maintainWeight;
-                          _targetWeight = profile.weightKg;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _GoalCard(
-                      label: 'dashboard.goals.gainWeight'.tr(),
-                      subtitle: 'Surplus terukur',
-                      icon: Icons.trending_up_rounded,
-                      isSelected: _goal == Goal.gainWeight,
-                      isDark: isDark,
-                      surfaceColor: surfaceColor,
-                      dividerColor: dividerColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      onTap: () {
-                        setState(() {
-                          _goal = Goal.gainWeight;
-                          if (_targetWeight <= profile.weightKg) {
-                            _targetWeight = profile.weightKg + 3.0;
-                          }
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 28),
-
-              // ── STEP 2: TARGET WEIGHT (If Lose/Gain) ──────────────────
-              if (_goal != Goal.maintainWeight) ...[
-                _StepHeader(
-                  step: '2',
-                  title: 'Target Berat Badan',
-                  subtitle: 'Tentukan berat badan akhir yang ingin kamu capai',
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                  isDark: isDark,
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: dividerColor, width: 0.8),
-                    boxShadow: AppShadows.card(isDark),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Saat Ini',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${profile.weightKg.toStringAsFixed(1)} kg',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            height: 36,
-                            width: 0.8,
-                            color: dividerColor,
-                          ),
-                          const SizedBox(width: 18),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Target Akhir',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${_targetWeight.toStringAsFixed(1)} kg',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark
-                                        ? AppColors.accent
-                                        : const Color(0xFF2E6319),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Stepper Controls
-                          Row(
-                            children: [
-                              _StepperButton(
-                                icon: Icons.remove_rounded,
-                                onTap: () {
-                                  if (_targetWeight > 25.0) {
-                                    setState(() {
-                                      _targetWeight = double.parse(
-                                        (_targetWeight - 0.5).toStringAsFixed(1),
-                                      );
-                                    });
-                                  }
-                                },
-                                isDark: isDark,
-                                surfaceAlt: surfaceAlt,
-                                textPrimary: textPrimary,
-                              ),
-                              const SizedBox(width: 6),
-                              _StepperButton(
-                                icon: Icons.add_rounded,
-                                onTap: () {
-                                  if (_targetWeight < 300.0) {
-                                    setState(() {
-                                      _targetWeight = double.parse(
-                                        (_targetWeight + 0.5).toStringAsFixed(1),
-                                      );
-                                    });
-                                  }
-                                },
-                                isDark: isDark,
-                                surfaceAlt: surfaceAlt,
-                                textPrimary: textPrimary,
-                              ),
-                            ],
-                          ),
-                        ],
+          // ── SECTION 1: ACTIVE PLAN & WEIGHT PROGRESS CARD ──────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: dividerColor, width: 0.8),
+              boxShadow: AppShadows.card(isDark),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Pills: Goal & Pace
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    // Goal Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: surfaceAlt,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: Border.all(color: dividerColor, width: 0.8),
                       ),
-                      const SizedBox(height: 14),
-                      Divider(height: 1, thickness: 0.6, color: dividerColor),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Selisih yang harus dicapai:',
-                            style: GoogleFonts.inter(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                              color: textSecondary,
-                            ),
+                          Icon(
+                            plan.isWeightLoss
+                                ? Icons.trending_down_rounded
+                                : (plan.isWeightGain
+                                    ? Icons.trending_up_rounded
+                                    : Icons.balance_rounded),
+                            size: 14,
+                            color: isDark
+                                ? AppColors.accent
+                                : const Color(0xFF2E6319),
                           ),
+                          const SizedBox(width: 5),
                           Text(
-                            '${(_targetWeight - profile.weightKg).abs().toStringAsFixed(1)} kg (${_goal == Goal.loseWeight ? 'Turun' : 'Naik'})',
+                            _goalLabel(profile.goal),
                             style: GoogleFonts.inter(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: isDark
                                   ? AppColors.accent
@@ -519,231 +356,1305 @@ class _GoalsAndNutritionScreenState
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-              ],
-
-              // ── STEP 3: GOAL PACE ────────────────────────────────────
-              _StepHeader(
-                step: _goal == Goal.maintainWeight ? '2' : '3',
-                title: 'onboarding.preferredPace'.tr(),
-                subtitle: 'Pilih seberapa bertahap pendekatan nutrisi harianmu',
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 12),
-              Column(
-                children: [
-                  _PaceOptionCard(
-                    title: 'onboarding.paces.gentle'.tr(),
-                    subtitle: 'onboarding.paces.gentleSub'.tr(),
-                    offsetKcal: '±250 kcal/hari',
-                    isSelected: _pace == GoalPace.gentle,
-                    isDark: isDark,
-                    surfaceColor: surfaceColor,
-                    dividerColor: dividerColor,
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    onTap: () => setState(() => _pace = GoalPace.gentle),
-                  ),
-                  const SizedBox(height: 8),
-                  _PaceOptionCard(
-                    title: 'onboarding.paces.moderate'.tr(),
-                    subtitle: 'onboarding.paces.moderateSub'.tr(),
-                    offsetKcal: '±500 kcal/hari',
-                    isRecommended: true,
-                    isSelected: _pace == GoalPace.moderate,
-                    isDark: isDark,
-                    surfaceColor: surfaceColor,
-                    dividerColor: dividerColor,
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    onTap: () => setState(() => _pace = GoalPace.moderate),
-                  ),
-                  const SizedBox(height: 8),
-                  _PaceOptionCard(
-                    title: 'onboarding.paces.faster'.tr(),
-                    subtitle: 'onboarding.paces.fasterSub'.tr(),
-                    offsetKcal: '±750 kcal/hari',
-                    isSelected: _pace == GoalPace.faster,
-                    isDark: isDark,
-                    surfaceColor: surfaceColor,
-                    dividerColor: dividerColor,
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    onTap: () => setState(() => _pace = GoalPace.faster),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 28),
-
-              // ── STEP 4: CALCULATED TARGET & CUSTOMIZATION ─────────────
-              _StepHeader(
-                step: _goal == Goal.maintainWeight ? '3' : '4',
-                title: 'Target Kalori Harian',
-                subtitle: 'Calora menghitung target dari BMR, TDEE, & pace yang kamu pilih',
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: dividerColor, width: 0.8),
-                  boxShadow: AppShadows.card(isDark),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _isCustomCalorie
-                                    ? 'Target Kustom'
-                                    : 'Dihitung Otomatis',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    _formatNumber(calculatedTarget),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.w800,
-                                      color: textPrimary,
-                                      letterSpacing: -0.6,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    'kcal / hari',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Safety BMR Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isBmrClamped
-                                ? AppColors.warning.withValues(alpha: 0.15)
-                                : (isDark
-                                    ? AppColors.accent.withValues(alpha: 0.15)
-                                    : const Color(0xFFE8F8D0)),
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isBmrClamped
-                                    ? Icons.shield_rounded
-                                    : Icons.check_circle_outline_rounded,
-                                size: 13,
-                                color: isBmrClamped
-                                    ? AppColors.warning
-                                    : (isDark
-                                        ? AppColors.accent
-                                        : const Color(0xFF2E6319)),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                isBmrClamped ? 'Batas Aman BMR' : 'Optimal',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: isBmrClamped
-                                      ? AppColors.warning
-                                      : (isDark
-                                          ? AppColors.accent
-                                          : const Color(0xFF2E6319)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
-
-                    const SizedBox(height: 14),
-
-                    // Transparency Breakdown (BMR & TDEE)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: surfaceAlt,
-                        borderRadius: BorderRadius.circular(14),
+                    if (!plan.isMaintenance)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 4.5),
+                        decoration: BoxDecoration(
+                          color: surfaceAlt,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(color: dividerColor, width: 0.8),
+                        ),
+                        child: Text(
+                          _paceLabel(profile.goalPace),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary,
+                          ),
+                        ),
                       ),
-                      child: Row(
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+
+                // Weight 3-Points: Start -> Current -> Target
+                Row(
+                  children: [
+                    // Start
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
+                          Text(
+                            'profile.start'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
                             child: Text(
-                              'BMR: $bmr kcal • TDEE: $tdee kcal',
+                              '${startWeight.toStringAsFixed(1)} kg',
                               style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: textSecondary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: textPrimary,
+                                letterSpacing: -0.3,
                               ),
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            'Mifflin-St Jeor',
+                            weightLogs.isNotEmpty
+                                ? DateFormat('d MMM')
+                                    .format(weightLogs.first.loggedDate)
+                                : 'profile.start'.tr(),
                             style: GoogleFonts.inter(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w500,
-                              color: textSecondary.withValues(alpha: 0.8),
+                              color: textTertiary,
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 16),
-                    Divider(height: 1, thickness: 0.6, color: dividerColor),
-                    const SizedBox(height: 12),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded,
+                        size: 13, color: textTertiary.withValues(alpha: 0.5)),
+                    const SizedBox(width: 4),
 
-                    // Custom Calorie Target Toggle
+                    // Current
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'profile.current'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${currentWeight.toStringAsFixed(1)} kg',
+                              style: GoogleFonts.inter(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'profile.today'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              color: textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded,
+                        size: 13, color: textTertiary.withValues(alpha: 0.5)),
+                    const SizedBox(width: 4),
+
+                    // Target
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'profile.target'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${targetWeight.toStringAsFixed(1)} kg',
+                              style: GoogleFonts.inter(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.accent
+                                    : const Color(0xFF2E6319),
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            plan.isMaintenance
+                                ? 'profile.trendStable'.tr()
+                                : '${remainingDelta.toStringAsFixed(1)} kg',
+                            style: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.accent
+                                  : const Color(0xFF2E6319),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (!plan.isMaintenance) ...[
+                  const SizedBox(height: 18),
+
+                  // Progress Bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: Container(
+                      height: 7,
+                      width: double.infinity,
+                      color: surfaceAlt,
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: progress,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.accent
+                                : const Color(0xFF2E6319),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Progress Bottom Info
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Text(
+                        isGoalReached
+                            ? 'profile.weightGoalReached'.tr()
+                            : 'profile.targetWeightRemaining'.tr(
+                                args: [remainingDelta.toStringAsFixed(1)],
+                              ),
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: isGoalReached
+                              ? (isDark
+                                  ? AppColors.accent
+                                  : const Color(0xFF2E6319))
+                              : textSecondary,
+                        ),
+                      ),
+                      if (plan.estimatedWeeks > 0)
+                        Text(
+                          '~${plan.estimatedWeeks} ${'profile.goalRoadmap.weeksCount'.tr(args: ['']).trim()}',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: textTertiary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── SECTION 2: WEIGHT PROGRESS / HISTORY ───────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'profile.weightProgress'.tr(),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textPrimary,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _openLogWeightSheet(context, ref, profile),
+                icon: const Icon(Icons.add_circle_outline_rounded, size: 15),
+                label: Text(
+                  'profile.logWeight'.tr(),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor:
+                      isDark ? AppColors.accent : const Color(0xFF2E6319),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  minimumSize: const Size(44, 34),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // If logs exist: render chart & history list. Else: empty state.
+          if (weightLogs.isNotEmpty) ...[
+            WeightJourneyChart(
+              logs: weightLogs,
+              profile: profile,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 14),
+
+            // Recent Entries List
+            Container(
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: dividerColor, width: 0.8),
+                boxShadow: AppShadows.card(isDark),
+              ),
+              child: Column(
+                children: [
+                  for (int i = weightLogs.length - 1;
+                      i >= math.max(0, weightLogs.length - 4);
+                      i--) ...[
+                    _WeightHistoryRow(
+                      log: weightLogs[i],
+                      previousLog: i > 0 ? weightLogs[i - 1] : null,
+                      isDark: isDark,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      textTertiary: textTertiary,
+                      onDelete: () =>
+                          _confirmDeleteLog(context, ref, weightLogs[i]),
+                    ),
+                    if (i > math.max(0, weightLogs.length - 4))
+                      Divider(height: 1, thickness: 0.6, color: dividerColor),
+                  ],
+                ],
+              ),
+            ),
+          ] else ...[
+            // Dedicated Honest Empty State Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: dividerColor, width: 0.8),
+                boxShadow: AppShadows.card(isDark),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: surfaceAlt,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: dividerColor, width: 0.8),
+                    ),
+                    child: Icon(
+                      Icons.monitor_weight_outlined,
+                      size: 26,
+                      color: isDark
+                          ? AppColors.accent
+                          : const Color(0xFF2E6319),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'profile.emptyWeightTitle'.tr(),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'profile.emptyWeightSubtitle'.tr(),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      height: 1.45,
+                      color: textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        _openLogWeightSheet(context, ref, profile),
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: Text(
+                      'profile.logWeight'.tr(),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isDark ? AppColors.accent : const Color(0xFF1B3D22),
+                      foregroundColor:
+                          isDark ? const Color(0xFF0F1410) : Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 11),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 28),
+
+          // ── SECTION 3: DAILY NUTRITION TARGETS ─────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'profile.dailyNutritionTarget'.tr(),
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'profile.macroDistribution'.tr(),
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Daily Calorie Target Big Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: dividerColor, width: 0.8),
+              boxShadow: AppShadows.card(isDark),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'profile.targetCalories'.tr(),
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: textSecondary,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isBmrClamped
+                            ? AppColors.warning.withValues(alpha: 0.15)
+                            : surfaceAlt,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        isBmrClamped
+                            ? 'profile.bmrFloorBadge'.tr()
+                            : (isCustom
+                                ? 'profile.customBadge'.tr()
+                                : 'profile.autoBadge'.tr()),
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: isBmrClamped
+                              ? AppColors.warning
+                              : textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      calculatedCalories.toString(),
+                      style: GoogleFonts.inter(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        color: textPrimary,
+                        letterSpacing: -0.8,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'profile.kcalPerDayUnit'.tr(),
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+                Divider(height: 1, thickness: 0.6, color: dividerColor),
+                const SizedBox(height: 10),
+
+                // Transparency: BMR & TDEE
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      'BMR: $bmr kcal  ·  TDEE: $tdee kcal',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: textSecondary,
+                      ),
+                    ),
+                    Text(
+                      'Mifflin-St Jeor',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (isBmrClamped) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.shield_outlined,
+                            size: 13, color: AppColors.warning),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'profile.bmrFloorExplanation'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 3 Supporting Macro Cards (Protein, Carbs, Fat)
+          Row(
+            children: [
+              // Protein
+              Expanded(
+                child: _MacroCard(
+                  name: 'Protein',
+                  grams: pG,
+                  percentage: pPct,
+                  kcal: pKcal,
+                  color: AppColors.protein,
+                  icon: Icons.fitness_center_rounded,
+                  isDark: isDark,
+                  surfaceColor: surfaceColor,
+                  dividerColor: dividerColor,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Carbs
+              Expanded(
+                child: _MacroCard(
+                  name: 'Carbs',
+                  grams: cG,
+                  percentage: cPct,
+                  kcal: cKcal,
+                  color: AppColors.carbs,
+                  icon: Icons.grain_rounded,
+                  isDark: isDark,
+                  surfaceColor: surfaceColor,
+                  dividerColor: dividerColor,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Fat (Avocado / Leaf icon - NEVER water droplet)
+              Expanded(
+                child: _MacroCard(
+                  name: 'Fat',
+                  grams: fG,
+                  percentage: fPct,
+                  kcal: fKcal,
+                  color: AppColors.fat,
+                  icon: Icons.eco_rounded,
+                  isDark: isDark,
+                  surfaceColor: surfaceColor,
+                  dividerColor: dividerColor,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 32),
+
+          // ── SECTION 4: PLAN MANAGEMENT ACTIONS ─────────────────────
+          Container(
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: dividerColor, width: 0.8),
+              boxShadow: AppShadows.card(isDark),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _openAdjustPlanSheet(context, ref, profile),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.accent.withValues(alpha: 0.15)
+                              : const Color(0xFFE8F8D0),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 20,
+                          color: isDark
+                              ? AppColors.accent
+                              : const Color(0xFF2E6319),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'profile.adjustPlan'.tr(),
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'profile.adjustPlanSubtitle'.tr(),
+                              style: GoogleFonts.inter(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: textTertiary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Restart Setup Link
+          Center(
+            child: TextButton(
+              onPressed: () => _confirmRestartSetup(context),
+              style: TextButton.styleFrom(
+                foregroundColor: textTertiary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              child: Text(
+                'profile.restartSetup'.tr(),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  decoration: TextDecoration.underline,
+                  decorationColor: textTertiary.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── MACRO CARD COMPONENT ──────────────────────────────────────────────
+class _MacroCard extends StatelessWidget {
+  const _MacroCard({
+    required this.name,
+    required this.grams,
+    required this.percentage,
+    required this.kcal,
+    required this.color,
+    required this.icon,
+    required this.isDark,
+    required this.surfaceColor,
+    required this.dividerColor,
+    required this.textPrimary,
+    required this.textSecondary,
+  });
+
+  final String name;
+  final int grams;
+  final int percentage;
+  final int kcal;
+  final Color color;
+  final IconData icon;
+  final bool isDark;
+  final Color surfaceColor;
+  final Color dividerColor;
+  final Color textPrimary;
+  final Color textSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: dividerColor, width: 0.8),
+        boxShadow: AppShadows.card(isDark),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 11, color: color),
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    name,
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${grams}g',
+              style: GoogleFonts.inter(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w800,
+                color: textPrimary,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '$percentage% · $kcal kcal',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── WEIGHT HISTORY ROW COMPONENT ──────────────────────────────────────
+class _WeightHistoryRow extends StatelessWidget {
+  const _WeightHistoryRow({
+    required this.log,
+    required this.previousLog,
+    required this.isDark,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textTertiary,
+    required this.onDelete,
+  });
+
+  final WeightLog log;
+  final WeightLog? previousLog;
+  final bool isDark;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textTertiary;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final double? delta =
+        previousLog != null ? log.weightKg - previousLog!.weightKg : null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  DateFormat('d MMMM yyyy').format(log.loggedDate),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimary,
+                  ),
+                ),
+                if (log.notes != null && log.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    log.notes!,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic,
+                      color: textSecondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${log.weightKg.toStringAsFixed(1)} kg',
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: textPrimary,
+                ),
+              ),
+              if (delta != null) ...[
+                const SizedBox(height: 1),
+                Text(
+                  '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(1)} kg',
+                  style: GoogleFonts.inter(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: delta.abs() < 0.1
+                        ? textTertiary
+                        : (delta < 0
+                            ? (isDark
+                                ? AppColors.accent
+                                : const Color(0xFF2E6319))
+                            : Colors.orange),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline_rounded, size: 16),
+            color: textTertiary,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── SUB-SHEET 1: ADJUST PLAN & TARGETS ────────────────────────────────
+class _AdjustPlanSheet extends ConsumerStatefulWidget {
+  const _AdjustPlanSheet({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  ConsumerState<_AdjustPlanSheet> createState() => _AdjustPlanSheetState();
+}
+
+class _AdjustPlanSheetState extends ConsumerState<_AdjustPlanSheet> {
+  late Goal _goal;
+  late GoalPace _pace;
+  late double _targetWeight;
+  late bool _isCustomCalorie;
+  late final TextEditingController _customCalorieCtrl;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _goal = widget.profile.goal;
+    _pace = widget.profile.goalPace;
+    _targetWeight = widget.profile.targetWeightKg ?? widget.profile.weightKg;
+    _isCustomCalorie = widget.profile.isCustomTarget;
+    _customCalorieCtrl = TextEditingController(
+      text: widget.profile.customCalorieTarget != null
+          ? widget.profile.customCalorieTarget!.round().toString()
+          : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _customCalorieCtrl.dispose();
+    super.dispose();
+  }
+
+  void _saveChanges() async {
+    final customVal = double.tryParse(_customCalorieCtrl.text.trim());
+
+    // BMR floor safety validation
+    if (_isCustomCalorie &&
+        (customVal == null || customVal < widget.profile.bmr)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Target kalori minimal adalah BMR (${widget.profile.bmr.round()} kcal) demi keamanan metabolisme.',
+          ),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final updatedProfile = widget.profile.copyWith(
+      goal: _goal,
+      goalPace: _pace,
+      targetWeightKg:
+          _goal == Goal.maintainWeight ? widget.profile.weightKg : _targetWeight,
+      customCalorieTarget: _isCustomCalorie ? customVal : null,
+      clearCustomCalorieTarget: !_isCustomCalorie,
+    );
+
+    ref.read(userProfileProvider.notifier).state = updatedProfile;
+
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser != null) {
+      try {
+        await ref.read(profileServiceProvider).saveProfile(
+              userId: currentUser.id,
+              profile: updatedProfile,
+            );
+      } catch (_) {
+        // Fallback: local Riverpod state is already updated
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    Navigator.of(context).pop();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('profile.planSavedSuccess'.tr()),
+        backgroundColor: const Color(0xFF1B2A18),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor =
+        isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final surfaceAlt =
+        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
+    final dividerColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    final bmr = widget.profile.bmr.round();
+
+    return RepaintBoundary(
+      child: Container(
+        height: MediaQuery.sizeOf(context).height * 0.85,
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 24,
+              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Drag Handle & Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
+              child: Column(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'profile.adjustPlan'.tr(),
+                        style: GoogleFonts.inter(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        color: textSecondary,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, thickness: 0.6, color: dividerColor),
+
+            // Scrollable Content
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  16,
+                  20,
+                  24 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Goal Selector
+                    Text(
+                      'profile.nutritionGoal'.tr(),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _GoalRadioCard(
+                            label: 'dashboard.goals.loseWeight'.tr(),
+                            icon: Icons.trending_down_rounded,
+                            isSelected: _goal == Goal.loseWeight,
+                            isDark: isDark,
+                            surfaceAlt: surfaceAlt,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                            onTap: () => setState(() {
+                              _goal = Goal.loseWeight;
+                              if (_targetWeight >= widget.profile.weightKg) {
+                                _targetWeight = math.max(
+                                    25.0, widget.profile.weightKg - 3.0);
+                              }
+                            }),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _GoalRadioCard(
+                            label: 'dashboard.goals.maintainWeight'.tr(),
+                            icon: Icons.balance_rounded,
+                            isSelected: _goal == Goal.maintainWeight,
+                            isDark: isDark,
+                            surfaceAlt: surfaceAlt,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                            onTap: () => setState(() {
+                              _goal = Goal.maintainWeight;
+                              _targetWeight = widget.profile.weightKg;
+                            }),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _GoalRadioCard(
+                            label: 'dashboard.goals.gainWeight'.tr(),
+                            icon: Icons.trending_up_rounded,
+                            isSelected: _goal == Goal.gainWeight,
+                            isDark: isDark,
+                            surfaceAlt: surfaceAlt,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                            onTap: () => setState(() {
+                              _goal = Goal.gainWeight;
+                              if (_targetWeight <= widget.profile.weightKg) {
+                                _targetWeight = widget.profile.weightKg + 3.0;
+                              }
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Target Weight (if not maintain)
+                    if (_goal != Goal.maintainWeight) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        'profile.targetWeightSection'.tr(),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: surfaceAlt,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: dividerColor, width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${_targetWeight.toStringAsFixed(1)} kg',
+                              style: GoogleFonts.inter(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.accent
+                                    : const Color(0xFF2E6319),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                _StepperSquareButton(
+                                  icon: Icons.remove_rounded,
+                                  onTap: () {
+                                    if (_targetWeight > 25.0) {
+                                      setState(() => _targetWeight -= 0.5);
+                                    }
+                                  },
+                                  isDark: isDark,
+                                  dividerColor: dividerColor,
+                                  textPrimary: textPrimary,
+                                ),
+                                const SizedBox(width: 8),
+                                _StepperSquareButton(
+                                  icon: Icons.add_rounded,
+                                  onTap: () {
+                                    if (_targetWeight < 300.0) {
+                                      setState(() => _targetWeight += 0.5);
+                                    }
+                                  },
+                                  isDark: isDark,
+                                  dividerColor: dividerColor,
+                                  textPrimary: textPrimary,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Pace Selector (if not maintain)
+                    if (_goal != Goal.maintainWeight) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        'profile.progressPaceSection'.tr(),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        children: [
+                          _PaceRadioRow(
+                            title: 'onboarding.paces.gentle'.tr(),
+                            subtitle: 'onboarding.paces.gentleSub'.tr(),
+                            offset: 'profile.offsetPerDay'.tr(args: ['250']),
+                            isSelected: _pace == GoalPace.gentle,
+                            isDark: isDark,
+                            surfaceAlt: surfaceAlt,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            onTap: () => setState(() => _pace = GoalPace.gentle),
+                          ),
+                          const SizedBox(height: 6),
+                          _PaceRadioRow(
+                            title: 'onboarding.paces.moderate'.tr(),
+                            subtitle: 'onboarding.paces.moderateSub'.tr(),
+                            offset: 'profile.offsetPerDay'.tr(args: ['500']),
+                            isRecommended: true,
+                            isSelected: _pace == GoalPace.moderate,
+                            isDark: isDark,
+                            surfaceAlt: surfaceAlt,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            onTap: () => setState(() => _pace = GoalPace.moderate),
+                          ),
+                          const SizedBox(height: 6),
+                          _PaceRadioRow(
+                            title: 'onboarding.paces.faster'.tr(),
+                            subtitle: 'onboarding.paces.fasterSub'.tr(),
+                            offset: 'profile.offsetPerDay'.tr(args: ['750']),
+                            isSelected: _pace == GoalPace.faster,
+                            isDark: isDark,
+                            surfaceAlt: surfaceAlt,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            onTap: () => setState(() => _pace = GoalPace.faster),
+                          ),
+                        ],
+                      ),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // Custom Calorie Target
                     GestureDetector(
+                      onTap: () => setState(() {
+                        _isCustomCalorie = !_isCustomCalorie;
+                        if (!_isCustomCalorie) {
+                          _customCalorieCtrl.clear();
+                        } else if (_customCalorieCtrl.text.isEmpty) {
+                          _customCalorieCtrl.text =
+                              widget.profile.dailyCalorieTarget.round().toString();
+                        }
+                      }),
                       behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        setState(() {
-                          _isCustomCalorie = !_isCustomCalorie;
-                          if (!_isCustomCalorie) {
-                            _customCalorieCtrl.clear();
-                          } else if (_customCalorieCtrl.text.isEmpty) {
-                            _customCalorieCtrl.text = calculatedTarget.toString();
-                          }
-                        });
-                      },
                       child: Row(
                         children: [
                           Icon(
@@ -752,18 +1663,18 @@ class _GoalsAndNutritionScreenState
                                 : Icons.check_box_outline_blank_rounded,
                             size: 20,
                             color: _isCustomCalorie
-                                ? (isDark ? AppColors.accent : const Color(0xFF2E6319))
+                                ? (isDark
+                                    ? AppColors.accent
+                                    : const Color(0xFF2E6319))
                                 : textSecondary,
                           ),
                           const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Atur target kalori manual (kustom)',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: textPrimary,
-                              ),
+                          Text(
+                            'profile.customCalorieToggle'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: textPrimary,
                             ),
                           ),
                         ],
@@ -771,21 +1682,20 @@ class _GoalsAndNutritionScreenState
                     ),
 
                     if (_isCustomCalorie) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: _customCalorieCtrl,
                         keyboardType: TextInputType.number,
                         inputFormatters: [InputValidators.integerFormatter],
-                        onChanged: (_) => setState(() {}),
+                        scrollPadding: const EdgeInsets.only(bottom: 80, top: 20),
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: textPrimary,
                         ),
                         decoration: InputDecoration(
-                          labelText: 'Target Kalori Manual (kcal)',
-                          hintText: 'Minimal $bmr kcal (BMR)',
-                          prefixIcon: const Icon(Icons.tune_rounded, size: 20),
+                          labelText: 'profile.customCaloriesLabel'.tr(),
+                          hintText: 'profile.customCaloriesHint'.tr(args: [bmr.toString()]),
                           suffixText: 'kcal',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -794,910 +1704,51 @@ class _GoalsAndNutritionScreenState
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Target kustom tetap dibatasi minimal senilai BMR agar tidak mengganggu kesehatan hormon.',
+                        'profile.customCaloriesBmrDisclaimer'.tr(args: [bmr.toString()]),
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          fontWeight: FontWeight.w400,
                           color: textSecondary,
                         ),
                       ),
                     ],
-                  ],
-                ),
-              ),
 
-              const SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
-              // ── STEP 5: SUPPORTING MACRONUTRIENTS ─────────────────────
-              _StepHeader(
-                step: _goal == Goal.maintainWeight ? '4' : '5',
-                title: 'Distribusi Makronutrisi',
-                subtitle: 'Rasio protein, karbohidrat, & lemak pendukung metabolisme',
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: dividerColor, width: 0.8),
-                  boxShadow: AppShadows.card(isDark),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Segmented Proportional Bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: SizedBox(
-                        height: 7,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: (pRatio * 100).round(),
-                              child: Container(color: AppColors.protein),
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              flex: (cRatio * 100).round(),
-                              child: Container(color: AppColors.carbs),
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              flex: (fRatio * 100).round(),
-                              child: Container(color: AppColors.fat),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Three Clean Macro Chips (matching Food Diary)
-                    Row(
-                      children: [
-                        _MacroChip(
-                          label: 'dashboard.protein'.tr(),
-                          value: '${pG}g',
-                          pct: '${(pRatio * 100).round()}%',
-                          color: AppColors.protein,
-                          isDark: isDark,
-                          surfaceAlt: surfaceAlt,
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                        ),
-                        const SizedBox(width: 8),
-                        _MacroChip(
-                          label: 'dashboard.carbs'.tr(),
-                          value: '${cG}g',
-                          pct: '${(cRatio * 100).round()}%',
-                          color: AppColors.carbs,
-                          isDark: isDark,
-                          surfaceAlt: surfaceAlt,
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                        ),
-                        const SizedBox(width: 8),
-                        _MacroChip(
-                          label: 'dashboard.fat'.tr(),
-                          value: '${fG}g',
-                          pct: '${(fRatio * 100).round()}%',
-                          color: AppColors.fat,
-                          isDark: isDark,
-                          surfaceAlt: surfaceAlt,
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Quick action: Log Today's Weight
-              Center(
-                child: TextButton.icon(
-                  onPressed: () => _openLogWeightSheet(context, ref, profile),
-                  icon: const Icon(Icons.scale_outlined, size: 16),
-                  label: Text(
-                    'profile.logWeightToday'.tr(),
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: isDark
-                        ? AppColors.accent
-                        : const Color(0xFF2E6319),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // ── STICKY BOTTOM SAVE ACTION ─────────────────────────────
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                22,
-                12,
-                22,
-                MediaQuery.paddingOf(context).bottom + 12,
-              ),
-              decoration: BoxDecoration(
-                color: bgColor.withValues(alpha: 0.95),
-                border: Border(top: BorderSide(color: dividerColor, width: 0.8)),
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : () => _savePlan(profile),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: const Color(0xFF0F1410),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF0F1410),
-                          ),
-                        )
-                      : Text(
-                          'Simpan Target Nutrisi',
-                          style: GoogleFonts.inter(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F1410),
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openLogWeightSheet(
-    BuildContext context,
-    WidgetRef ref,
-    UserProfile profile,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => _LogWeightSheet(
-        currentWeight: profile.weightKg,
-        onSave: (newWeight) {
-          ref.read(weightLogProvider.notifier).addWeightLog(newWeight);
-          Navigator.of(sheetCtx).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('profile.weightUpdatedSuccess'.tr()),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _goalLabel(Goal goal) {
-    switch (goal) {
-      case Goal.loseWeight:
-        return 'dashboard.goals.loseWeight'.tr();
-      case Goal.maintainWeight:
-        return 'dashboard.goals.maintainWeight'.tr();
-      case Goal.gainWeight:
-        return 'dashboard.goals.gainWeight'.tr();
-    }
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// REUSABLE LOCAL HELPER WIDGETS
-// ════════════════════════════════════════════════════════════════
-
-class _SectionTitleHeader extends StatelessWidget {
-  const _SectionTitleHeader({
-    required this.title,
-    required this.subtitle,
-    required this.textPrimary,
-    required this.textSecondary,
-    this.trailing,
-  });
-
-  final String title;
-  final String subtitle;
-  final Color textPrimary;
-  final Color textSecondary;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        ?trailing,
-      ],
-    );
-  }
-}
-
-class _WeightProgressOverviewCard extends StatelessWidget {
-  const _WeightProgressOverviewCard({
-    required this.logs,
-    required this.profile,
-    required this.targetWeight,
-    required this.goal,
-    required this.plan,
-    required this.isDark,
-    required this.surfaceColor,
-    required this.surfaceAlt,
-    required this.dividerColor,
-    required this.textPrimary,
-    required this.textSecondary,
-  });
-
-  final List<WeightLog> logs;
-  final UserProfile profile;
-  final double targetWeight;
-  final Goal goal;
-  final GoalRoadmapPlan plan;
-  final bool isDark;
-  final Color surfaceColor;
-  final Color surfaceAlt;
-  final Color dividerColor;
-  final Color textPrimary;
-  final Color textSecondary;
-
-  @override
-  Widget build(BuildContext context) {
-    final startWeight =
-        logs.isNotEmpty ? logs.first.weightKg : profile.weightKg;
-    final currentWeight = profile.weightKg;
-    final totalDelta = currentWeight - startWeight;
-    final remainingDelta = (targetWeight - currentWeight).abs();
-
-    // Progress percentage calculation
-    double progressRatio = 1.0;
-    if (goal == Goal.loseWeight) {
-      final totalToLose = startWeight - targetWeight;
-      if (totalToLose > 0.05) {
-        progressRatio =
-            ((startWeight - currentWeight) / totalToLose).clamp(0.0, 1.0);
-      }
-    } else if (goal == Goal.gainWeight) {
-      final totalToGain = targetWeight - startWeight;
-      if (totalToGain > 0.05) {
-        progressRatio =
-            ((currentWeight - startWeight) / totalToGain).clamp(0.0, 1.0);
-      }
-    }
-
-    final String deltaText;
-    if (totalDelta.abs() < 0.05) {
-      deltaText = 'Stabil (0.0 kg)';
-    } else if (totalDelta < 0) {
-      deltaText = 'Turun ${(-totalDelta).toStringAsFixed(1)} kg sejauh ini';
-    } else {
-      deltaText = 'Naik ${totalDelta.toStringAsFixed(1)} kg sejauh ini';
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: dividerColor, width: 0.8),
-        boxShadow: AppShadows.card(isDark),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Row of 3 stats: Start -> Current -> Target
-          Row(
-            children: [
-              // 1. Start Weight
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Mulai',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${startWeight.toStringAsFixed(1)} kg',
-                      style: GoogleFonts.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: textPrimary,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Arrow / Divider
-              Icon(
-                Icons.arrow_forward_rounded,
-                size: 16,
-                color: textSecondary.withValues(alpha: 0.4),
-              ),
-
-              // 2. Current Weight
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Saat Ini',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${currentWeight.toStringAsFixed(1)} kg',
-                      style: GoogleFonts.inter(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Arrow / Divider
-              Icon(
-                Icons.arrow_forward_rounded,
-                size: 16,
-                color: textSecondary.withValues(alpha: 0.4),
-              ),
-
-              // 3. Target Weight
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Target',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${targetWeight.toStringAsFixed(1)} kg',
-                      style: GoogleFonts.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color:
-                            isDark ? AppColors.accent : const Color(0xFF2E6319),
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          if (goal != Goal.maintainWeight) ...[
-            const SizedBox(height: 16),
-
-            // Progress Bar Track
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                height: 7,
-                child: Stack(
-                  children: [
-                    Container(color: surfaceAlt),
-                    FractionallySizedBox(
-                      widthFactor: progressRatio,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark
                               ? AppColors.accent
-                              : const Color(0xFF2E6319),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Summary Subtitle Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  deltaText,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-                  ),
-                ),
-                Text(
-                  plan.isMaintenance
-                      ? 'Target tercapai'
-                      : 'Sisa ${remainingDelta.toStringAsFixed(1)} kg • ~${plan.estimatedWeeks} mg',
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                    color: textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StepHeader extends StatelessWidget {
-  const _StepHeader({
-    required this.step,
-    required this.title,
-    required this.subtitle,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.isDark,
-  });
-
-  final String step;
-  final String title;
-  final String subtitle;
-  final Color textPrimary;
-  final Color textSecondary;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.accent.withValues(alpha: 0.2)
-                    : const Color(0xFFE8F8D0),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                step,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w700,
-                color: textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 3),
-        Padding(
-          padding: const EdgeInsets.only(left: 28),
-          child: Text(
-            subtitle,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _GoalCard extends StatelessWidget {
-  const _GoalCard({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.isDark,
-    required this.surfaceColor,
-    required this.dividerColor,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.onTap,
-  });
-
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final bool isDark;
-  final Color surfaceColor;
-  final Color dividerColor;
-  final Color textPrimary;
-  final Color textSecondary;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final activeColor = isDark ? AppColors.accent : const Color(0xFF2E6319);
-
-    return Material(
-      color: surfaceColor,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? activeColor : dividerColor,
-              width: isSelected ? 1.5 : 0.8,
-            ),
-            color: isSelected
-                ? activeColor.withValues(alpha: isDark ? 0.08 : 0.05)
-                : surfaceColor,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: isSelected ? activeColor : textSecondary,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? textPrimary : textSecondary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PaceOptionCard extends StatelessWidget {
-  const _PaceOptionCard({
-    required this.title,
-    required this.subtitle,
-    required this.offsetKcal,
-    this.isRecommended = false,
-    required this.isSelected,
-    required this.isDark,
-    required this.surfaceColor,
-    required this.dividerColor,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final String offsetKcal;
-  final bool isRecommended;
-  final bool isSelected;
-  final bool isDark;
-  final Color surfaceColor;
-  final Color dividerColor;
-  final Color textPrimary;
-  final Color textSecondary;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final activeColor = isDark ? AppColors.accent : const Color(0xFF2E6319);
-
-    return Material(
-      color: surfaceColor,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? activeColor : dividerColor,
-              width: isSelected ? 1.5 : 0.8,
-            ),
-            color: isSelected
-                ? activeColor.withValues(alpha: isDark ? 0.08 : 0.05)
-                : surfaceColor,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isSelected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_off_rounded,
-                size: 20,
-                color: isSelected ? activeColor : textSecondary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          title,
-                          style: GoogleFonts.inter(
-                            fontSize: 13.5,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                            color: textPrimary,
+                              : const Color(0xFF1B3D22),
+                          foregroundColor:
+                              isDark ? const Color(0xFF0F1410) : Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
                         ),
-                        if (isRecommended) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.accent.withValues(alpha: 0.18)
-                                  : const Color(0xFFE8F8D0),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'onboarding.paces.recommendedBadge'.tr(),
-                              style: GoogleFonts.inter(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? AppColors.accent
-                                    : const Color(0xFF2E6319),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(
+                                'profile.savePlan'.tr(),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              Text(
-                offsetKcal,
-                style: GoogleFonts.inter(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? textPrimary : textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StepperButton extends StatelessWidget {
-  const _StepperButton({
-    required this.icon,
-    required this.onTap,
-    required this.isDark,
-    required this.surfaceAlt,
-    required this.textPrimary,
-  });
-
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool isDark;
-  final Color surfaceAlt;
-  final Color textPrimary;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: surfaceAlt,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          child: Icon(icon, size: 18, color: textPrimary),
-        ),
-      ),
-    );
-  }
-}
-
-class _MacroChip extends StatelessWidget {
-  const _MacroChip({
-    required this.label,
-    required this.value,
-    required this.pct,
-    required this.color,
-    required this.isDark,
-    required this.surfaceAlt,
-    required this.textPrimary,
-    required this.textSecondary,
-  });
-
-  final String label;
-  final String value;
-  final String pct;
-  final Color color;
-  final bool isDark;
-  final Color surfaceAlt;
-  final Color textPrimary;
-  final Color textSecondary;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 0.8,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  value,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                Text(
-                  pct,
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: textSecondary,
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -1706,282 +1757,645 @@ class _MacroChip extends StatelessWidget {
   }
 }
 
-/// Sleek bottom sheet to log today's weight measurement.
-class _LogWeightSheet extends StatefulWidget {
-  const _LogWeightSheet({
-    required this.currentWeight,
-    required this.onSave,
-  });
+// ── SUB-SHEET 2: LOG WEIGHT ───────────────────────────────────────────
+class _LogWeightSheet extends ConsumerStatefulWidget {
+  const _LogWeightSheet({required this.profile});
 
-  final double currentWeight;
-  final ValueChanged<double> onSave;
+  final UserProfile profile;
 
   @override
-  State<_LogWeightSheet> createState() => _LogWeightSheetState();
+  ConsumerState<_LogWeightSheet> createState() => _LogWeightSheetState();
 }
 
-class _LogWeightSheetState extends State<_LogWeightSheet> {
-  late final TextEditingController _controller;
-  double _weight = 0.0;
-  String? _errorText;
+class _LogWeightSheetState extends ConsumerState<_LogWeightSheet> {
+  late double _weight;
+  late DateTime _selectedDate;
+  late final TextEditingController _noteCtrl;
+  late final TextEditingController _weightCtrl;
+  late final FocusNode _weightFocusNode;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _weight = widget.currentWeight;
-    _controller = TextEditingController(text: _weight.toStringAsFixed(1));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _adjustWeight(double delta) {
-    final next = (_weight + delta).clamp(25.0, 300.0);
-    setState(() {
-      _weight = double.parse(next.toStringAsFixed(1));
-      _controller.text = _weight.toStringAsFixed(1);
-      _errorText = null;
-    });
-  }
-
-  void _onTextChanged(String val) {
-    final err = InputValidators.validateWeight(val);
-    setState(() {
-      _errorText = err;
-      final parsed = double.tryParse(val);
-      if (parsed != null && err == null) {
-        _weight = parsed;
+    _weight = widget.profile.weightKg;
+    _selectedDate = DateTime.now();
+    _noteCtrl = TextEditingController();
+    _weightCtrl = TextEditingController(text: _weight.toStringAsFixed(1));
+    _weightFocusNode = FocusNode();
+    _weightFocusNode.addListener(() {
+      setState(() {});
+      if (!_weightFocusNode.hasFocus) {
+        final parsed = double.tryParse(_weightCtrl.text.replaceAll(',', '.'));
+        if (parsed != null && parsed >= 20.0 && parsed <= 350.0) {
+          _weight = parsed;
+          _weightCtrl.text = _weight.toStringAsFixed(1);
+        } else {
+          _weightCtrl.text = _weight.toStringAsFixed(1);
+        }
       }
     });
   }
 
-  void _submit() {
-    final err = InputValidators.validateWeight(_controller.text);
-    if (err != null) {
-      setState(() => _errorText = err);
-      return;
+  @override
+  void dispose() {
+    _weightCtrl.dispose();
+    _weightFocusNode.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  void _saveWeight() async {
+    final clean = _weightCtrl.text.replaceAll(',', '.');
+    final parsed = double.tryParse(clean);
+    if (parsed != null && parsed >= 20.0 && parsed <= 350.0) {
+      _weight = parsed;
     }
-    widget.onSave(_weight);
+
+    setState(() => _isSaving = true);
+
+    ref.read(weightLogProvider.notifier).addWeightLog(
+          _weight,
+          date: _selectedDate,
+          notes: _noteCtrl.text.trim().isNotEmpty ? _noteCtrl.text.trim() : null,
+        );
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    Navigator.of(context).pop();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'profile.weightLoggedSuccess'.tr(args: [_weight.toStringAsFixed(1)]),
+        ),
+        backgroundColor: const Color(0xFF1B2A18),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now,
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final surfaceAlt = isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final surfaceColor =
+        isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final surfaceAlt =
+        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
+    final dividerColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
-    final diff = _weight - widget.currentWeight;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        16,
-        24,
-        24 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: divider,
-              borderRadius: BorderRadius.circular(2),
+    return RepaintBoundary(
+      child: Container(
+        height: MediaQuery.sizeOf(context).height * 0.72,
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 24,
+              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
             ),
-          ),
-          const SizedBox(height: 18),
-
-          Text(
-            'profile.updateWeightTitle'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'profile.updateWeightSubtitle'.tr(),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w400,
-              color: textSecondary,
-              height: 1.35,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Stepper & Input Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton.filledTonal(
-                onPressed: () => _adjustWeight(-0.1),
-                icon: const Icon(Icons.remove_rounded, size: 22),
-                style: IconButton.styleFrom(
-                  backgroundColor: surfaceAlt,
-                  foregroundColor: textPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Drag Handle & Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
+              child: Column(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  padding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              Container(
-                width: 140,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: surfaceAlt,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _errorText != null
-                        ? Colors.red
-                        : divider.withValues(alpha: 0.6),
-                    width: _errorText != null ? 1.4 : 0.8,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    IntrinsicWidth(
-                      child: TextField(
-                        controller: _controller,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [InputValidators.decimalFormatter],
-                        onChanged: _onTextChanged,
-                        textAlign: TextAlign.center,
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'profile.logWeight'.tr(),
                         style: GoogleFonts.inter(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
                           color: textPrimary,
                         ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        color: textSecondary,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, thickness: 0.6, color: dividerColor),
+
+            // Scrollable Content
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  20,
+                  20,
+                  24 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: Column(
+                  children: [
+                    // Big Weight Stepper Display
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        color: surfaceAlt,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: _weightFocusNode.hasFocus
+                              ? (isDark
+                                  ? AppColors.accent.withValues(alpha: 0.6)
+                                  : const Color(0xFF1B3D22)
+                                      .withValues(alpha: 0.4))
+                              : dividerColor,
+                          width: _weightFocusNode.hasFocus ? 1.2 : 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _StepperSquareButton(
+                            icon: Icons.remove_rounded,
+                            onTap: () {
+                              _weightFocusNode.unfocus();
+                              if (_weight > 25.0) {
+                                setState(() {
+                                  _weight = double.parse(
+                                      (_weight - 0.1).toStringAsFixed(1));
+                                  _weightCtrl.text = _weight.toStringAsFixed(1);
+                                });
+                              }
+                            },
+                            isDark: isDark,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                          ),
+                          const SizedBox(width: 18),
+                          IntrinsicWidth(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minWidth: 100,
+                                    maxWidth: 160,
+                                  ),
+                                  child: TextField(
+                                    controller: _weightCtrl,
+                                    focusNode: _weightFocusNode,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    cursorColor: isDark
+                                        ? AppColors.accent
+                                        : const Color(0xFF1B3D22),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 42,
+                                      fontWeight: FontWeight.w900,
+                                      color: textPrimary,
+                                      letterSpacing: -1.0,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      border: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                    ),
+                                    onChanged: (val) {
+                                      final clean = val.replaceAll(',', '.');
+                                      final parsed = double.tryParse(clean);
+                                      if (parsed != null && parsed > 0) {
+                                        _weight = parsed;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'kg',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.edit_rounded,
+                                      size: 12,
+                                      color: textSecondary.withValues(
+                                          alpha: 0.5),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 18),
+                          _StepperSquareButton(
+                            icon: Icons.add_rounded,
+                            onTap: () {
+                              _weightFocusNode.unfocus();
+                              if (_weight < 300.0) {
+                                setState(() {
+                                  _weight = double.parse(
+                                      (_weight + 0.1).toStringAsFixed(1));
+                                  _weightCtrl.text = _weight.toStringAsFixed(1);
+                                });
+                              }
+                            },
+                            isDark: isDark,
+                            dividerColor: dividerColor,
+                            textPrimary: textPrimary,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Date Row
+                    GestureDetector(
+                      onTap: _pickDate,
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: surfaceAlt,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: dividerColor, width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today_rounded,
+                                    size: 16, color: textSecondary),
+                                const SizedBox(width: 10),
+                                Text(
+                                  DateFormat('d MMMM yyyy')
+                                      .format(_selectedDate),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Icon(Icons.edit_calendar_rounded,
+                                size: 16, color: textSecondary),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'kg',
+
+                    const SizedBox(height: 12),
+
+                    // Note Input
+                    TextField(
+                      controller: _noteCtrl,
+                      scrollPadding: const EdgeInsets.only(bottom: 80, top: 20),
                       style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondary,
+                        fontSize: 13.5,
+                        color: textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'profile.weightNotePlaceholder'.tr(),
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: textSecondary.withValues(alpha: 0.6),
+                        ),
+                        filled: true,
+                        fillColor: surfaceAlt,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: dividerColor, width: 0.8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: dividerColor, width: 0.8),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _saveWeight,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark
+                              ? AppColors.accent
+                              : const Color(0xFF1B3D22),
+                          foregroundColor:
+                              isDark ? const Color(0xFF0F1410) : Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(
+                                'profile.logWeightNow'.tr(),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-              IconButton.filledTonal(
-                onPressed: () => _adjustWeight(0.1),
-                icon: const Icon(Icons.add_rounded, size: 22),
-                style: IconButton.styleFrom(
-                  backgroundColor: surfaceAlt,
-                  foregroundColor: textPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding: const EdgeInsets.all(12),
-                ),
-              ),
-            ],
+// ── RADIO CARD HELPERS ────────────────────────────────────────────────
+class _GoalRadioCard extends StatelessWidget {
+  const _GoalRadioCard({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.isDark,
+    required this.surfaceAlt,
+    required this.dividerColor,
+    required this.textPrimary,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final bool isDark;
+  final Color surfaceAlt;
+  final Color dividerColor;
+  final Color textPrimary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark
+                  ? AppColors.accent.withValues(alpha: 0.15)
+                  : const Color(0xFFE8F8D0))
+              : surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? (isDark ? AppColors.accent : const Color(0xFF2E6319))
+                : dividerColor,
+            width: isSelected ? 1.4 : 0.8,
           ),
-
-          if (_errorText != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _errorText!,
-              style: GoogleFonts.inter(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: Colors.red,
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected
+                  ? (isDark ? AppColors.accent : const Color(0xFF2E6319))
+                  : textPrimary.withValues(alpha: 0.6),
+            ),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark ? AppColors.accent : const Color(0xFF2E6319))
+                      : textPrimary,
+                ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
 
-          const SizedBox(height: 14),
+class _PaceRadioRow extends StatelessWidget {
+  const _PaceRadioRow({
+    required this.title,
+    required this.subtitle,
+    required this.offset,
+    this.isRecommended = false,
+    required this.isSelected,
+    required this.isDark,
+    required this.surfaceAlt,
+    required this.dividerColor,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.onTap,
+  });
 
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: diff == 0
-                  ? surfaceAlt
-                  : (diff < 0
-                      ? (isDark
-                          ? AppColors.accent.withValues(alpha: 0.15)
-                          : const Color(0xFF85C500).withValues(alpha: 0.12))
-                      : Colors.orange.withValues(alpha: 0.12)),
-              borderRadius: BorderRadius.circular(20),
+  final String title;
+  final String subtitle;
+  final String offset;
+  final bool isRecommended;
+  final bool isSelected;
+  final bool isDark;
+  final Color surfaceAlt;
+  final Color dividerColor;
+  final Color textPrimary;
+  final Color textSecondary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark
+                  ? AppColors.accent.withValues(alpha: 0.15)
+                  : const Color(0xFFE8F8D0))
+              : surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? (isDark ? AppColors.accent : const Color(0xFF2E6319))
+                : dividerColor,
+            width: isSelected ? 1.4 : 0.8,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_off_rounded,
+              size: 18,
+              color: isSelected
+                  ? (isDark ? AppColors.accent : const Color(0xFF2E6319))
+                  : textSecondary,
             ),
-            child: Text(
-              diff == 0
-                  ? 'Sama dengan timbangan sebelumnya'
-                  : (diff < 0
-                      ? 'Turun ${(-diff).toStringAsFixed(1)} kg dari sebelumnya'
-                      : 'Naik ${diff.toStringAsFixed(1)} kg dari sebelumnya'),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 2,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w600,
+                          color: textPrimary,
+                        ),
+                      ),
+                      if (isRecommended)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.accent
+                                : const Color(0xFF2E6319),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'profile.recommendedBadge'.tr(),
+                            style: GoogleFonts.inter(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? const Color(0xFF0F1410)
+                                  : Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              offset,
               style: GoogleFonts.inter(
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: diff == 0
-                    ? textSecondary
-                    : (diff < 0
-                        ? (isDark ? AppColors.accent : const Color(0xFF5B8A00))
-                        : Colors.orange),
+                color: textSecondary,
               ),
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-          const SizedBox(height: 22),
+class _StepperSquareButton extends StatelessWidget {
+  const _StepperSquareButton({
+    required this.icon,
+    required this.onTap,
+    required this.isDark,
+    required this.dividerColor,
+    required this.textPrimary,
+  });
 
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? AppColors.accent
-                    : const Color(0xFF17382B),
-                foregroundColor:
-                    isDark ? const Color(0xFF0F1410) : Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-              child: Text(
-                'profile.saveWeight'.tr(),
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDark;
+  final Color dividerColor;
+  final Color textPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isDark ? AppColors.darkSurface : Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: dividerColor, width: 0.8),
           ),
-        ],
+          alignment: Alignment.center,
+          child: Icon(icon, size: 18, color: textPrimary),
+        ),
       ),
     );
   }

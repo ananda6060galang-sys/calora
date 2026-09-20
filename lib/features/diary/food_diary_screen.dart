@@ -143,6 +143,58 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
     'Dinner',
   ]; // Matching reference
   DateTime _selectedDate = DateTime.now();
+  late final ScrollController _dayScrollController;
+  bool _hasInitialScroll = false;
+
+  static const int _totalDays = 2000;
+  static const int _baseOffsetDays = 1000;
+
+  DateTime get _baseDate => DateUtils.dateOnly(DateTime.now());
+
+  DateTime _dateForIndex(int index) =>
+      _baseDate.add(Duration(days: index - _baseOffsetDays));
+
+  int _indexForDate(DateTime date) =>
+      _baseOffsetDays +
+      DateUtils.dateOnly(date).difference(_baseDate).inDays;
+
+  @override
+  void initState() {
+    super.initState();
+    _dayScrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _dayScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToDate(DateTime date, {bool animate = true}) {
+    if (!_dayScrollController.hasClients) return;
+
+    final index = _indexForDate(date);
+    final targetOffset = index * 60.0;
+
+    if (animate) {
+      _dayScrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _dayScrollController.jumpTo(targetOffset);
+    }
+  }
+
+  void _selectDate(DateTime date, {bool animate = true}) {
+    if (!DateUtils.isSameDay(date, _selectedDate)) {
+      setState(() {
+        _selectedDate = date;
+      });
+    }
+    _scrollToDate(date, animate: animate);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -407,9 +459,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                           },
                                         );
                                         if (picked != null) {
-                                          setState(
-                                            () => _selectedDate = picked,
-                                          );
+                                          _selectDate(picked);
                                         }
                                       },
                                       child: Row(
@@ -444,99 +494,141 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              // 2. Horizontal scrollable months list (Full Width)
-                              SizedBox(
-                                height: 44,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  physics: const BouncingScrollPhysics(),
-                                  child: Row(
-                                    children: List.generate(12, (index) {
-                                      final monthIndex = index + 1;
-                                      final date = DateTime(
-                                        _selectedDate.year,
-                                        monthIndex,
-                                        1,
-                                      );
-                                      final isSelected =
-                                          date.month == _selectedDate.month &&
-                                          date.year == _selectedDate.year;
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          left: index == 0 ? 24 : 10,
-                                          right: index == 11 ? 24 : 10,
-                                        ),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
+                              // 2. Horizontal scrollable months list
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: SizedBox(
+                                  height: 44,
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    child: Row(
+                                      children: List.generate(12, (index) {
+                                        final monthIndex = index + 1;
+                                        final date = DateTime(
+                                          _selectedDate.year,
+                                          monthIndex,
+                                          1,
+                                        );
+                                        final isSelected =
+                                            date.month == _selectedDate.month &&
+                                            date.year == _selectedDate.year;
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            left: index == 0 ? 8 : 10,
+                                            right: index == 11 ? 8 : 10,
+                                          ),
+                                          child: GestureDetector(
+                                            onTap: () {
                                               final daysInMonth =
                                                   DateUtils.getDaysInMonth(
-                                                    date.year,
-                                                    date.month,
-                                                  );
-                                              final day = _selectedDate.day
-                                                  .clamp(1, daysInMonth);
-                                              _selectedDate = DateTime(
                                                 date.year,
                                                 date.month,
-                                                day,
                                               );
-                                            });
-                                          },
-                                          child: _monthText(
-                                            context,
-                                            DateFormat('MMM').format(date),
-                                            isSelected,
+                                              final day = _selectedDate.day
+                                                  .clamp(1, daysInMonth);
+                                              _selectDate(
+                                                DateTime(
+                                                  date.year,
+                                                  date.month,
+                                                  day,
+                                                ),
+                                              );
+                                            },
+                                            child: _monthText(
+                                              context,
+                                              DateFormat('MMM').format(date),
+                                              isSelected,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    }),
+                                        );
+                                      }),
+                                    ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 12),
                               // Day selector
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                 ),
                                 child: SizedBox(
-                                  height: 80,
-                                  child: ListView.separated(
-                                    padding: EdgeInsets.zero,
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: 7,
-                                    separatorBuilder: (context, index) =>
-                                        const SizedBox(width: 8),
-                                    itemBuilder: (context, index) {
-                                      final date = _selectedDate.subtract(
-                                        Duration(days: 3 - index),
-                                      );
-                                      final isSelected = DateUtils.isSameDay(
-                                        date,
-                                        _selectedDate,
-                                      );
+                                  height: 96,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final availableWidth =
+                                            constraints.maxWidth;
+                                        final horizontalPadding =
+                                            (availableWidth - 52.0) / 2;
 
-                                      // Get progress for this specific day to draw the bottom progress fill
-                                      final dayTotals = ref.watch(
-                                        diaryTotalsForDateProvider(date),
-                                      );
-                                      final dayTarget = profile
-                                          .dailyCalorieTarget
-                                          .round();
-                                      final dayProgress = dayTarget > 0
-                                          ? (dayTotals.calories / dayTarget)
-                                          : 0.0;
+                                        if (!_hasInitialScroll) {
+                                          _hasInitialScroll = true;
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                            if (mounted) {
+                                              _scrollToDate(
+                                                _selectedDate,
+                                                animate: false,
+                                              );
+                                            }
+                                          });
+                                        }
 
-                                      return _DayCard(
-                                        date: date,
-                                        isSelected: isSelected,
-                                        progress: dayProgress,
-                                        onTap: () => setState(
-                                          () => _selectedDate = date,
-                                        ),
-                                      );
-                                    },
+                                        return ListView.separated(
+                                          controller: _dayScrollController,
+                                          clipBehavior: Clip.hardEdge,
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: horizontalPadding,
+                                          ),
+                                          scrollDirection: Axis.horizontal,
+                                          physics:
+                                              const BouncingScrollPhysics(),
+                                          itemCount: _totalDays,
+                                          separatorBuilder:
+                                              (context, index) =>
+                                                  const SizedBox(width: 8),
+                                          itemBuilder: (context, index) {
+                                            final date = _dateForIndex(index);
+                                            final isSelected =
+                                                DateUtils.isSameDay(
+                                              date,
+                                              _selectedDate,
+                                            );
+
+                                            // Get progress for this specific day to draw the bottom progress fill
+                                            final dayTotals = ref.watch(
+                                              diaryTotalsForDateProvider(
+                                                date,
+                                              ),
+                                            );
+                                            final dayTarget = profile
+                                                .dailyCalorieTarget
+                                                .round();
+                                            final dayProgress = dayTarget > 0
+                                                ? (dayTotals.calories /
+                                                    dayTarget)
+                                                : 0.0;
+
+                                            return Center(
+                                              child: _DayCard(
+                                                date: date,
+                                                isSelected: isSelected,
+                                                progress: dayProgress,
+                                                onTap: () => _selectDate(
+                                                  date,
+                                                  animate: true,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -740,11 +832,14 @@ class _DayCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
+      child: AnimatedScale(
+        scale: isSelected ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: 52,
+          height: 80,
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.accent
@@ -761,9 +856,9 @@ class _DayCard extends StatelessWidget {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: AppColors.accent.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ]
                 : null,
@@ -772,15 +867,18 @@ class _DayCard extends StatelessWidget {
             children: [
               // Bottom Progress Fill (only for unselected days)
               if (!isSelected && progress > 0)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 80 * progress.clamp(0.0, 1.0),
-                  child: Container(
-                    color: AppColors.accent.withValues(
-                      alpha: 0.15,
-                    ), // Soft brand green vertical progress fill
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        height: 80 * progress.clamp(0.0, 1.0),
+                        color: AppColors.accent.withValues(
+                          alpha: 0.15,
+                        ), // Soft brand green vertical progress fill
+                      ),
+                    ),
                   ),
                 ),
               // Text Content
@@ -1612,55 +1710,59 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                 const SizedBox(height: AppSpacing.sm),
 
                 // Category Filter Chips
-                SizedBox(
-                  height: 36,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                    children: [
-                      _buildCategoryChip(
-                        key: 'Semua',
-                        label: 'diary.categories.all'.tr(),
-                        selectedCategory: searchState.selectedCategory,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        key: 'Nasi & Karbo',
-                        label: 'diary.categories.riceCarbs'.tr(),
-                        selectedCategory: searchState.selectedCategory,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        key: 'Lauk Protein',
-                        label: 'diary.categories.proteinMeat'.tr(),
-                        selectedCategory: searchState.selectedCategory,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        key: 'Nabati & Sayur',
-                        label: 'diary.categories.plantVeggies'.tr(),
-                        selectedCategory: searchState.selectedCategory,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        key: 'Jajanan',
-                        label: 'diary.categories.snacks'.tr(),
-                        selectedCategory: searchState.selectedCategory,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        key: 'Minuman',
-                        label: 'diary.categories.drinks'.tr(),
-                        selectedCategory: searchState.selectedCategory,
-                        isDark: isDark,
-                      ),
-                    ],
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  child: SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      children: [
+                        _buildCategoryChip(
+                          key: 'Semua',
+                          label: 'diary.categories.all'.tr(),
+                          selectedCategory: searchState.selectedCategory,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          key: 'Nasi & Karbo',
+                          label: 'diary.categories.riceCarbs'.tr(),
+                          selectedCategory: searchState.selectedCategory,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          key: 'Lauk Protein',
+                          label: 'diary.categories.proteinMeat'.tr(),
+                          selectedCategory: searchState.selectedCategory,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          key: 'Nabati & Sayur',
+                          label: 'diary.categories.plantVeggies'.tr(),
+                          selectedCategory: searchState.selectedCategory,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          key: 'Jajanan',
+                          label: 'diary.categories.snacks'.tr(),
+                          selectedCategory: searchState.selectedCategory,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          key: 'Minuman',
+                          label: 'diary.categories.drinks'.tr(),
+                          selectedCategory: searchState.selectedCategory,
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),

@@ -1,81 +1,67 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import '../../../models/user_profile.dart';
 import '../../../models/weight_log.dart';
 import '../../dashboard/providers/profile_provider.dart';
 
+/// StateNotifier managing real, authentic user weight logs.
+/// Strictly follows PRD & user rules: NO fake or demo progress data.
 class WeightLogNotifier extends StateNotifier<List<WeightLog>> {
-  WeightLogNotifier(this._ref) : super([]) {
-    _initDefaultHistory();
-  }
+  WeightLogNotifier(this._ref) : super([]);
 
   final Ref _ref;
 
-  void _initDefaultHistory() {
-    final profile = _ref.read(userProfileProvider);
-    final now = DateTime.now();
-    final currentWeight = profile.weightKg;
-
-    // Seed 5 realistic weekly checkpoints leading up to today
-    final List<WeightLog> initialLogs = [];
-    final double stepDelta;
-    if (profile.goal == Goal.loseWeight) {
-      stepDelta = 0.5; // Was heavier previously
-    } else if (profile.goal == Goal.gainWeight) {
-      stepDelta = -0.5; // Was lighter previously
-    } else {
-      stepDelta = 0.05; // Fluctuating slightly
-    }
-
-    for (int i = 4; i >= 1; i--) {
-      final date = now.subtract(Duration(days: i * 7));
-      final weight = (currentWeight + (stepDelta * i)).clamp(20.0, 300.0);
-      initialLogs.add(WeightLog(
-        id: 'seed_w_$i',
-        weightKg: double.parse(weight.toStringAsFixed(1)),
-        loggedDate: date,
-      ));
-    }
-
-    // Today's entry
-    initialLogs.add(WeightLog(
-      id: 'seed_w_today',
-      weightKg: currentWeight,
-      loggedDate: now,
-    ));
-
-    state = initialLogs;
-  }
-
-  void addWeightLog(double newWeight, {String? notes}) {
-    final now = DateTime.now();
+  /// Records a new weight measurement entry.
+  /// Replaces existing entry if logged on the same calendar day, otherwise appends.
+  /// Keeps the list strictly sorted chronologically by [loggedDate].
+  void addWeightLog(double newWeight, {String? notes, DateTime? date}) {
+    final logDate = date ?? DateTime.now();
     final newEntry = WeightLog(
-      id: 'w_${now.millisecondsSinceEpoch}',
+      id: 'w_${logDate.millisecondsSinceEpoch}',
       weightKg: double.parse(newWeight.toStringAsFixed(1)),
-      loggedDate: now,
+      loggedDate: logDate,
       notes: notes,
     );
 
-    // If there's already a log today, replace or append
     final updated = List<WeightLog>.from(state);
-    final todayIndex = updated.indexWhere((log) =>
-        log.loggedDate.year == now.year &&
-        log.loggedDate.month == now.month &&
-        log.loggedDate.day == now.day);
+    final existingIndex = updated.indexWhere((log) =>
+        log.loggedDate.year == logDate.year &&
+        log.loggedDate.month == logDate.month &&
+        log.loggedDate.day == logDate.day);
 
-    if (todayIndex != -1) {
-      updated[todayIndex] = newEntry;
+    if (existingIndex != -1) {
+      updated[existingIndex] = newEntry;
     } else {
       updated.add(newEntry);
     }
 
+    // Sort chronologically ascending
+    updated.sort((a, b) => a.loggedDate.compareTo(b.loggedDate));
+
     state = updated;
 
-    // Also synchronize profile's current weight
+    // Synchronize latest weight with profile's current weight
     final currentProfile = _ref.read(userProfileProvider);
     _ref.read(userProfileProvider.notifier).state = currentProfile.copyWith(
-      weightKg: newWeight,
+      weightKg: updated.last.weightKg,
     );
+  }
+
+  /// Removes an individual weight entry by [id].
+  void deleteWeightLog(String id) {
+    final updated = state.where((log) => log.id != id).toList();
+    state = updated;
+
+    if (updated.isNotEmpty) {
+      final currentProfile = _ref.read(userProfileProvider);
+      _ref.read(userProfileProvider.notifier).state = currentProfile.copyWith(
+        weightKg: updated.last.weightKg,
+      );
+    }
+  }
+
+  /// Clears all weight logs (e.g. upon account reset).
+  void clearLogs() {
+    state = [];
   }
 }
 

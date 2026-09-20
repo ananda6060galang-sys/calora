@@ -11,7 +11,7 @@ import '../auth/login_screen.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
 import 'goals_and_nutrition_screen.dart';
-import 'profile_screen.dart';
+import 'personal_information_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -239,11 +239,10 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _openEditProfile(BuildContext context, UserProfile profile) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => EditProfileSheet(profile: profile),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PersonalInformationScreen(),
+      ),
     );
   }
 

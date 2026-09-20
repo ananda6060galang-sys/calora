@@ -18,6 +18,7 @@ import '../dashboard/providers/profile_provider.dart';
 import '../diary/food_request_sheet.dart';
 import '../diary/providers/food_request_provider.dart';
 import 'goals_and_nutrition_screen.dart';
+import 'personal_information_screen.dart';
 import 'providers/weight_log_provider.dart';
 import 'settings_screen.dart';
 import 'widgets/weight_journey_chart.dart';
@@ -538,20 +539,18 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _openEditProfile(BuildContext context, UserProfile profile) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => EditProfileSheet(profile: profile),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PersonalInformationScreen(),
+      ),
     );
   }
 
   void _openPersonalInformation(BuildContext context, UserProfile profile) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _PersonalInformationSheet(profile: profile),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PersonalInformationScreen(),
+      ),
     );
   }
 
@@ -1278,28 +1277,13 @@ class _CaloraMembershipFooter extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Calora Nutrition & Wellness • v1.0.0',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  'School PjBL Project • Single Student Developer',
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: textSecondary,
-                  ),
-                ),
-              ],
+            Text(
+              'Calora Nutrition & Wellness • v1.0.0',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: textPrimary,
+              ),
             ),
           ],
         ),
@@ -1386,218 +1370,6 @@ class _ProfileNavRow extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// PERSONAL INFORMATION SHEET
-// ════════════════════════════════════════════════════════════════
-
-class _PersonalInformationSheet extends StatelessWidget {
-  const _PersonalInformationSheet({required this.profile});
-
-  final UserProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final surfaceAlt =
-        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
-
-    final genderText = profile.gender == Gender.male
-        ? 'onboarding.male'.tr()
-        : 'onboarding.female'.tr();
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        22,
-        12,
-        22,
-        MediaQuery.viewInsetsOf(context).bottom + 28,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: divider, width: 0.8)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag Handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-
-          Text(
-            'onboarding.personalInfoTitle'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'onboarding.personalInfoSubtitle'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Details Grid Card
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: surfaceAlt,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: divider, width: 0.8),
-            ),
-            child: Column(
-              children: [
-                _InfoDetailRow(
-                  label: 'auth.fullName'.tr(),
-                  value: profile.name.isNotEmpty ? profile.name : 'Minji',
-                  icon: Icons.person_outline_rounded,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-                Divider(height: 24, thickness: 0.6, color: divider),
-                _InfoDetailRow(
-                  label: 'profile.gender'.tr(),
-                  value: genderText,
-                  icon: profile.gender == Gender.male
-                      ? Icons.male_rounded
-                      : Icons.female_rounded,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-                Divider(height: 24, thickness: 0.6, color: divider),
-                _InfoDetailRow(
-                  label: 'profile.age'.tr(),
-                  value: '${profile.age} ${'profile.yearsOld'.tr(args: [''])}',
-                  icon: Icons.calendar_today_outlined,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-                Divider(height: 24, thickness: 0.6, color: divider),
-                _InfoDetailRow(
-                  label: 'profile.height'.tr(),
-                  value: '${profile.heightCm.round()} cm',
-                  icon: Icons.straighten_rounded,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-                Divider(height: 24, thickness: 0.6, color: divider),
-                _InfoDetailRow(
-                  label: 'profile.weight'.tr(),
-                  value: '${profile.weightKg.toStringAsFixed(1)} kg',
-                  icon: Icons.scale_outlined,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Edit Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => EditProfileSheet(profile: profile),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: const Color(0xFF0F1410),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                'profile.editProfile'.tr(),
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-class _InfoDetailRow extends StatelessWidget {
-  const _InfoDetailRow({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.textPrimary,
-    required this.textSecondary,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color textPrimary;
-  final Color textSecondary;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: textSecondary),
-        const SizedBox(width: 12),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: textSecondary,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w700,
-            color: textPrimary,
-          ),
-        ),
-      ],
     );
   }
 }

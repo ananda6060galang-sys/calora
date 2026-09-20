@@ -217,50 +217,58 @@ class WeightJourneyChart extends StatelessWidget {
           const SizedBox(height: 8),
 
           // ── Bottom Minimal Stats Row ─────────────────────────────────
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
-              Icon(
-                trendIcon,
-                size: 13,
-                color: isProgressingWell
-                    ? (isDark
-                        ? AppColors.accent
-                        : const Color(0xFF2E6319))
-                    : Colors.orange,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    trendIcon,
+                    size: 13,
+                    color: isProgressingWell
+                        ? (isDark
+                            ? AppColors.accent
+                            : const Color(0xFF2E6319))
+                        : Colors.orange,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    trendText,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isProgressingWell
+                          ? (isDark
+                              ? AppColors.accent
+                              : const Color(0xFF2E6319))
+                          : Colors.orange,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '•',
+                    style: TextStyle(
+                      color: textTertiary.withValues(alpha: 0.6),
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'profile.kcalPerDay'.tr(
+                      args: [profile.dailyCalorieTarget.round().toString()],
+                    ),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              Text(
-                trendText,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: isProgressingWell
-                      ? (isDark
-                          ? AppColors.accent
-                          : const Color(0xFF2E6319))
-                      : Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '•',
-                style: TextStyle(
-                  color: textTertiary.withValues(alpha: 0.6),
-                  fontSize: 10,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'profile.kcalPerDay'.tr(
-                  args: [profile.dailyCalorieTarget.round().toString()],
-                ),
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: textSecondary,
-                ),
-              ),
-              const Spacer(),
               if (!plan.isMaintenance && plan.estimatedWeeks > 0)
                 Text(
                   '~${plan.estimatedWeeks} ${'profile.goalRoadmap.weeksCount'.tr(args: ['']).trim()}',
@@ -391,7 +399,9 @@ class _WeightChartPainter extends CustomPainter {
     final List<Offset> points = [];
 
     for (int i = 0; i < count; i++) {
-      final x = leftPadding + (i * stepX);
+      final x = count == 1
+          ? leftPadding + (chartWidth / 2)
+          : leftPadding + (i * stepX);
       final yRatio = ((logs[i].weightKg - yMin) / ySpan).clamp(0.0, 1.0);
       final y = topPadding + (chartHeight * (1.0 - yRatio));
       points.add(Offset(x, y));

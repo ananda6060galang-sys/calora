@@ -20,36 +20,89 @@ class InsightsScreen extends ConsumerStatefulWidget {
 
 class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   late DateTime _selectedDate;
+  late final PageController _pageController;
+
+  static const int _totalDays = 2000;
+  static const int _initialPage = 1000;
+
+  DateTime get _baseDate => DateUtils.dateOnly(DateTime.now());
+
+  DateTime _dateForIndex(int page) =>
+      _baseDate.add(Duration(days: page - _initialPage));
+
+  int _pageForDate(DateTime date) =>
+      _initialPage +
+      DateUtils.dateOnly(date).difference(_baseDate).inDays;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
+    _pageController = PageController(
+      initialPage: _initialPage,
+      viewportFraction: 1.0 / 7.0,
+    );
   }
 
-  /// 7 consecutive dates with [_selectedDate] centered at index 3.
-  List<DateTime> get _sevenDays {
-    return List.generate(7, (i) {
-      return _selectedDate.add(Duration(days: i - 3));
-    });
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
-  void _onPreviousWeek() {
-    setState(() {
-      _selectedDate = _selectedDate.subtract(const Duration(days: 7));
-    });
+  DateTime _previousMonth(DateTime date) {
+    final prevMonth = DateTime(date.year, date.month - 1, 1);
+    final daysInPrevMonth =
+        DateUtils.getDaysInMonth(prevMonth.year, prevMonth.month);
+    final newDay = date.day.clamp(1, daysInPrevMonth);
+    return DateTime(prevMonth.year, prevMonth.month, newDay);
   }
 
-  void _onNextWeek() {
-    setState(() {
-      _selectedDate = _selectedDate.add(const Duration(days: 7));
-    });
+  DateTime _nextMonth(DateTime date) {
+    final nextMonth = DateTime(date.year, date.month + 1, 1);
+    final daysInNextMonth =
+        DateUtils.getDaysInMonth(nextMonth.year, nextMonth.month);
+    final newDay = date.day.clamp(1, daysInNextMonth);
+    return DateTime(nextMonth.year, nextMonth.month, newDay);
+  }
+
+  void _onPreviousMonth() {
+    _selectDate(_previousMonth(_selectedDate));
+  }
+
+  void _onNextMonth() {
+    _selectDate(_nextMonth(_selectedDate));
   }
 
   void _onDateTap(DateTime date) {
+    _selectDate(date, animate: true);
+  }
+
+  void _selectDate(DateTime date, {bool animate = true}) {
     if (!DateUtils.isSameDay(date, _selectedDate)) {
       setState(() {
         _selectedDate = date;
+      });
+    }
+    final page = _pageForDate(date);
+    if (_pageController.hasClients) {
+      if (animate) {
+        _pageController.animateToPage(
+          page,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _pageController.jumpToPage(page);
+      }
+    }
+  }
+
+  void _onPageChanged(int page) {
+    final newDate = _dateForIndex(page);
+    if (!DateUtils.isSameDay(newDate, _selectedDate)) {
+      setState(() {
+        _selectedDate = newDate;
       });
     }
   }
@@ -265,7 +318,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             GestureDetector(
-                              onTap: _onPreviousWeek,
+                              onTap: _onPreviousMonth,
                               behavior: HitTestBehavior.opaque,
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
@@ -288,7 +341,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
-                              onTap: _onNextWeek,
+                              onTap: _onNextMonth,
                               behavior: HitTestBehavior.opaque,
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
@@ -305,144 +358,180 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
                       const SizedBox(height: 20),
 
-                      // ── 4. HORIZONTAL 7-DAY DATE CALENDAR ───────────────
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: List.generate(_sevenDays.length, (index) {
-                          final date = _sevenDays[index];
-                          final isSelected =
-                              DateUtils.isSameDay(date, _selectedDate);
-                          final dayName = DateFormat.E(context.locale.languageCode).format(date);
-                          final dateNum = date.day.toString();
+                      // ── 4. HORIZONTAL 7-DAY DATE CALENDAR (ANIMATED & SATISFYING) ──
+                      SizedBox(
+                        height: 104,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          clipBehavior: Clip.none,
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: _totalDays,
+                          onPageChanged: _onPageChanged,
+                          itemBuilder: (context, index) {
+                            final date = _dateForIndex(index);
+                            final isSelected =
+                                DateUtils.isSameDay(date, _selectedDate);
+                            final dayName = DateFormat.E(
+                                    context.locale.languageCode)
+                                .format(date);
+                            final dateNum = date.day.toString();
 
-                          return GestureDetector(
-                            onTap: () => _onDateTap(date),
-                            behavior: HitTestBehavior.opaque,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: isSelected ? 48 : 41,
-                              height: isSelected ? 82 : 64,
-                              padding: const EdgeInsets.symmetric(vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? (isDark ? AppColors.darkSurface : Colors.white)
-                                    : (isDark
-                                        ? AppColors.darkSurface
-                                            .withValues(alpha: 0.50)
-                                        : Colors.white
-                                            .withValues(alpha: 0.58)),
-                                borderRadius: BorderRadius.circular(
-                                  isSelected ? 26 : 22,
-                                ),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? (isDark ? AppColors.accent : Colors.white)
-                                      : (isDark
-                                          ? AppColors.darkBorder
-                                          : Colors.white.withValues(alpha: 0.30)),
-                                  width: isSelected ? 1.2 : 0.8,
-                                ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: isDark ? 0.35 : 0.15),
-                                          blurRadius: 18,
-                                          offset: const Offset(0, 6),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: isSelected
-                                  ? Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          width: 34,
-                                          height: 34,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? AppColors.accent
-                                                : const Color(0xFF17382B),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: Column(
-                                            mainAxisSize:
-                                                MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                dateNum,
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 13.5,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: isDark
-                                                      ? const Color(0xFF0F1410)
-                                                      : Colors.white,
-                                                  height: 1.0,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Container(
-                                                width: 3.5,
-                                                height: 3.5,
-                                                decoration: BoxDecoration(
-                                                  color: isDark
-                                                      ? const Color(0xFF0F1410)
-                                                      : Colors.white,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          dayName,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: isDark
-                                                ? AppColors.accent
-                                                : const Color(0xFF17382B),
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          dayName,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w500,
-                                            color: isDark
-                                                ? AppColors
-                                                    .darkTextSecondary
-                                                : const Color(0xFF354B3E),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          dateNum,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: isDark
-                                                ? AppColors
-                                                    .darkTextPrimary
-                                                : const Color(0xFF1A2C21),
-                                          ),
-                                        ),
-                                      ],
+                            return Center(
+                              child: GestureDetector(
+                                onTap: () => _onDateTap(date),
+                                behavior: HitTestBehavior.opaque,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 280),
+                                  curve: Curves.easeOutCubic,
+                                  width: isSelected ? 48 : 41,
+                                  height: isSelected ? 82 : 64,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 6, horizontal: 2),
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? (isDark
+                                            ? AppColors.darkSurface
+                                            : Colors.white)
+                                        : (isDark
+                                            ? AppColors.darkSurface
+                                                .withValues(alpha: 0.50)
+                                            : Colors.white.withValues(
+                                                alpha: 0.58)),
+                                    borderRadius: BorderRadius.circular(
+                                      isSelected ? 26 : 22,
                                     ),
-                            ),
-                          );
-                        }),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? (isDark
+                                              ? AppColors.accent
+                                              : Colors.white)
+                                          : (isDark
+                                              ? AppColors.darkBorder
+                                              : Colors.white.withValues(
+                                                  alpha: 0.30)),
+                                      width: isSelected ? 1.2 : 0.8,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: isDark ? 0.35 : 0.15,
+                                              ),
+                                              blurRadius: 18,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.center,
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 200),
+                                      child: isSelected
+                                          ? Column(
+                                              key: const ValueKey('selected'),
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  width: 34,
+                                                  height: 34,
+                                                  decoration: BoxDecoration(
+                                                    color: isDark
+                                                        ? AppColors.accent
+                                                        : const Color(
+                                                            0xFF17382B),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        dateNum,
+                                                        style: GoogleFonts.inter(
+                                                          fontSize: 13.5,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          color: isDark
+                                                              ? const Color(
+                                                                  0xFF0F1410)
+                                                              : Colors.white,
+                                                          height: 1.0,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Container(
+                                                        width: 3.5,
+                                                        height: 3.5,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isDark
+                                                              ? const Color(
+                                                                  0xFF0F1410)
+                                                              : Colors.white,
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  dayName,
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: isDark
+                                                        ? AppColors.accent
+                                                        : const Color(0xFF17382B),
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Column(
+                                              key: const ValueKey('unselected'),
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  dayName,
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: isDark
+                                                        ? AppColors
+                                                            .darkTextSecondary
+                                                        : const Color(0xFF354B3E),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Text(
+                                                  dateNum,
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 14.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: isDark
+                                                        ? AppColors
+                                                            .darkTextPrimary
+                                                        : const Color(0xFF1A2C21),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
 
                       const SizedBox(height: 26),

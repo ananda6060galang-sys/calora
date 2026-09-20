@@ -647,21 +647,40 @@ class _CircleIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Ink(
-          height: 38,
-          width: 38,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            shape: BoxShape.circle,
-            boxShadow: _softShadow(isDark: isDark, blur: 16, offset: 6),
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
+              .withValues(alpha: 0.72),
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-          child: Icon(icon, size: 18, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 19,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
         ),
       ),
     );
