@@ -3,17 +3,23 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/food.dart';
+import '../../models/indonesian_foods_data.dart';
 import '../../models/mock_data.dart';
 import '../config/supabase_config.dart';
 
 /// Abstraction for food searching and food details lookup.
 abstract class FoodSearchService {
-  Future<List<Food>> searchFoods(String query, {int page = 0, int maxResults = 20});
+  Future<List<Food>> searchFoods(
+    String query, {
+    int page = 0,
+    int maxResults = 50,
+    String? category,
+  });
   Future<Food?> getFoodDetails(String foodId);
 }
 
-/// Real food search service powered by FatSecret through Supabase Edge Function.
-/// Flutter NEVER holds or sends FatSecret client secrets.
+/// Real food search service powered by FatSecret through Supabase Edge Function,
+/// with instant seamless fallback to curated Indonesian foods database.
 class FatSecretFoodSearchService implements FoodSearchService {
   FatSecretFoodSearchService({SupabaseClient? client, http.Client? httpClient})
       : _client = client ?? Supabase.instance.client,
@@ -21,6 +27,7 @@ class FatSecretFoodSearchService implements FoodSearchService {
 
   final SupabaseClient _client;
   final http.Client _httpClient;
+  final MockFoodSearchService _localFallback = MockFoodSearchService();
 
   Uri get _edgeFunctionUri =>
       Uri.parse('${SupabaseConfig.url}/functions/v1/fatsecret-food');
@@ -36,11 +43,24 @@ class FatSecretFoodSearchService implements FoodSearchService {
   }
 
   @override
-  Future<List<Food>> searchFoods(String query, {int page = 0, int maxResults = 20}) async {
+  Future<List<Food>> searchFoods(
+    String query, {
+    int page = 0,
+    int maxResults = 50,
+    String? category,
+  }) async {
     final cleanQuery = query.trim();
-    if (cleanQuery.isEmpty) return [];
 
     try {
+      if (cleanQuery.isEmpty) {
+        return _localFallback.searchFoods(
+          cleanQuery,
+          page: page,
+          maxResults: maxResults,
+          category: category,
+        );
+      }
+
       final response = await _httpClient
           .post(
             _edgeFunctionUri,
@@ -52,22 +72,36 @@ class FatSecretFoodSearchService implements FoodSearchService {
               'maxResults': maxResults,
             }),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final foodsList = data['foods'] as List<dynamic>? ?? [];
-        return foodsList
+        final results = foodsList
             .whereType<Map<String, dynamic>>()
             .map(Food.fromJson)
             .toList();
-      } else {
-        throw Exception(
-          'Food search failed (status ${response.statusCode})',
-        );
+
+        if (results.isNotEmpty) {
+          return results;
+        }
       }
-    } catch (e) {
-      rethrow;
+
+      // If FatSecret returned empty or non-200, query Indonesian database
+      return _localFallback.searchFoods(
+        cleanQuery,
+        page: page,
+        maxResults: maxResults,
+        category: category,
+      );
+    } catch (_) {
+      // Instant fallback to Indonesian food dataset
+      return _localFallback.searchFoods(
+        cleanQuery,
+        page: page,
+        maxResults: maxResults,
+        category: category,
+      );
     }
   }
 
@@ -76,13 +110,9 @@ class FatSecretFoodSearchService implements FoodSearchService {
     final cleanId = foodId.trim();
     if (cleanId.isEmpty) return null;
 
-    // Local items are resolved locally without network calls
-    if (cleanId.startsWith('local_')) {
-      try {
-        return demoFoods.firstWhere((f) => f.id == cleanId);
-      } catch (_) {
-        return null;
-      }
+    // Local & Indonesian items are resolved locally without network calls
+    if (cleanId.startsWith('indo_') || cleanId.startsWith('local_')) {
+      return _localFallback.getFoodDetails(cleanId);
     }
 
     try {
@@ -95,7 +125,7 @@ class FatSecretFoodSearchService implements FoodSearchService {
               'foodId': cleanId,
             }),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -104,39 +134,61 @@ class FatSecretFoodSearchService implements FoodSearchService {
           return Food.fromJson(foodJson);
         }
         return null;
-      } else {
-        throw Exception(
-          'Food details failed (status ${response.statusCode})',
-        );
       }
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return _localFallback.getFoodDetails(cleanId);
     }
+    return _localFallback.getFoodDetails(cleanId);
   }
 }
 
-/// In-memory mock food search service for development, testing, and offline fallback.
+/// In-memory food search service powered by curated Indonesian foods
+/// for sub-millisecond, offline-capable, highly reliable logging.
 class MockFoodSearchService implements FoodSearchService {
   final List<Food> _foods;
 
-  MockFoodSearchService([List<Food>? foods]) : _foods = foods ?? demoFoods;
+  MockFoodSearchService([List<Food>? foods])
+      : _foods = foods ?? [...indonesianFoods, ...demoFoods];
 
   @override
-  Future<List<Food>> searchFoods(String query, {int page = 0, int maxResults = 20}) async {
+  Future<List<Food>> searchFoods(
+    String query, {
+    int page = 0,
+    int maxResults = 50,
+    String? category,
+  }) async {
     final clean = query.trim().toLowerCase();
-    if (clean.isEmpty) {
-      return _foods.take(maxResults).toList();
+
+    // 1. Filter by category if specified
+    List<Food> baseList = _foods;
+    if (category != null && category.isNotEmpty && category != 'Semua') {
+      baseList = baseList.where((f) {
+        final foodCat = f.category.toLowerCase();
+        return foodCat == category.toLowerCase();
+      }).toList();
     }
-    await Future.delayed(const Duration(milliseconds: 150)); // simulated latency
-    return _foods
-        .where((f) => f.name.toLowerCase().contains(clean))
-        .take(maxResults)
-        .toList();
+
+    if (clean.isEmpty) {
+      return baseList.take(maxResults).toList();
+    }
+
+    // 2. Token-based matching (e.g. 'ayam geprek' matches both 'ayam' and 'geprek')
+    final tokens = clean.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+
+    return baseList.where((f) {
+      final nameLower = f.name.toLowerCase();
+      final catLower = f.category.toLowerCase();
+
+      // Check exact substring first
+      if (nameLower.contains(clean)) return true;
+
+      // Check all tokens
+      return tokens.every((token) => nameLower.contains(token) || catLower.contains(token));
+    }).take(maxResults).toList();
   }
 
   @override
   Future<Food?> getFoodDetails(String foodId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
     try {
       return _foods.firstWhere((f) => f.id == foodId);
     } catch (_) {

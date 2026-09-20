@@ -10,6 +10,7 @@ import '../../models/user_profile.dart';
 import '../auth/login_screen.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
+import 'goals_and_nutrition_screen.dart';
 import 'profile_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -111,7 +112,11 @@ class SettingsScreen extends ConsumerWidget {
                     textSecondary: textSecondary,
                     dividerColor: dividerColor,
                     showDivider: true,
-                    onTap: () => _openEditProfile(context, profile),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const GoalsAndNutritionScreen(),
+                      ),
+                    ),
                   ),
                   _SettingsOptionRow(
                     icon: Icons.palette_outlined,

@@ -9,13 +9,18 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/calora_avatar.dart';
+import '../../core/widgets/language_toggle_pill.dart';
+import '../../core/utils/input_validators.dart';
 import '../../models/food_request.dart';
 import '../../models/user_profile.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
 import '../diary/food_request_sheet.dart';
 import '../diary/providers/food_request_provider.dart';
+import 'goals_and_nutrition_screen.dart';
+import 'providers/weight_log_provider.dart';
 import 'settings_screen.dart';
+import 'widgets/weight_journey_chart.dart';
 
 /// Redesigned Calora Profile Screen.
 ///
@@ -42,6 +47,7 @@ class ProfileScreen extends ConsumerWidget {
     final profile = ref.watch(userProfileProvider);
     final currentUser = ref.watch(currentUserProvider);
     final foodRequests = ref.watch(foodRequestProvider);
+    final weightLogs = ref.watch(weightLogProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final textPrimary =
@@ -88,7 +94,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Top Navigation Bar (Profile title, ENG/ID pill, Settings gear)
+                // Top Navigation Bar (Profile title, LanguageTogglePill, Settings Button)
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
@@ -105,72 +111,46 @@ class ProfileScreen extends ConsumerWidget {
                             letterSpacing: -0.4,
                           ),
                         ),
+                        // Quick Language Toggle Pill and Settings Action
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Quick Language Pill Indicator (1-tap instant switch)
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                final currentLang = context.locale.languageCode;
-                                final nextLocale = currentLang == 'en'
-                                    ? const Locale('id')
-                                    : const Locale('en');
-                                context.setLocale(nextLocale);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 11,
-                                  vertical: 5.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.pill),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black
-                                          .withValues(alpha: 0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  'ENG/ID',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF111111),
-                                  ),
-                                ),
-                              ),
-                            ),
+                            const LanguageTogglePill(),
                             const SizedBox(width: 8),
-
-                            // Settings Icon Button (Single Home for Settings)
                             GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap: () => _openSettings(context),
                               child: Container(
-                                width: 32,
-                                height: 32,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: isDark
+                                      ? AppColors.darkSurfaceAlt
+                                      : Colors.white,
                                   shape: BoxShape.circle,
+                                  border: isDark
+                                      ? Border.all(
+                                          color: AppColors.darkBorder,
+                                          width: 0.8,
+                                        )
+                                      : null,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black
-                                          .withValues(alpha: 0.08),
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.25 : 0.08,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
                                 alignment: Alignment.center,
-                                child: const Icon(
+                                child: Icon(
                                   Icons.settings_outlined,
-                                  size: 17,
-                                  color: Color(0xFF111111),
+                                  color: isDark
+                                      ? AppColors.accent
+                                      : const Color(0xFF2E6319),
+                                  size: 18,
                                 ),
                               ),
                             ),
@@ -338,23 +318,22 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            // ── 4. NUTRITION & METABOLIC BLUEPRINT CARD ───────────────
-            _NutritionBlueprintCard(
-              profile: profile,
-              isDark: isDark,
-              surfaceColor: surfaceColor,
-              dividerColor: dividerColor,
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              goalLabel: _goalLabel(profile.goal),
-              onTap: () => _openGoalsAndNutrition(context, profile),
+            // ── 4. WEIGHT PROGRESS CHART ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: WeightJourneyChart(
+                logs: weightLogs,
+                profile: profile,
+                isDark: isDark,
+                onTap: () => _openGoalsAndNutrition(context, profile),
+              ),
             ),
 
             const SizedBox(height: 22),
 
             // ── 5. PERSONAL SECTION ───────────────────────────────────
             _SectionHeader(
-              'Personal',
+              'profile.personal'.tr(),
               textSecondary: textSecondary,
             ),
             const SizedBox(height: 10),
@@ -391,7 +370,7 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.track_changes_rounded,
                       title: 'profile.goalsAndNutrition'.tr(),
                       subtitle:
-                          '${_goalLabel(profile.goal)} • ${profile.dailyCalorieTarget.round()} kcal/day',
+                          '${_goalLabel(profile.goal)} • ${'profile.kcalPerDay'.tr(args: [profile.dailyCalorieTarget.round().toString()])}',
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onTap: () => _openGoalsAndNutrition(context, profile),
@@ -424,8 +403,13 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileNavRow(
                       icon: Icons.receipt_long_outlined,
                       title: 'profile.myFoodRequests'.tr(),
-                      subtitle:
-                          '${foodRequests.length} submissions • ${foodRequests.where((r) => r.status == 'approved').length} approved',
+                      subtitle: 'profile.submissionsCount'.tr(args: [
+                        foodRequests.length.toString(),
+                        foodRequests
+                            .where((r) => r.status == 'approved')
+                            .length
+                            .toString(),
+                      ]),
                       badge: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -572,11 +556,10 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _openGoalsAndNutrition(BuildContext context, UserProfile profile) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _GoalsAndNutritionSheet(profile: profile),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const GoalsAndNutritionScreen(),
+      ),
     );
   }
 
@@ -753,379 +736,6 @@ class _BodyMetricsStrip extends StatelessWidget {
       height: 24,
       width: 0.8,
       color: dividerColor,
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// NUTRITION & METABOLIC BLUEPRINT CARD
-// ════════════════════════════════════════════════════════════════
-
-class _NutritionBlueprintCard extends StatelessWidget {
-  const _NutritionBlueprintCard({
-    required this.profile,
-    required this.isDark,
-    required this.surfaceColor,
-    required this.dividerColor,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.goalLabel,
-    required this.onTap,
-  });
-
-  final UserProfile profile;
-  final bool isDark;
-  final Color surfaceColor;
-  final Color dividerColor;
-  final Color textPrimary;
-  final Color textSecondary;
-  final String goalLabel;
-  final VoidCallback onTap;
-
-  String _activityShortLabel(ActivityLevel level) {
-    switch (level) {
-      case ActivityLevel.sedentary:
-        return 'Sedentary';
-      case ActivityLevel.light:
-        return 'Light';
-      case ActivityLevel.moderate:
-        return 'Moderate';
-      case ActivityLevel.active:
-        return 'Active';
-      case ActivityLevel.veryActive:
-        return 'Very Active';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Macro proportions for segmented bar
-    final proteinCals = profile.proteinTargetG * 4;
-    final carbsCals = profile.carbsTargetG * 4;
-    final fatCals = profile.fatTargetG * 9;
-    final totalCals =
-        (proteinCals + carbsCals + fatCals).clamp(1.0, 10000.0);
-
-    final pRatio = (proteinCals / totalCals).clamp(0.1, 0.7);
-    final cRatio = (carbsCals / totalCals).clamp(0.1, 0.7);
-    final fRatio = (fatCals / totalCals).clamp(0.1, 0.7);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
-      child: Material(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: dividerColor, width: 0.8),
-              boxShadow: AppShadows.card(isDark),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header: Flame icon, Energy Budget, Calories & Goal Badge
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: AppColors.protein.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.local_fire_department_rounded,
-                        color: AppColors.protein,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'profile.energyBudget'.tr(),
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                '${profile.dailyCalorieTarget.round()}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: textPrimary,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'kcal / day',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Goal Pill Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.accent.withValues(alpha: 0.18)
-                            : const Color(0xFFE8F8D0),
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.accent.withValues(alpha: 0.35)
-                              : const Color(0xFFC7F464),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        goalLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.accent
-                              : const Color(0xFF2E6319),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Atwater Proportional Macro Bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: SizedBox(
-                    height: 8,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: (pRatio * 100).round(),
-                          child: Container(color: AppColors.protein),
-                        ),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          flex: (cRatio * 100).round(),
-                          child: Container(color: AppColors.carbs),
-                        ),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          flex: (fRatio * 100).round(),
-                          child: Container(color: AppColors.fat),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Macro Target Chips (Protein, Carbs, Fat)
-                Row(
-                  children: [
-                    _buildMacroChip(
-                      label: 'dashboard.protein'.tr(),
-                      grams: '${profile.proteinTargetG.round()}g',
-                      pct: '${(pRatio * 100).round()}%',
-                      color: AppColors.protein,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildMacroChip(
-                      label: 'dashboard.carbs'.tr(),
-                      grams: '${profile.carbsTargetG.round()}g',
-                      pct: '${(cRatio * 100).round()}%',
-                      color: AppColors.carbs,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildMacroChip(
-                      label: 'dashboard.fat'.tr(),
-                      grams: '${profile.fatTargetG.round()}g',
-                      pct: '${(fRatio * 100).round()}%',
-                      color: AppColors.fat,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-                Divider(height: 1, thickness: 0.6, color: dividerColor),
-                const SizedBox(height: 12),
-
-                // Mifflin-St Jeor Metabolic Baselines (BMR, TDEE, Activity)
-                Row(
-                  children: [
-                    _buildMetabolicStat(
-                      label: 'BMR',
-                      sublabel: 'Basal Burn',
-                      value: '${profile.bmr.round()} kcal',
-                    ),
-                    Container(height: 28, width: 0.8, color: dividerColor),
-                    _buildMetabolicStat(
-                      label: 'TDEE',
-                      sublabel: 'Maintenance',
-                      value: '${profile.tdee.round()} kcal',
-                    ),
-                    Container(height: 28, width: 0.8, color: dividerColor),
-                    _buildMetabolicStat(
-                      label: 'Activity',
-                      sublabel: _activityShortLabel(profile.activityLevel),
-                      value: 'Level',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMacroChip({
-    required String label,
-    required String grams,
-    required String pct,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.08 : 0.06),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.25 : 0.20),
-            width: 0.8,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  grams,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  pct,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetabolicStat({
-    required String label,
-    required String sublabel,
-    required String value,
-  }) {
-    return Expanded(
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 1),
-          Text(
-            sublabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -1698,86 +1308,6 @@ class _CaloraMembershipFooter extends StatelessWidget {
   }
 }
 
-// ════════════════════════════════════════════════════════════════
-// MACRO TARGET ITEM
-// ════════════════════════════════════════════════════════════════
-
-class _MacroTargetItem extends StatelessWidget {
-  const _MacroTargetItem({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.isDark,
-    required this.surfaceColor,
-    required this.textPrimary,
-    required this.textSecondary,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-  final bool isDark;
-  final Color surfaceColor;
-  final Color textPrimary;
-  final Color textSecondary;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.35 : 0.40),
-            width: 1.0,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ════════════════════════════════════════════════════════════════
 // PROFILE NAVIGATION ROW
@@ -2028,223 +1558,6 @@ class _PersonalInformationSheet extends StatelessWidget {
   }
 }
 
-// ════════════════════════════════════════════════════════════════
-// GOALS & NUTRITION SHEET
-// ════════════════════════════════════════════════════════════════
-
-class _GoalsAndNutritionSheet extends StatelessWidget {
-  const _GoalsAndNutritionSheet({required this.profile});
-
-  final UserProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final surfaceAlt =
-        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
-
-    String goalTitle;
-    switch (profile.goal) {
-      case Goal.loseWeight:
-        goalTitle = 'dashboard.goals.loseWeight'.tr();
-        break;
-      case Goal.maintainWeight:
-        goalTitle = 'dashboard.goals.maintainWeight'.tr();
-        break;
-      case Goal.gainWeight:
-        goalTitle = 'dashboard.goals.gainWeight'.tr();
-        break;
-    }
-
-    String paceTitle;
-    switch (profile.goalPace) {
-      case GoalPace.gentle:
-        paceTitle = 'Gentle pace (0.25 kg/wk)';
-        break;
-      case GoalPace.moderate:
-        paceTitle = 'Moderate pace (0.5 kg/wk)';
-        break;
-      case GoalPace.faster:
-        paceTitle = 'Faster pace (0.75 kg/wk)';
-        break;
-    }
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        22,
-        12,
-        22,
-        MediaQuery.viewInsetsOf(context).bottom + 28,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: divider, width: 0.8)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-
-          Text(
-            'profile.goalsAndNutrition'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'onboarding.goalSubtitle'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Goals Summary Card
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: surfaceAlt,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: divider, width: 0.8),
-            ),
-            child: Column(
-              children: [
-                _InfoDetailRow(
-                  label: 'profile.goal'.tr(),
-                  value: goalTitle,
-                  icon: Icons.track_changes_rounded,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-                Divider(height: 24, thickness: 0.6, color: divider),
-                _InfoDetailRow(
-                  label: 'profile.goalPaceLabel'.tr(),
-                  value: paceTitle,
-                  icon: Icons.speed_rounded,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-                if (profile.targetWeightKg != null) ...[
-                  Divider(height: 24, thickness: 0.6, color: divider),
-                  _InfoDetailRow(
-                    label: 'onboarding.targetWeightLabel'.tr(),
-                    value: '${profile.targetWeightKg!.toStringAsFixed(1)} kg',
-                    icon: Icons.flag_rounded,
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                  ),
-                ],
-                Divider(height: 24, thickness: 0.6, color: divider),
-                _InfoDetailRow(
-                  label: 'profile.dailyTarget'.tr(),
-                  value: '${profile.dailyCalorieTarget.round()} kcal',
-                  icon: Icons.local_fire_department_rounded,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Macros Summary Row
-          Row(
-            children: [
-              _MacroTargetItem(
-                label: 'dashboard.protein'.tr(),
-                value: '${profile.proteinTargetG.round()} g',
-                color: AppColors.protein,
-                isDark: isDark,
-                surfaceColor: surfaceAlt,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              ),
-              const SizedBox(width: 8),
-              _MacroTargetItem(
-                label: 'dashboard.carbs'.tr(),
-                value: '${profile.carbsTargetG.round()} g',
-                color: AppColors.carbs,
-                isDark: isDark,
-                surfaceColor: surfaceAlt,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              ),
-              const SizedBox(width: 8),
-              _MacroTargetItem(
-                label: 'dashboard.fat'.tr(),
-                value: '${profile.fatTargetG.round()} g',
-                color: AppColors.fat,
-                isDark: isDark,
-                surfaceColor: surfaceAlt,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Edit Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => EditProfileSheet(profile: profile),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: const Color(0xFF0F1410),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                'profile.editProfile'.tr(),
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _InfoDetailRow extends StatelessWidget {
   const _InfoDetailRow({
@@ -2307,10 +1620,17 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   late final TextEditingController _heightCtrl;
   late final TextEditingController _weightCtrl;
   late final TextEditingController _targetWeightCtrl;
+  late final FocusNode _heightFocus;
+  late final FocusNode _weightFocus;
+  late final FocusNode _targetWeightFocus;
   late Goal _selectedGoal;
   late GoalPace _selectedGoalPace;
   String? _currentAvatarUrl;
   bool _isUploadingPhoto = false;
+
+  String? _heightError;
+  String? _weightError;
+  String? _targetWeightError;
 
   @override
   void initState() {
@@ -2326,6 +1646,9 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
     _targetWeightCtrl = TextEditingController(
       text: widget.profile.targetWeightKg?.toStringAsFixed(1) ?? '',
     );
+    _heightFocus = FocusNode();
+    _weightFocus = FocusNode();
+    _targetWeightFocus = FocusNode();
     _selectedGoal = widget.profile.goal;
     _selectedGoalPace = widget.profile.goalPace;
   }
@@ -2336,7 +1659,48 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
     _heightCtrl.dispose();
     _weightCtrl.dispose();
     _targetWeightCtrl.dispose();
+    _heightFocus.dispose();
+    _weightFocus.dispose();
+    _targetWeightFocus.dispose();
     super.dispose();
+  }
+
+  void _validateHeight([String? value]) {
+    final text = value ?? _heightCtrl.text;
+    final err = InputValidators.validateHeight(text);
+    if (_heightError != err) {
+      setState(() => _heightError = err);
+    }
+  }
+
+  void _validateWeight([String? value]) {
+    final text = value ?? _weightCtrl.text;
+    final err = InputValidators.validateWeight(text);
+    if (_weightError != err) {
+      setState(() => _weightError = err);
+    }
+    if (_targetWeightCtrl.text.trim().isNotEmpty) {
+      _validateTargetWeight();
+    }
+  }
+
+  void _validateTargetWeight([String? value]) {
+    final text = value ?? _targetWeightCtrl.text;
+    if (_selectedGoal == Goal.maintainWeight) {
+      if (_targetWeightError != null) {
+        setState(() => _targetWeightError = null);
+      }
+      return;
+    }
+    final currentW = double.tryParse(_weightCtrl.text.replaceAll(',', '.'));
+    final err = InputValidators.validateTargetWeight(
+      targetWeightStr: text,
+      currentWeight: currentW,
+      goal: _selectedGoal,
+    );
+    if (_targetWeightError != err) {
+      setState(() => _targetWeightError = err);
+    }
   }
 
   Future<void> _pickAndUploadImage(ImageSource source) async {
@@ -2858,11 +2222,16 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
 
                   // Height & Weight
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _heightCtrl,
-                          keyboardType: TextInputType.number,
+                          focusNode: _heightFocus,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [InputValidators.decimalFormatter],
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -2870,19 +2239,29 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                           ),
                           decoration: InputDecoration(
                             labelText: 'profile.heightCmLabel'.tr(),
+                            errorText: _heightError,
+                            errorMaxLines: 3,
+                            errorStyle: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              height: 1.15,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
+                          onChanged: _validateHeight,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
                           controller: _weightCtrl,
+                          focusNode: _weightFocus,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          inputFormatters: [InputValidators.decimalFormatter],
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -2890,10 +2269,18 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                           ),
                           decoration: InputDecoration(
                             labelText: 'profile.weightKgLabel'.tr(),
+                            errorText: _weightError,
+                            errorMaxLines: 3,
+                            errorStyle: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              height: 1.15,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
+                          onChanged: _validateWeight,
                         ),
                       ),
                     ],
@@ -2930,20 +2317,26 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                       ),
                     ],
                     onChanged: (v) {
-                      if (v != null) setState(() => _selectedGoal = v);
+                      if (v != null) {
+                        setState(() => _selectedGoal = v);
+                        _validateTargetWeight();
+                      }
                     },
                   ),
                   const SizedBox(height: 14),
 
                   // Target Weight & Goal Pace
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _targetWeightCtrl,
+                          focusNode: _targetWeightFocus,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          inputFormatters: [InputValidators.decimalFormatter],
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -2951,10 +2344,18 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                           ),
                           decoration: InputDecoration(
                             labelText: 'profile.targetWeightKgLabel'.tr(),
+                            errorText: _targetWeightError,
+                            errorMaxLines: 3,
+                            errorStyle: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              height: 1.15,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
+                          onChanged: _validateTargetWeight,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -3021,8 +2422,31 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
               onPressed: _isUploadingPhoto
                   ? null
                   : () {
-                      final parsedTargetWeight =
-                          double.tryParse(_targetWeightCtrl.text);
+                      _validateHeight();
+                      _validateWeight();
+                      _validateTargetWeight();
+
+                      if (_heightError != null) {
+                        _heightFocus.requestFocus();
+                        return;
+                      }
+                      if (_weightError != null) {
+                        _weightFocus.requestFocus();
+                        return;
+                      }
+                      if (_targetWeightError != null) {
+                        _targetWeightFocus.requestFocus();
+                        return;
+                      }
+
+                      final parsedTargetWeight = double.tryParse(
+                          _targetWeightCtrl.text.replaceAll(',', '.'));
+                      final parsedHeight = double.tryParse(
+                              _heightCtrl.text.replaceAll(',', '.')) ??
+                          widget.profile.heightCm;
+                      final parsedWeight = double.tryParse(
+                              _weightCtrl.text.replaceAll(',', '.')) ??
+                          widget.profile.weightKg;
 
                       final updatedProfile = widget.profile.copyWith(
                         name: _nameCtrl.text.trim().isNotEmpty
@@ -3030,10 +2454,8 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                             : widget.profile.name,
                         avatarUrl: _currentAvatarUrl,
                         clearAvatarUrl: _currentAvatarUrl == null,
-                        heightCm: double.tryParse(_heightCtrl.text) ??
-                            widget.profile.heightCm,
-                        weightKg: double.tryParse(_weightCtrl.text) ??
-                            widget.profile.weightKg,
+                        heightCm: parsedHeight,
+                        weightKg: parsedWeight,
                         targetWeightKg: parsedTargetWeight,
                         goal: _selectedGoal,
                         goalPace: _selectedGoalPace,

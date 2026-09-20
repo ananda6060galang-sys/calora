@@ -315,23 +315,50 @@ class _CalorieHeroCard extends StatelessWidget {
                     bottom: 14,
                     child: Column(
                       children: [
-                        const Icon(
-                            Icons.local_fire_department_rounded,
-                            size: 30,
-                            color: AppColors.warning,
-                          ),
+                        Icon(
+                          remaining < 0
+                              ? Icons.warning_amber_rounded
+                              : (remaining == 0
+                                  ? Icons.check_circle_rounded
+                                  : Icons.local_fire_department_rounded),
+                          size: 30,
+                          color: remaining < 0
+                              ? const Color(0xFFFF5252)
+                              : (remaining == 0
+                                  ? (isDark
+                                      ? AppColors.accent
+                                      : const Color(0xFF6EA800))
+                                  : AppColors.warning),
+                        ),
                         const SizedBox(height: 2),
                         Text(
-                          '$remaining',
-                          style: _textStyle(isDark: isDark, size: 31, weight: FontWeight.w900),
+                          remaining < 0 ? '+${remaining.abs()}' : '$remaining',
+                          style: _textStyle(
+                            isDark: isDark,
+                            size: 31,
+                            weight: FontWeight.w900,
+                            color: remaining < 0
+                                ? (isDark
+                                    ? const Color(0xFFFF6B6B)
+                                    : const Color(0xFFD32F2F))
+                                : null,
+                          ),
                         ),
                         Text(
-                          'dashboard.kcalLeft'.tr(),
+                          remaining < 0
+                              ? 'dashboard.kcalOver'.tr()
+                              : 'dashboard.kcalLeft'.tr(),
                           style: _textStyle(
                             isDark: isDark,
                             size: 12,
                             weight: FontWeight.w600,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: remaining < 0
+                                ? (isDark
+                                    ? const Color(0xFFFF6B6B)
+                                    : const Color(0xFFD32F2F))
+                                : (isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                           ),
                         ),
                       ],

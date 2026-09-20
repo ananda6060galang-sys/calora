@@ -3,6 +3,7 @@
     "hello": "Hello",
     "dailySummary": "Daily Summary",
     "kcalLeft": "kcal left",
+    "kcalOver": "kcal over",
     "consumed": "Consumed",
     "goal": "Goal",
     "protein": "Protein",
@@ -73,6 +74,10 @@
     "invalidEmail": "Please enter a valid email address",
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
+    "nameRequired": "Name is required",
+    "wrongCredentials": "Email or password is incorrect",
+    "emailAlreadyInUse": "Email is already registered",
+    "passwordTooShort": "Password must be at least 6 characters",
     "registrationSuccessful": "Account created successfully!"
   },
   "onboarding": {
@@ -147,7 +152,8 @@
     "personalizedPlan": "Here's your personalized daily plan.",
     "dailyCalories": "Daily Calories",
     "disclaimer": "These targets are calculated using the Mifflin-St Jeor equation based on your profile. They are for reference only, not medical advice.",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "restartGuide": "Entered wrong data? Start over"
   },
   "diary": {
     "meals": {
@@ -155,6 +161,14 @@
       "lunch": "Lunch",
       "snack": "Snack",
       "dinner": "Dinner"
+    },
+    "categories": {
+      "all": "All",
+      "riceCarbs": "Rice & Carbs",
+      "proteinMeat": "Meat & Protein",
+      "plantVeggies": "Plant & Veggies",
+      "snacks": "Snacks",
+      "drinks": "Drinks"
     },
     "setDailyMealPlan": "Set your daily\nmeal plan",
     "loggedFoods": "Logged Foods",
@@ -292,6 +306,21 @@
   "profile": {
     "title": "Profile",
     "settings": "Settings",
+    "personal": "Personal",
+    "weightProgress": "Weight Progress",
+    "weightTrend": "Weight Trend",
+    "weightLogsCount": "{} entries in 4 weeks",
+    "planLabel": "Plan",
+    "trendStable": "Stable (0.0 kg)",
+    "trendDown": "Down {} kg",
+    "trendUp": "Up {} kg",
+    "today": "Today",
+    "target": "Target",
+    "targetGuideline": "Dotted line shows target weight",
+    "editPlan": "Edit Plan",
+    "manageTarget": "Manage Target",
+    "submissionsCount": "{} submissions · {} approved",
+    "kcalPerDay": "{} kcal/day",
     "ageAndGender": "{} years old  ·  {}",
     "edit": "Edit",
     "height": "Height",
@@ -320,6 +349,9 @@
     "avatarUrlLabel": "Avatar Image URL",
     "avatarUrlHint": "https://example.com/avatar.jpg",
     "memberSince": "Calora Member",
+    "weight": "Weight",
+    "height": "Height",
+    "age": "Age",
     "preferences": "PREFERENCES",
     "account": "ACCOUNT",
     "accountSettings": "Account settings",
@@ -334,6 +366,19 @@
     "logOut": "Log Out",
     "logOutConfirmTitle": "Log Out",
     "logOutConfirmMessage": "Are you sure you want to log out of your account?",
+    "restartGuideTitle": "Want to start over?",
+    "restartGuideSubtitle": "Repeat the onboarding guide to recalculate your physical and calorie targets step-by-step.",
+    "restartGuideAction": "Restart Guide",
+    "confirmResetTitle": "Restart target setup?",
+    "confirmResetMessage": "You will be guided from the beginning to enter your physical data and goals. Your previous targets will be updated automatically upon completion.",
+    "restartGuideConfirm": "Restart Now",
+    "currentWeight": "Current Weight",
+    "logWeightToday": "Log Today's Weight",
+    "updateWeightTitle": "What's your weight today?",
+    "updateWeightSubtitle": "Calora will automatically recalculate your remaining targets & daily calories.",
+    "saveWeight": "Save Weight",
+    "weightUpdatedSuccess": "Weight updated successfully!",
+    "changeGoalAndPlan": "Edit Goal & Plan",
     "cancel": "Cancel",
     "theme": {
       "light": "Light",
@@ -373,7 +418,28 @@
     "energyBudget": "Energy Budget",
     "metabolicBaselines": "Metabolic Baselines",
     "privacySecurity": "Privacy & Health Data",
-    "privacySecuritySubtitle": "Local encryption & RLS protected"
+    "privacySecuritySubtitle": "Local encryption & RLS protected",
+    "goalRoadmap": {
+      "title": "Goal Roadmap & Projection",
+      "subtitle": "How Calora guides you to your target weight",
+      "current": "Current",
+      "target": "Target",
+      "difference": "Difference",
+      "estimatedTimeline": "Estimated Timeline",
+      "dailyStrategy": "Daily Strategy",
+      "keyToSuccess": "Key to Success",
+      "weeksCount": "{} weeks",
+      "estCompletion": "Est. {}",
+      "deficitPerDay": "{} kcal deficit/day",
+      "surplusPerDay": "{} kcal surplus/day",
+      "hitProteinDaily": "Eat {}g protein/day to preserve muscle",
+      "hitProteinGain": "Eat {}g protein/day for muscle hypertrophy",
+      "maintainBalance": "Eat at TDEE to maintain energy balance",
+      "loseWeightExplanation": "By eating {} kcal/day ({} kcal below your TDEE), your body burns stored fat at a safe, sustainable pace of {} kg/week without crashing your metabolism.",
+      "gainWeightExplanation": "By eating {} kcal/day ({} kcal above your TDEE), your body receives optimal surplus energy to build lean muscle at {} kg/week.",
+      "maintainExplanation": "Your daily intake matches your TDEE ({} kcal/day). Consistently logging your meals ensures your weight stays stable and healthy.",
+      "bmrFloorProtected": "Deficit capped at BMR floor ({} kcal) for your metabolic safety."
+    }
   },
   "insights": {
     "title": "Insights",
@@ -466,5 +532,16 @@
   },
   "splash": {
     "tagline": "Eat smart. Train hard. Track it all."
+  },
+  "validation": {
+    "invalidNumber": "Invalid number",
+    "heightRange": "Range: {} - {} cm",
+    "weightRange": "Range: {} - {} kg",
+    "targetMustBeLower": "Must be < {} kg",
+    "targetMustBeHigher": "Must be > {} kg",
+    "servingPositive": "Must be > 0",
+    "servingRange": "Range: {} - {}",
+    "caloriesMax": "Max {} kcal",
+    "macroMax": "Max {}g"
   }
 }

@@ -4,11 +4,13 @@ import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/input_validators.dart';
 import '../../../main.dart';
 import '../../../models/food.dart';
 import '../providers/ai_scanner_provider.dart';
@@ -1727,7 +1729,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                               ),
                               const SizedBox(height: 12),
 
-                              // Portion & Calories Row
+                               // Portion & Calories Row
                               Row(
                                 children: [
                                   Expanded(
@@ -1736,6 +1738,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                       controller: _portionController,
                                       isDark: isDark,
                                       isNumber: true,
+                                      inputFormatters: [InputValidators.decimalFormatter],
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -1745,6 +1748,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                       controller: _calController,
                                       isDark: isDark,
                                       isNumber: true,
+                                      inputFormatters: [InputValidators.integerFormatter],
                                     ),
                                   ),
                                 ],
@@ -1760,6 +1764,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                       controller: _proteinController,
                                       isDark: isDark,
                                       isNumber: true,
+                                      inputFormatters: [InputValidators.decimalFormatter],
                                       accentColor: AppColors.protein,
                                     ),
                                   ),
@@ -1770,6 +1775,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                       controller: _carbsController,
                                       isDark: isDark,
                                       isNumber: true,
+                                      inputFormatters: [InputValidators.decimalFormatter],
                                       accentColor: AppColors.carbs,
                                     ),
                                   ),
@@ -1780,6 +1786,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                       controller: _fatController,
                                       isDark: isDark,
                                       isNumber: true,
+                                      inputFormatters: [InputValidators.decimalFormatter],
                                       accentColor: AppColors.fat,
                                     ),
                                   ),
@@ -1842,11 +1849,17 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                   ),
                                   onPressed: () {
                                     final name = _nameController.text.trim();
-                                    final portion = double.tryParse(_portionController.text.trim());
-                                    final cal = int.tryParse(_calController.text.trim());
-                                    final pro = double.tryParse(_proteinController.text.trim());
-                                    final carbs = double.tryParse(_carbsController.text.trim());
-                                    final fat = double.tryParse(_fatController.text.trim());
+                                    final rawPortion = double.tryParse(_portionController.text.trim().replaceAll(',', '.'));
+                                    final rawCal = int.tryParse(_calController.text.trim().replaceAll(',', '.'));
+                                    final rawPro = double.tryParse(_proteinController.text.trim().replaceAll(',', '.'));
+                                    final rawCarbs = double.tryParse(_carbsController.text.trim().replaceAll(',', '.'));
+                                    final rawFat = double.tryParse(_fatController.text.trim().replaceAll(',', '.'));
+
+                                    final portion = rawPortion?.clamp(0.0, InputValidators.maxPortionGrams);
+                                    final cal = rawCal?.clamp(0, InputValidators.maxCalories);
+                                    final pro = rawPro?.clamp(0.0, InputValidators.maxMacroGrams);
+                                    final carbs = rawCarbs?.clamp(0.0, InputValidators.maxMacroGrams);
+                                    final fat = rawFat?.clamp(0.0, InputValidators.maxMacroGrams);
 
                                     setState(() {
                                       _selectedMeal = sheetMeal;
@@ -1896,6 +1909,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
     required TextEditingController controller,
     required bool isDark,
     bool isNumber = false,
+    List<TextInputFormatter>? inputFormatters,
     Color? accentColor,
   }) {
     return Column(
@@ -1918,6 +1932,8 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
           keyboardType: isNumber
               ? const TextInputType.numberWithOptions(decimal: true)
               : TextInputType.text,
+          inputFormatters: inputFormatters ??
+              (isNumber ? [InputValidators.decimalFormatter] : null),
           scrollPadding: const EdgeInsets.only(bottom: 80.0, top: 20.0),
           style: GoogleFonts.inter(
             fontSize: 14,

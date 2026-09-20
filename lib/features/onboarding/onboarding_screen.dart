@@ -1,10 +1,13 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/input_validators.dart';
 import '../../core/widgets/app_button.dart';
 import '../../models/user_profile.dart';
+import '../auth/login_screen.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
 import 'onboarding_result_screen.dart';
@@ -40,19 +43,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 1:
         return _dateOfBirth != null;
       case 2:
-        final h = double.tryParse(_heightController.text.trim());
-        final w = double.tryParse(_weightController.text.trim());
-        return h != null && h > 0 && w != null && w > 0;
+        final hText = _heightController.text.trim();
+        final wText = _weightController.text.trim();
+        if (hText.isEmpty || wText.isEmpty) return false;
+        final hErr = InputValidators.validateHeight(hText);
+        final wErr = InputValidators.validateWeight(wText);
+        return hErr == null && wErr == null;
       case 3:
         return _activity != null;
       case 4:
         if (_goal == null) return false;
         if (_goal != Goal.maintainWeight) {
           final twText = _targetWeightController.text.trim();
-          if (twText.isNotEmpty) {
-            final tw = double.tryParse(twText);
-            if (tw == null || tw <= 0) return false;
-          }
+          if (twText.isEmpty) return false;
+          final currentW = double.tryParse(_weightController.text.trim());
+          final twErr = InputValidators.validateTargetWeight(
+            targetWeightStr: twText,
+            currentWeight: currentW,
+            goal: _goal!,
+          );
+          return twErr == null;
         }
         return true;
       default:
@@ -135,7 +145,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _back() {
     if (_step == 0) {
-      Navigator.of(context).pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
       return;
     }
     setState(() => _step--);
@@ -175,66 +191,73 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: _back,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _back();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+            onPressed: _back,
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Progress bar
-              Row(
-                children: List.generate(_totalSteps, (i) {
-                  return Expanded(
-                    child: Container(
-                      height: 4,
-                      margin: EdgeInsets.only(
-                        right: i == _totalSteps - 1 ? 0 : AppSpacing.xs,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Progress bar
+                Row(
+                  children: List.generate(_totalSteps, (i) {
+                    return Expanded(
+                      child: Container(
+                        height: 4,
+                        margin: EdgeInsets.only(
+                          right: i == _totalSteps - 1 ? 0 : AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: i <= _step
+                              ? AppColors.accent
+                              : Theme.of(context).dividerColor,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: i <= _step
-                            ? AppColors.accent
-                            : Theme.of(context).dividerColor,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Page content
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _nameAndGenderStep(),
-                    _dobStep(),
-                    _heightAndWeightStep(),
-                    _activityStep(),
-                    _goalStep(),
-                  ],
+                    );
+                  }),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.xl),
 
-              // Continue button
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: AppButton(
-                  label: _step == _totalSteps - 1
-                      ? 'onboarding.seeMyPlan'.tr()
-                      : 'onboarding.continue'.tr(),
-                  onPressed: (_canProceed && !_savingProfile) ? _next : null,
+                // Page content
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _nameAndGenderStep(),
+                      _dobStep(),
+                      _heightAndWeightStep(),
+                      _activityStep(),
+                      _goalStep(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                // Continue button
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: AppButton(
+                    label: _step == _totalSteps - 1
+                        ? 'onboarding.seeMyPlan'.tr()
+                        : 'onboarding.continue'.tr(),
+                    onPressed: (_canProceed && !_savingProfile) ? _next : null,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -459,6 +482,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: TextField(
@@ -466,10 +490,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  inputFormatters: [InputValidators.decimalFormatter],
                   style: Theme.of(context).textTheme.bodyLarge,
                   decoration: InputDecoration(
                     labelText: 'onboarding.heightLabel'.tr(),
                     suffixText: 'cm',
+                    errorText: _heightController.text.trim().isNotEmpty
+                        ? InputValidators.validateHeight(_heightController.text)
+                        : null,
+                    errorMaxLines: 3,
+                    errorStyle: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                      height: 1.15,
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -481,10 +515,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  inputFormatters: [InputValidators.decimalFormatter],
                   style: Theme.of(context).textTheme.bodyLarge,
                   decoration: InputDecoration(
                     labelText: 'onboarding.weightLabel'.tr(),
                     suffixText: 'kg',
+                    errorText: _weightController.text.trim().isNotEmpty
+                        ? InputValidators.validateWeight(_weightController.text)
+                        : null,
+                    errorMaxLines: 3,
+                    errorStyle: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                      height: 1.15,
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -632,9 +676,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               controller: _targetWeightController,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [InputValidators.decimalFormatter],
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: 'onboarding.targetWeightHint'.tr(),
                 suffixText: 'kg',
+                errorText: _targetWeightController.text.trim().isNotEmpty
+                    ? InputValidators.validateTargetWeight(
+                        targetWeightStr: _targetWeightController.text,
+                        currentWeight: currentWeight,
+                        goal: _goal!,
+                      )
+                    : null,
+                errorMaxLines: 3,
+                errorStyle: GoogleFonts.inter(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.15,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),

@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../../core/services/food_search_service.dart';
 import '../../../models/food.dart';
+import '../../../models/indonesian_foods_data.dart';
 import '../../../models/mock_data.dart';
 
-/// Provides the active [FoodSearchService] implementation.
-/// Default: [FatSecretFoodSearchService] with graceful mock fallback.
+/// Active [FoodSearchService] implementation.
+/// Default: [FatSecretFoodSearchService] which has instant, seamless fallback
+/// to [indonesianFoods] curated dataset if network/FatSecret is unreachable.
 final foodSearchServiceProvider = Provider<FoodSearchService>((ref) {
   return FatSecretFoodSearchService();
 });
@@ -20,6 +22,7 @@ class FoodSearchState {
     this.status = FoodSearchStatus.idle,
     this.foods = const [],
     this.query = '',
+    this.selectedCategory = 'Semua',
     this.errorMessage,
     this.isFallback = false,
   });
@@ -27,6 +30,7 @@ class FoodSearchState {
   final FoodSearchStatus status;
   final List<Food> foods;
   final String query;
+  final String selectedCategory;
   final String? errorMessage;
   final bool isFallback;
 
@@ -34,6 +38,7 @@ class FoodSearchState {
     FoodSearchStatus? status,
     List<Food>? foods,
     String? query,
+    String? selectedCategory,
     String? errorMessage,
     bool? isFallback,
   }) {
@@ -41,20 +46,23 @@ class FoodSearchState {
       status: status ?? this.status,
       foods: foods ?? this.foods,
       query: query ?? this.query,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
       errorMessage: errorMessage,
       isFallback: isFallback ?? this.isFallback,
     );
   }
 }
 
-/// StateNotifier managing food search queries, debounce, and network requests.
+/// StateNotifier managing food search queries, categories, debounce, and network requests.
 class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
   FoodSearchNotifier(this._service) : super(const FoodSearchState()) {
-    // Initially populate with default foods in idle state for clean UX
+    // Initially populate with Indonesian foods database in idle state for instant offline UX
+    final initialList = [...indonesianFoods, ...demoFoods];
     state = FoodSearchState(
       status: FoodSearchStatus.idle,
-      foods: demoFoods,
+      foods: initialList,
       query: '',
+      selectedCategory: 'Semua',
     );
   }
 
@@ -62,27 +70,29 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
   Timer? _debounceTimer;
   int _searchCounter = 0;
 
+  void onCategoryChanged(String category) {
+    state = state.copyWith(selectedCategory: category);
+    _executeSearch(state.query, category: category);
+  }
+
   void onQueryChanged(String query) {
     _debounceTimer?.cancel();
 
     final clean = query.trim();
     if (clean.isEmpty) {
-      state = FoodSearchState(
-        status: FoodSearchStatus.idle,
-        foods: demoFoods,
-        query: '',
-      );
+      _executeSearch('', category: state.selectedCategory);
       return;
     }
 
-    // Debounce between 350ms
-    _debounceTimer = Timer(const Duration(milliseconds: 350), () {
-      _executeSearch(clean);
+    // Debounce 250ms for snappy responsiveness
+    _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+      _executeSearch(clean, category: state.selectedCategory);
     });
   }
 
-  Future<void> _executeSearch(String query) async {
+  Future<void> _executeSearch(String query, {String? category}) async {
     final searchId = ++_searchCounter;
+    final activeCategory = category ?? state.selectedCategory;
 
     state = state.copyWith(
       status: FoodSearchStatus.loading,
@@ -91,9 +101,12 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
     );
 
     try {
-      final results = await _service.searchFoods(query);
+      final results = await _service.searchFoods(
+        query,
+        category: activeCategory == 'Semua' ? null : activeCategory,
+      );
 
-      // Verify that this is still the freshest search
+      // Verify freshness of search
       if (searchId != _searchCounter) return;
 
       if (results.isEmpty) {
@@ -104,24 +117,36 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
         );
       } else {
         state = state.copyWith(
-          status: FoodSearchStatus.results,
+          status: query.isEmpty && activeCategory == 'Semua'
+              ? FoodSearchStatus.idle
+              : FoodSearchStatus.results,
           foods: results,
           isFallback: false,
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (searchId != _searchCounter) return;
 
-      // Graceful fallback to local mock foods matching query (token + substring matching)
+      // Fallback directly to local Indonesian foods database
       final queryLower = query.toLowerCase();
-      final tokens = queryLower.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+      final tokens =
+          queryLower.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
 
-      final fallbackResults = demoFoods.where((f) {
-        final nameLower = f.name.toLowerCase();
-        if (nameLower.contains(queryLower)) return true;
-        if (tokens.isNotEmpty && tokens.any((t) => nameLower.contains(t))) return true;
-        return false;
-      }).toList();
+      var baseList = [...indonesianFoods, ...demoFoods];
+      if (activeCategory != 'Semua') {
+        baseList = baseList
+            .where((f) => f.category.toLowerCase() == activeCategory.toLowerCase())
+            .toList();
+      }
+
+      final fallbackResults = queryLower.isEmpty
+          ? baseList
+          : baseList.where((f) {
+              final nameLower = f.name.toLowerCase();
+              if (nameLower.contains(queryLower)) return true;
+              if (tokens.isNotEmpty && tokens.every((t) => nameLower.contains(t))) return true;
+              return false;
+            }).toList();
 
       if (fallbackResults.isNotEmpty) {
         state = state.copyWith(
@@ -132,19 +157,17 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
         );
       } else {
         state = state.copyWith(
-          status: FoodSearchStatus.error,
+          status: FoodSearchStatus.empty,
           foods: [],
-          isFallback: false,
-          errorMessage: 'diary.searchUnavailableNotice',
+          isFallback: true,
+          errorMessage: null,
         );
       }
     }
   }
 
   void retry() {
-    if (state.query.isNotEmpty) {
-      _executeSearch(state.query);
-    }
+    _executeSearch(state.query, category: state.selectedCategory);
   }
 
   @override

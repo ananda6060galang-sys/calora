@@ -1,9 +1,11 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/input_validators.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/food_category.dart';
 import 'providers/food_request_provider.dart';
@@ -27,6 +29,12 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
   final _notesCtrl = TextEditingController();
 
   String? _selectedCategoryId;
+  String? _nameError;
+  String? _servingError;
+  String? _caloriesError;
+  String? _proteinError;
+  String? _carbsError;
+  String? _fatError;
 
   @override
   void dispose() {
@@ -43,12 +51,40 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
   void _submit() {
     final name = _nameCtrl.text.trim();
     final serving = _servingCtrl.text.trim();
-    final cals = int.tryParse(_caloriesCtrl.text.trim()) ?? 0;
+    final cals = int.tryParse(_caloriesCtrl.text.trim().replaceAll(',', '.')) ?? 0;
+    final pro = double.tryParse(_proteinCtrl.text.trim().replaceAll(',', '.')) ?? 0.0;
+    final carbs = double.tryParse(_carbsCtrl.text.trim().replaceAll(',', '.')) ?? 0.0;
+    final fat = double.tryParse(_fatCtrl.text.trim().replaceAll(',', '.')) ?? 0.0;
 
-    if (name.isEmpty ||
-        serving.isEmpty ||
-        cals <= 0 ||
-        _selectedCategoryId == null) {
+    setState(() {
+      _nameError = name.isEmpty ? 'diary.foodRequest.fillRequired'.tr() : null;
+      _servingError = serving.isEmpty ? 'diary.foodRequest.fillRequired'.tr() : null;
+      _caloriesError = cals <= 0
+          ? 'validation.invalidNumber'.tr()
+          : (cals > InputValidators.maxCalories
+              ? 'validation.caloriesMax'.tr(args: ['${InputValidators.maxCalories}'])
+              : null);
+      _proteinError = pro > InputValidators.maxMacroGrams
+          ? 'validation.macroMax'.tr(args: ['${InputValidators.maxMacroGrams.round()}'])
+          : null;
+      _carbsError = carbs > InputValidators.maxMacroGrams
+          ? 'validation.macroMax'.tr(args: ['${InputValidators.maxMacroGrams.round()}'])
+          : null;
+      _fatError = fat > InputValidators.maxMacroGrams
+          ? 'validation.macroMax'.tr(args: ['${InputValidators.maxMacroGrams.round()}'])
+          : null;
+    });
+
+    if (_nameError != null ||
+        _servingError != null ||
+        _caloriesError != null ||
+        _proteinError != null ||
+        _carbsError != null ||
+        _fatError != null) {
+      return;
+    }
+
+    if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('diary.foodRequest.fillRequired'.tr()),
@@ -65,9 +101,9 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
           categoryId: _selectedCategoryId!,
           servingLabel: serving,
           calories: cals,
-          proteinG: double.tryParse(_proteinCtrl.text.trim()) ?? 0.0,
-          carbsG: double.tryParse(_carbsCtrl.text.trim()) ?? 0.0,
-          fatG: double.tryParse(_fatCtrl.text.trim()) ?? 0.0,
+          proteinG: pro,
+          carbsG: carbs,
+          fatG: fat,
           notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         );
 
@@ -182,6 +218,10 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                       label: 'diary.foodRequest.foodNameLabel'.tr(),
                       hint: 'diary.foodRequest.foodNameHint'.tr(),
                       icon: Icons.restaurant_menu_rounded,
+                      errorText: _nameError,
+                      onChanged: (_) {
+                        if (_nameError != null) setState(() => _nameError = null);
+                      },
                       isDark: isDark,
                     ),
                     const SizedBox(height: 16),
@@ -259,6 +299,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
 
                     // Serving Label & Calories
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: _SheetField(
@@ -266,6 +307,10 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             label: 'diary.foodRequest.servingSizeLabel'.tr(),
                             hint: 'diary.foodRequest.servingSizeHint'.tr(),
                             icon: Icons.scale_rounded,
+                            errorText: _servingError,
+                            onChanged: (_) {
+                              if (_servingError != null) setState(() => _servingError = null);
+                            },
                             isDark: isDark,
                           ),
                         ),
@@ -276,7 +321,12 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             label: 'diary.foodRequest.caloriesLabel'.tr(),
                             hint: 'diary.foodRequest.caloriesHint'.tr(),
                             keyboardType: TextInputType.number,
+                            inputFormatters: [InputValidators.integerFormatter],
                             icon: Icons.local_fire_department_rounded,
+                            errorText: _caloriesError,
+                            onChanged: (_) {
+                              if (_caloriesError != null) setState(() => _caloriesError = null);
+                            },
                             isDark: isDark,
                           ),
                         ),
@@ -297,6 +347,7 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                     ),
                     const SizedBox(height: 6),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: _SheetField(
@@ -306,6 +357,11 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
+                            inputFormatters: [InputValidators.decimalFormatter],
+                            errorText: _proteinError,
+                            onChanged: (_) {
+                              if (_proteinError != null) setState(() => _proteinError = null);
+                            },
                             isDark: isDark,
                           ),
                         ),
@@ -318,6 +374,11 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
+                            inputFormatters: [InputValidators.decimalFormatter],
+                            errorText: _carbsError,
+                            onChanged: (_) {
+                              if (_carbsError != null) setState(() => _carbsError = null);
+                            },
                             isDark: isDark,
                           ),
                         ),
@@ -330,6 +391,11 @@ class _FoodRequestSheetState extends State<FoodRequestSheet> {
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
+                            inputFormatters: [InputValidators.decimalFormatter],
+                            errorText: _fatError,
+                            onChanged: (_) {
+                              if (_fatError != null) setState(() => _fatError = null);
+                            },
                             isDark: isDark,
                           ),
                         ),
@@ -394,6 +460,9 @@ class _SheetField extends StatelessWidget {
     required this.label,
     required this.hint,
     this.keyboardType,
+    this.inputFormatters,
+    this.errorText,
+    this.onChanged,
     this.icon,
     this.maxLines = 1,
     required this.isDark,
@@ -403,6 +472,9 @@ class _SheetField extends StatelessWidget {
   final String label;
   final String hint;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
   final IconData? icon;
   final int maxLines;
   final bool isDark;
@@ -426,6 +498,8 @@ class _SheetField extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          onChanged: onChanged,
           maxLines: maxLines,
           style: GoogleFonts.inter(
             fontSize: 14,
@@ -436,6 +510,8 @@ class _SheetField extends StatelessWidget {
           ),
           decoration: InputDecoration(
             hintText: hint,
+            errorText: errorText,
+            errorMaxLines: 2,
             hintStyle: GoogleFonts.inter(
               fontSize: 13,
               color: AppColors.lightTextTertiary,

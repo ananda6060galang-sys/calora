@@ -8,6 +8,7 @@ import '../../core/theme/app_spacing.dart';
 
 import '../../core/widgets/food_card.dart';
 import '../../core/widgets/progress_ring.dart';
+import '../../core/utils/input_validators.dart';
 
 import '../../models/food.dart';
 
@@ -962,7 +963,7 @@ class _MealCard extends StatelessWidget {
                         child: FoodCard(
                           name: item.food.name,
                           serving:
-                              '${item.servings == item.servings.toInt() ? item.servings.toInt() : item.servings} x ${item.food.servingLabel}',
+                              '${item.servings == item.servings.toInt() ? item.servings.toInt() : item.servings} x ${localizeServingText(item.food.servingLabel, context)}',
                           calories: item.calories,
                           protein: item.proteinG,
                           carbs: item.carbsG,
@@ -1214,6 +1215,50 @@ class _MacroRow extends StatelessWidget {
   }
 }
 
+/// Localizes Indonesian household serving descriptions (e.g. "centong" -> "scoop",
+/// "potong" -> "piece", "mangkok" -> "bowl") to English when the active locale is English,
+/// while strictly preserving the authentic Indonesian food name.
+String localizeServingText(String raw, BuildContext context) {
+  if (context.locale.languageCode != 'en') {
+    return raw;
+  }
+  String text = raw;
+  const replacements = [
+    {'id': 'porsi mangkok besar', 'en': 'large bowl portion'},
+    {'id': 'porsi warung', 'en': 'regular portion'},
+    {'id': 'porsi sedang', 'en': 'medium portion'},
+    {'id': 'porsi kecil', 'en': 'small portion'},
+    {'id': 'porsi besar', 'en': 'large portion'},
+    {'id': 'porsi', 'en': 'portion'},
+    {'id': 'centong', 'en': 'scoop'},
+    {'id': 'potong sedang', 'en': 'medium piece'},
+    {'id': 'potong kecil', 'en': 'small piece'},
+    {'id': 'potong besar', 'en': 'large piece'},
+    {'id': 'potong', 'en': 'piece'},
+    {'id': 'butir', 'en': 'piece'},
+    {'id': 'mangkok', 'en': 'bowl'},
+    {'id': 'piring', 'en': 'plate'},
+    {'id': 'gelas', 'en': 'glass'},
+    {'id': 'cangkir', 'en': 'cup'},
+    {'id': 'tusuk', 'en': 'skewer'},
+    {'id': 'bungkus', 'en': 'pack'},
+    {'id': 'sendok makan', 'en': 'tbsp'},
+    {'id': 'sendok teh', 'en': 'tsp'},
+    {'id': 'sdm', 'en': 'tbsp'},
+    {'id': 'sdt', 'en': 'tsp'},
+    {'id': 'lembar', 'en': 'slice'},
+    {'id': 'buah', 'en': 'piece'},
+    {'id': 'biji', 'en': 'piece'},
+    {'id': 'iris', 'en': 'slice'},
+  ];
+
+  for (final r in replacements) {
+    final pattern = RegExp('\\b${RegExp.escape(r['id']!)}\\b', caseSensitive: false);
+    text = text.replaceAll(pattern, r['en']!);
+  }
+  return text;
+}
+
 // ─── Add Food Bottom Sheet (Matching clean nutrition label) ──────────
 
 class AddFoodSheet extends ConsumerStatefulWidget {
@@ -1244,6 +1289,8 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
   bool _isCtaPressed = false;
   bool _isCustomServing = false;
   late TextEditingController _customServingController;
+  bool _isGramMode = false;
+  late TextEditingController _gramServingController;
 
   @override
   void initState() {
@@ -1254,6 +1301,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
       _selectedMeal = getDefaultMealType(DateTime.now());
     }
     _customServingController = TextEditingController(text: '1.0');
+    _gramServingController = TextEditingController();
     if (widget.initialFood != null) {
       _selectedFood = widget.initialFood;
       if (widget.initialFood!.servings.isNotEmpty) {
@@ -1266,6 +1314,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
   void dispose() {
     _searchController.dispose();
     _customServingController.dispose();
+    _gramServingController.dispose();
     super.dispose();
   }
 
@@ -1274,6 +1323,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
       _selectedFood = food;
       _servings = 1.0;
       _isCustomServing = false;
+      _isGramMode = false;
       _customServingController.text = '1.0';
       _selectedServing = null;
     });
@@ -1561,6 +1611,60 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
 
+                // Category Filter Chips
+                SizedBox(
+                  height: 36,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    children: [
+                      _buildCategoryChip(
+                        key: 'Semua',
+                        label: 'diary.categories.all'.tr(),
+                        selectedCategory: searchState.selectedCategory,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCategoryChip(
+                        key: 'Nasi & Karbo',
+                        label: 'diary.categories.riceCarbs'.tr(),
+                        selectedCategory: searchState.selectedCategory,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCategoryChip(
+                        key: 'Lauk Protein',
+                        label: 'diary.categories.proteinMeat'.tr(),
+                        selectedCategory: searchState.selectedCategory,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCategoryChip(
+                        key: 'Nabati & Sayur',
+                        label: 'diary.categories.plantVeggies'.tr(),
+                        selectedCategory: searchState.selectedCategory,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCategoryChip(
+                        key: 'Jajanan',
+                        label: 'diary.categories.snacks'.tr(),
+                        selectedCategory: searchState.selectedCategory,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCategoryChip(
+                        key: 'Minuman',
+                        label: 'diary.categories.drinks'.tr(),
+                        selectedCategory: searchState.selectedCategory,
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
                 // Attribution strip & offline fallback banner
                 if (searchState.isFallback)
                   Padding(
@@ -1827,6 +1931,51 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
       ),
     );
   }
+
+  Widget _buildCategoryChip({
+    required String key,
+    required String label,
+    required String selectedCategory,
+    required bool isDark,
+  }) {
+    final isSelected = key == selectedCategory;
+    final accentBg = isDark ? AppColors.accent : const Color(0xFF17382B);
+    final accentFg = isDark ? const Color(0xFF0F1410) : Colors.white;
+
+    return GestureDetector(
+      onTap: () {
+        ref.read(foodSearchProvider.notifier).onCategoryChanged(key);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accentBg
+              : (isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected
+                ? Colors.transparent
+                : (isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB)),
+            width: 0.8,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? accentFg
+                : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProviderAttribution(FoodSearchState searchState, bool isDark) {
     String? attributionText;
     final foods = searchState.foods;
@@ -1984,45 +2133,108 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                 ),
               ),
               const SizedBox(height: 18),
-              GestureDetector(
-                onTap: () {
-                  FocusScope.of(context).unfocus();
-                  final sheetRef = widget.ref;
-                  Navigator.of(context).pop();
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => FoodRequestSheet(ref: sheetRef),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurface
-                        : const Color(0xFFF1F3F5),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : const Color(0xFFE5E7EB),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: [
+                  // Button 1: AI Scanner
+                  GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      Navigator.of(context).pop();
+                      FoodDiaryScreen.openAiScannerSheet(
+                        context,
+                        meal: _selectedMeal,
+                        date: widget.date,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.accent : const Color(0xFF17382B),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.camera_alt_rounded,
+                            size: 16,
+                            color: isDark ? const Color(0xFF0F1410) : Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Scan dengan AI',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? const Color(0xFF0F1410) : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: Text(
-                    'diary.requestFood'.tr(),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.accent
-                          : const Color(0xFF2C5E3B),
+
+                  // Button 2: Request Food Form
+                  GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      final sheetRef = widget.ref;
+                      Navigator.of(context).pop();
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => FoodRequestSheet(ref: sheetRef),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurface
+                            : const Color(0xFFF1F3F5),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : const Color(0xFFE5E7EB),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_rounded,
+                            size: 16,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'diary.requestFood'.tr(),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -2094,7 +2306,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
   }
 
   Widget _buildFoodItemRow(BuildContext context, Food food, bool isDark) {
-    final servingText = food.servingLabel.trim();
+    final servingText = localizeServingText(food.servingLabel.trim(), context);
     final p = food.proteinG.round();
     final c = food.carbsG.round();
     final f = food.fatG.round();
@@ -2199,7 +2411,8 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
     final baseProtein = (serving?.proteinG ?? food.proteinG);
     final baseCarbs = (serving?.carbsG ?? food.carbsG);
     final baseFat = (serving?.fatG ?? food.fatG);
-    final servingLabel = serving?.servingDescription ?? food.servingLabel;
+    final rawServingLabel = serving?.servingDescription ?? food.servingLabel;
+    final servingLabel = localizeServingText(rawServingLabel, context);
 
     final displayCalories = (baseCalories * _servings).round();
     final displayProtein = (baseProtein * _servings).round();
@@ -2647,7 +2860,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           child: Row(
             children: food.servings.map((serving) {
               final isSelected = _selectedServing?.servingId == serving.servingId;
-              final desc = serving.servingDescription;
+              final desc = localizeServingText(serving.servingDescription, context);
 
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -2805,6 +3018,37 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
     return val.toStringAsFixed(1);
   }
 
+  Widget _buildModeToggleTab({
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? const Color(0xFF0F1410)
+                : (isDark
+                    ? AppColors.darkTextSecondary
+                    : const Color(0xFF6B7280)),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildServingsSelector(Food food, bool isDark) {
     final presets = [
       {'label': '¼', 'val': 0.25},
@@ -2818,153 +3062,106 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
     double? gramWeight;
     if (serving != null &&
         serving.metricServingAmount != null &&
-        serving.metricServingUnit?.toLowerCase() == 'g') {
+        serving.metricServingUnit?.toLowerCase() == 'g' &&
+        serving.metricServingAmount! > 0) {
       gramWeight = serving.metricServingAmount;
+    } else if (food.portionGrams != null && food.portionGrams! > 0) {
+      gramWeight = food.portionGrams;
     } else {
       gramWeight = _parseGramWeight(serving?.servingDescription ?? food.servingLabel);
     }
-    final gramTotal = gramWeight != null ? (gramWeight * _servings) : null;
+    final effectiveBaseGrams = gramWeight ?? 100.0;
+    final gramTotal = (effectiveBaseGrams * _servings);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Preset portion chips row
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ...presets.map((p) {
-                final val = p['val'] as double;
-                final label = p['label'] as String;
-                final isSelected = !_isCustomServing && _servings == val;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isCustomServing = false;
-                        _servings = val;
-                        _customServingController.text = val % 1 == 0
-                            ? val.toInt().toString()
-                            : val.toString();
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.accent
-                            : (isDark
-                                  ? AppColors.darkSurfaceAlt.withValues(alpha: 0.6)
-                                  : const Color(0xFFF1F3F5)),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.accent
-                              : (isDark
-                                    ? AppColors.darkBorder
-                                    : const Color(0xFFE5E7EB)),
-                          width: 1,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        label,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? const Color(0xFF0F1410)
-                              : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : const Color(0xFF4B5563)),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-
-              // Custom chip
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isCustomServing = true;
-                      _customServingController.text = _servings % 1 == 0
-                          ? _servings.toInt().toString()
-                          : _servings.toString();
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    height: 42,
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    decoration: BoxDecoration(
-                      color: _isCustomServing
-                          ? AppColors.accent
-                          : (isDark
-                                ? AppColors.darkSurfaceAlt.withValues(alpha: 0.6)
-                                : const Color(0xFFF1F3F5)),
-                      borderRadius: BorderRadius.circular(21),
-                      border: Border.all(
-                        color: _isCustomServing
-                            ? AppColors.accent
-                            : (isDark
-                                  ? AppColors.darkBorder
-                                  : const Color(0xFFE5E7EB)),
-                        width: 1,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Custom',
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: _isCustomServing
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _isCustomServing
-                            ? const Color(0xFF0F1410)
-                            : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : const Color(0xFF4B5563)),
-                      ),
-                    ),
-                  ),
+        // ── Portion Mode Switcher: [ Porsi ] [ Gram (g) ] ──
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              'diary.adjustPortion'.tr(),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : const Color(0xFF6B7280),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkSurfaceAlt.withValues(alpha: 0.6)
+                    : const Color(0xFFF1F3F5),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorder
+                      : const Color(0xFFE5E7EB),
+                  width: 0.8,
                 ),
               ),
-            ],
-          ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildModeToggleTab(
+                    label: 'diary.serving'.tr(),
+                    isSelected: !_isGramMode,
+                    isDark: isDark,
+                    onTap: () {
+                      if (!_isGramMode) return;
+                      setState(() {
+                        _isGramMode = false;
+                        _customServingController.text = _servings % 1 == 0
+                            ? _servings.toInt().toString()
+                            : _servings.toStringAsFixed(1);
+                      });
+                    },
+                  ),
+                  _buildModeToggleTab(
+                    label: 'Gram (g)',
+                    isSelected: _isGramMode,
+                    isDark: isDark,
+                    onTap: () {
+                      if (_isGramMode) return;
+                      final currentTotalG = (effectiveBaseGrams * _servings).round();
+                      setState(() {
+                        _isGramMode = true;
+                        _gramServingController.text = currentTotalG.toString();
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 12),
 
-        // Custom numeric TextField (revealed when Custom chip is tapped)
-        if (_isCustomServing) ...[
-          const SizedBox(height: 12),
+        if (_isGramMode) ...[
+          // ── Mode Gram (g) ──
           Center(
             child: SizedBox(
-              width: 130,
+              width: 140,
               child: TextField(
-                controller: _customServingController,
+                controller: _gramServingController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                inputFormatters: [InputValidators.decimalFormatter],
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                   color: isDark ? Colors.white : const Color(0xFF111111),
                 ),
                 decoration: InputDecoration(
-                  hintText: '1.0',
+                  hintText: '100',
                   hintStyle: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -2972,7 +3169,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                         ? AppColors.darkTextTertiary
                         : const Color(0xFF9CA3AF),
                   ),
-                  suffixText: 'x',
+                  suffixText: 'g',
                   suffixStyle: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -3014,22 +3211,301 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                 ),
                 onChanged: (v) {
                   final parsed = double.tryParse(v.replaceAll(',', '.'));
-                  if (parsed != null && parsed > 0) {
+                  if (parsed != null && parsed > 0 && effectiveBaseGrams > 0) {
                     setState(() {
-                      _servings = parsed;
+                      _servings = (parsed / effectiveBaseGrams).clamp(
+                        InputValidators.minServing,
+                        InputValidators.maxServing,
+                      );
                     });
                   }
                 },
               ),
             ),
           ),
-        ],
-
-        // Informational gram equivalent text line
-        if (gramTotal != null) ...[
           const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
+
+          // Quick Delta Adjusters: [-50g] [-25g] [-10g] [+10g] [+25g] [+50g]
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ...[-50, -25, -10, 10, 25, 50].map((delta) {
+                  final label = delta > 0 ? '+$delta g' : '$delta g';
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: GestureDetector(
+                      onTap: () {
+                        final currentG = double.tryParse(
+                                _gramServingController.text.replaceAll(',', '.')) ??
+                            (effectiveBaseGrams * _servings);
+                        final newG = (currentG + delta).clamp(5.0, 5000.0);
+                        setState(() {
+                          _gramServingController.text = newG % 1 == 0
+                              ? newG.toInt().toString()
+                              : newG.toStringAsFixed(1);
+                          _servings = (newG / effectiveBaseGrams).clamp(
+                            InputValidators.minServing,
+                            InputValidators.maxServing,
+                          );
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkSurfaceAlt.withValues(alpha: 0.6)
+                              : const Color(0xFFF1F3F5),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : const Color(0xFFE5E7EB),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF4B5563),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Equivalent portion display
+          Center(
+            child: Text(
+              '≈ ${_formatGramValue(_servings)} × ${localizeServingText(serving?.servingDescription ?? food.servingLabel, context)}',
+              style: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : const Color(0xFF6B7280),
+              ),
+            ),
+          ),
+        ] else ...[
+          // ── Mode Porsi (Presets) ──
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ...presets.map((p) {
+                  final val = p['val'] as double;
+                  final label = p['label'] as String;
+                  final isSelected = !_isCustomServing && _servings == val;
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isCustomServing = false;
+                          _servings = val;
+                          _customServingController.text = val % 1 == 0
+                              ? val.toInt().toString()
+                              : val.toString();
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.accent
+                              : (isDark
+                                    ? AppColors.darkSurfaceAlt.withValues(alpha: 0.6)
+                                    : const Color(0xFFF1F3F5)),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.accent
+                                : (isDark
+                                      ? AppColors.darkBorder
+                                      : const Color(0xFFE5E7EB)),
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? const Color(0xFF0F1410)
+                                : (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : const Color(0xFF4B5563)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+                // Custom chip
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isCustomServing = true;
+                        _customServingController.text = _servings % 1 == 0
+                            ? _servings.toInt().toString()
+                            : _servings.toString();
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      height: 42,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(
+                        color: _isCustomServing
+                            ? AppColors.accent
+                            : (isDark
+                                  ? AppColors.darkSurfaceAlt.withValues(alpha: 0.6)
+                                  : const Color(0xFFF1F3F5)),
+                        borderRadius: BorderRadius.circular(21),
+                        border: Border.all(
+                          color: _isCustomServing
+                              ? AppColors.accent
+                              : (isDark
+                                    ? AppColors.darkBorder
+                                    : const Color(0xFFE5E7EB)),
+                          width: 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Custom',
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: _isCustomServing
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: _isCustomServing
+                              ? const Color(0xFF0F1410)
+                              : (isDark
+                                    ? AppColors.darkTextSecondary
+                                    : const Color(0xFF4B5563)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Custom numeric TextField (revealed when Custom chip is tapped)
+          if (_isCustomServing) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: SizedBox(
+                width: 130,
+                child: TextField(
+                  controller: _customServingController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [InputValidators.decimalFormatter],
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF111111),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '1.0',
+                    hintStyle: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : const Color(0xFF9CA3AF),
+                    ),
+                    suffixText: 'x',
+                    suffixStyle: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : const Color(0xFF6B7280),
+                    ),
+                    filled: true,
+                    fillColor: isDark
+                        ? AppColors.darkSurface
+                        : const Color(0xFFF9FAFB),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : const Color(0xFFE5E7EB),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : const Color(0xFFE5E7EB),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(
+                        color: AppColors.accent,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  onChanged: (v) {
+                    final parsed = double.tryParse(v.replaceAll(',', '.'));
+                    if (parsed != null && parsed > 0) {
+                      setState(() {
+                        _servings = parsed.clamp(
+                          InputValidators.minServing,
+                          InputValidators.maxServing,
+                        );
+                      });
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+
+          // Informational gram equivalent text line
+          const SizedBox(height: 10),
+          Center(
             child: Text(
               '= ${_formatGramValue(gramTotal)} g',
               style: GoogleFonts.inter(

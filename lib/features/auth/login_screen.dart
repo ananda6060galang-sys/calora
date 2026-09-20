@@ -2,10 +2,12 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/language_toggle_pill.dart';
 import '../../routing/root_shell.dart';
 import '../dashboard/providers/profile_provider.dart';
 import 'forgot_password_screen.dart';
@@ -23,32 +25,45 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
 
+  String? _emailError;
+  String? _passwordError;
+  bool _hasCredentialError = false;
   bool _loading = false;
 
   void _login() async {
+    FocusScope.of(context).unfocus();
     final email = _email.text.trim();
     final password = _password.text;
 
-    // Validation: Email not empty
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    String? emailErr;
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('auth.emailRequired'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+      emailErr = 'auth.emailRequired'.tr();
+    } else if (!emailRegExp.hasMatch(email)) {
+      emailErr = 'auth.invalidEmail'.tr();
     }
 
-    // Validation: Password not empty
+    String? passwordErr;
     if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('auth.passwordRequired'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
+      passwordErr = 'auth.passwordRequired'.tr();
+    }
+
+    setState(() {
+      _emailError = emailErr;
+      _passwordError = passwordErr;
+      _hasCredentialError = false;
+    });
+
+    if (emailErr != null) {
+      _emailFocus.requestFocus();
+      return;
+    }
+    if (passwordErr != null) {
+      _passwordFocus.requestFocus();
       return;
     }
 
@@ -78,7 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             MaterialPageRoute(builder: (_) => const RootShell()),
           );
         } else {
-          Navigator.of(context).pushReplacement(
+          Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const OnboardingScreen()),
           );
         }
@@ -89,9 +104,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthException catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
-      );
+      final msg = e.message.toLowerCase();
+      if (msg.contains('invalid login credentials') ||
+          msg.contains('invalid credential') ||
+          msg.contains('invalid login') ||
+          msg.contains('email not confirmed') ||
+          e.statusCode == '400') {
+        setState(() {
+          _passwordError = 'auth.wrongCredentials'.tr();
+          _hasCredentialError = true;
+        });
+        _passwordFocus.requestFocus();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -105,6 +133,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -256,6 +286,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           hint: 'auth.email'.tr(),
                           isDark: isDark,
                           controller: _email,
+                          focusNode: _emailFocus,
+                          isError: _hasCredentialError,
+                          errorText: _emailError,
+                          onChanged: (_) {
+                            if (_emailError != null || _hasCredentialError) {
+                              setState(() {
+                                _emailError = null;
+                                _hasCredentialError = false;
+                                if (_passwordError ==
+                                    'auth.wrongCredentials'.tr()) {
+                                  _passwordError = null;
+                                }
+                              });
+                            }
+                          },
                           keyboardType: TextInputType.emailAddress,
                           prefixIcon: Icons.mail_outline_rounded,
                         ),
@@ -269,6 +314,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           hint: 'auth.password'.tr(),
                           isDark: isDark,
                           controller: _password,
+                          focusNode: _passwordFocus,
+                          errorText: _passwordError,
+                          onChanged: (_) {
+                            if (_passwordError != null || _hasCredentialError) {
+                              setState(() {
+                                _passwordError = null;
+                                _hasCredentialError = false;
+                              });
+                            }
+                          },
                           obscureText: true,
                           prefixIcon: Icons.lock_outline_rounded,
                         ),
@@ -473,9 +528,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
 
-                              child: const Text(
-                                'Sign up',
-                                style: TextStyle(
+                              child: Text(
+                                'auth.signUp'.tr(),
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF85C500),
@@ -491,6 +546,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ],
               ),
+            ),
+
+            // =====================================================
+            // LANGUAGE TOGGLE (ENG / ID)
+            // =====================================================
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 12,
+              right: 16,
+              child: const LanguageTogglePill(),
             ),
           ],
         ),
@@ -508,6 +572,10 @@ class _AuthField extends StatefulWidget {
     required this.hint,
     required this.isDark,
     this.controller,
+    this.focusNode,
+    this.errorText,
+    this.isError = false,
+    this.onChanged,
     this.obscureText = false,
     this.keyboardType,
     this.prefixIcon,
@@ -516,6 +584,10 @@ class _AuthField extends StatefulWidget {
   final String hint;
   final bool isDark;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
+  final String? errorText;
+  final bool isError;
+  final ValueChanged<String>? onChanged;
   final bool obscureText;
   final TextInputType? keyboardType;
   final IconData? prefixIcon;
@@ -529,6 +601,9 @@ class _AuthFieldState extends State<_AuthField> {
 
   @override
   Widget build(BuildContext context) {
+    final hasError =
+        (widget.errorText != null && widget.errorText!.isNotEmpty) ||
+            widget.isError;
     final borderColor = widget.isDark
         ? AppColors.darkBorder
         : const Color(0xFFD1D5DB);
@@ -538,73 +613,109 @@ class _AuthFieldState extends State<_AuthField> {
       borderSide: BorderSide(color: borderColor, width: 1.2),
     );
 
-    return TextField(
-      controller: widget.controller,
-      obscureText: _obscure,
-      keyboardType: widget.keyboardType,
+    final errorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Colors.red, width: 1.4),
+    );
 
-      style: TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w500,
-        color: widget.isDark ? Colors.white : const Color(0xFF1E1E1E),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: widget.controller,
+          focusNode: widget.focusNode,
+          obscureText: _obscure,
+          keyboardType: widget.keyboardType,
+          onChanged: widget.onChanged,
 
-      decoration: InputDecoration(
-        filled: true,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: widget.isDark ? Colors.white : const Color(0xFF1E1E1E),
+          ),
 
-        fillColor: widget.isDark ? AppColors.darkSurface : Colors.white,
+          decoration: InputDecoration(
+            filled: true,
 
-        hintText: widget.hint,
+            fillColor: widget.isDark ? AppColors.darkSurface : Colors.white,
 
-        hintStyle: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-          color: widget.isDark
-              ? AppColors.darkTextTertiary
-              : const Color(0xFF9CA3AF),
+            hintText: widget.hint,
+
+            hintStyle: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: widget.isDark
+                  ? AppColors.darkTextTertiary
+                  : const Color(0xFF9CA3AF),
+            ),
+
+            border: hasError ? errorBorder : border,
+
+            enabledBorder: hasError ? errorBorder : border,
+
+            focusedBorder: hasError
+                ? OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Colors.red, width: 1.6),
+                  )
+                : OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF85C500), width: 1.6),
+                  ),
+
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 15,
+            ),
+
+            prefixIcon: widget.prefixIcon != null
+                ? Icon(
+                    widget.prefixIcon,
+                    size: 20,
+                    color: hasError
+                        ? Colors.red
+                        : (widget.isDark
+                            ? AppColors.darkTextSecondary
+                            : const Color(0xFF6B7280)),
+                  )
+                : null,
+
+            suffixIcon: widget.obscureText
+                ? IconButton(
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      size: 20,
+                      color: widget.isDark
+                          ? AppColors.darkTextSecondary
+                          : const Color(0xFF6B7280),
+                    ),
+                    onPressed: () {
+                      setState(() => _obscure = !_obscure);
+                    },
+                  )
+                : null,
+          ),
         ),
-
-        border: border,
-
-        enabledBorder: border,
-
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF85C500), width: 1.6),
-        ),
-
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 15,
-        ),
-
-        prefixIcon: widget.prefixIcon != null
-            ? Icon(
-                widget.prefixIcon,
-                size: 20,
-                color: widget.isDark
-                    ? AppColors.darkTextSecondary
-                    : const Color(0xFF6B7280),
-              )
-            : null,
-
-        suffixIcon: widget.obscureText
-            ? IconButton(
-                icon: Icon(
-                  _obscure
-                      ? Icons.visibility_off_rounded
-                      : Icons.visibility_rounded,
-                  size: 20,
-                  color: widget.isDark
-                      ? AppColors.darkTextSecondary
-                      : const Color(0xFF6B7280),
-                ),
-                onPressed: () {
-                  setState(() => _obscure = !_obscure);
-                },
-              )
-            : null,
-      ),
+        if (widget.errorText != null && widget.errorText!.isNotEmpty) ...[
+          const SizedBox(height: 5),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              widget.errorText!,
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+                height: 1.15,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

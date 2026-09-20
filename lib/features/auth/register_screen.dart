@@ -2,10 +2,12 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/language_toggle_pill.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'providers/auth_provider.dart';
 
@@ -22,6 +24,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
 
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
+
+  String? _nameError;
+  String? _emailError;
+  String? _passwordError;
   String? _confirmError;
   bool _loading = false;
 
@@ -29,40 +39,63 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // REGISTER
   // =========================================================
   void _register() async {
+    FocusScope.of(context).unfocus();
+    final name = _name.text.trim();
     final email = _email.text.trim();
     final password = _password.text;
     final confirm = _confirm.text;
 
-    // Validation: Email not empty
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    String? nameErr;
+    if (name.isEmpty) {
+      nameErr = 'auth.nameRequired'.tr();
+    }
+
+    String? emailErr;
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('auth.emailRequired'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+      emailErr = 'auth.emailRequired'.tr();
+    } else if (!emailRegExp.hasMatch(email)) {
+      emailErr = 'auth.invalidEmail'.tr();
     }
 
-    // Validation: Password not empty
+    String? passwordErr;
     if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('auth.passwordRequired'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+      passwordErr = 'auth.passwordRequired'.tr();
+    } else if (password.length < 6) {
+      passwordErr = 'auth.passwordTooShort'.tr();
     }
 
-    // Validation: Passwords match
+    String? confirmErr;
+    if (confirm.isEmpty) {
+      confirmErr = 'auth.passwordRequired'.tr();
+    } else if (confirm != password) {
+      confirmErr = 'auth.passwordsDoNotMatch'.tr();
+    }
+
     setState(() {
-      _confirmError = confirm != password
-          ? 'auth.passwordsDoNotMatch'.tr()
-          : null;
+      _nameError = nameErr;
+      _emailError = emailErr;
+      _passwordError = passwordErr;
+      _confirmError = confirmErr;
     });
 
-    if (_confirmError != null) return;
+    if (nameErr != null) {
+      _nameFocus.requestFocus();
+      return;
+    }
+    if (emailErr != null) {
+      _emailFocus.requestFocus();
+      return;
+    }
+    if (passwordErr != null) {
+      _passwordFocus.requestFocus();
+      return;
+    }
+    if (confirmErr != null) {
+      _confirmFocus.requestFocus();
+      return;
+    }
 
     // Prevent duplicate submissions
     setState(() => _loading = true);
@@ -85,16 +118,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pushReplacement(
+        Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
         );
       }
     } on AuthException catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
-      );
+      final msg = e.message.toLowerCase();
+      if (msg.contains('already registered') ||
+          msg.contains('already in use') ||
+          msg.contains('user already exists')) {
+        setState(() {
+          _emailError = 'auth.emailAlreadyInUse'.tr();
+        });
+        _emailFocus.requestFocus();
+      } else if (msg.contains('least 6') ||
+          msg.contains('password should be at least')) {
+        setState(() {
+          _passwordError = 'auth.passwordTooShort'.tr();
+        });
+        _passwordFocus.requestFocus();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -117,6 +166,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _email.dispose();
     _password.dispose();
     _confirm.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
   }
 
@@ -279,11 +332,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         // =================================================
                         _AuthField(
                           hint: 'auth.fullName'.tr(),
-
                           isDark: isDark,
-
                           controller: _name,
-
+                          focusNode: _nameFocus,
+                          errorText: _nameError,
+                          onChanged: (_) {
+                            if (_nameError != null) {
+                              setState(() => _nameError = null);
+                            }
+                          },
                           prefixIcon: Icons.person_outline_rounded,
                         ),
 
@@ -294,13 +351,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         // =================================================
                         _AuthField(
                           hint: 'auth.email'.tr(),
-
                           isDark: isDark,
-
                           controller: _email,
-
+                          focusNode: _emailFocus,
+                          errorText: _emailError,
+                          onChanged: (_) {
+                            if (_emailError != null) {
+                              setState(() => _emailError = null);
+                            }
+                          },
                           keyboardType: TextInputType.emailAddress,
-
                           prefixIcon: Icons.mail_outline_rounded,
                         ),
 
@@ -311,13 +371,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         // =================================================
                         _AuthField(
                           hint: 'auth.password'.tr(),
-
                           isDark: isDark,
-
                           controller: _password,
-
+                          focusNode: _passwordFocus,
+                          errorText: _passwordError,
+                          onChanged: (_) {
+                            if (_passwordError != null) {
+                              setState(() => _passwordError = null);
+                            }
+                          },
                           obscureText: true,
-
                           prefixIcon: Icons.lock_outline_rounded,
                         ),
 
@@ -328,16 +391,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         // =================================================
                         _AuthField(
                           hint: 'auth.confirmPassword'.tr(),
-
                           isDark: isDark,
-
                           controller: _confirm,
-
-                          obscureText: true,
-
-                          prefixIcon: Icons.lock_outline_rounded,
-
+                          focusNode: _confirmFocus,
                           errorText: _confirmError,
+                          onChanged: (_) {
+                            if (_confirmError != null) {
+                              setState(() => _confirmError = null);
+                            }
+                          },
+                          obscureText: true,
+                          prefixIcon: Icons.lock_outline_rounded,
                         ),
 
                         const SizedBox(height: 20),
@@ -515,10 +579,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             GestureDetector(
                               onTap: _goBack,
 
-                              child: const Text(
-                                'Log in',
-
-                                style: TextStyle(
+                              child: Text(
+                                'auth.logIn'.tr(),
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF85C500),
@@ -538,14 +601,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
             // =====================================================
             // 3. BACK BUTTON
-            // =====================================================
-            //
-            // PENTING:
-            // Back button sengaja diletakkan PALING TERAKHIR
-            // di dalam Stack.
-            //
-            // Jadi dia berada DI ATAS SingleChildScrollView
-            // dan bisa menerima tap.
             // =====================================================
             Positioned(
               top: MediaQuery.of(context).padding.top + 12,
@@ -579,6 +634,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
             ),
+
+            // =====================================================
+            // 4. LANGUAGE TOGGLE (ENG / ID)
+            // =====================================================
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 12,
+              right: 16,
+              child: const LanguageTogglePill(),
+            ),
           ],
         ),
       ),
@@ -595,19 +659,23 @@ class _AuthField extends StatefulWidget {
     required this.hint,
     required this.isDark,
     this.controller,
+    this.focusNode,
+    this.errorText,
+    this.onChanged,
     this.obscureText = false,
     this.keyboardType,
     this.prefixIcon,
-    this.errorText,
   });
 
   final String hint;
   final bool isDark;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
   final bool obscureText;
   final TextInputType? keyboardType;
   final IconData? prefixIcon;
-  final String? errorText;
 
   @override
   State<_AuthField> createState() => _AuthFieldState();
@@ -622,35 +690,39 @@ class _AuthFieldState extends State<_AuthField> {
         ? AppColors.darkBorder
         : const Color(0xFFD1D5DB);
 
-    final errorColor = AppColors.danger;
+    final errorColor = Colors.red;
 
     final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
 
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-
       borderSide: BorderSide(
-        color: hasError ? errorColor : borderColor,
-
+        color: borderColor,
         width: 1.2,
+      ),
+    );
+
+    final errorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(
+        color: errorColor,
+        width: 1.4,
       ),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         TextField(
           controller: widget.controller,
-
+          focusNode: widget.focusNode,
           obscureText: _obscure,
-
           keyboardType: widget.keyboardType,
+          onChanged: widget.onChanged,
 
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-
             color: widget.isDark ? Colors.white : const Color(0xFF1E1E1E),
           ),
 
@@ -670,15 +742,15 @@ class _AuthFieldState extends State<_AuthField> {
                   : const Color(0xFF9CA3AF),
             ),
 
-            border: border,
+            border: hasError ? errorBorder : border,
 
-            enabledBorder: border,
+            enabledBorder: hasError ? errorBorder : border,
 
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
 
-              borderSide: const BorderSide(
-                color: Color(0xFF85C500),
+              borderSide: BorderSide(
+                color: hasError ? errorColor : const Color(0xFF85C500),
                 width: 1.6,
               ),
             ),
@@ -692,10 +764,11 @@ class _AuthFieldState extends State<_AuthField> {
                 ? Icon(
                     widget.prefixIcon,
                     size: 20,
-
-                    color: widget.isDark
-                        ? AppColors.darkTextSecondary
-                        : const Color(0xFF6B7280),
+                    color: hasError
+                        ? errorColor
+                        : (widget.isDark
+                            ? AppColors.darkTextSecondary
+                            : const Color(0xFF6B7280)),
                   )
                 : null,
 
@@ -730,10 +803,11 @@ class _AuthFieldState extends State<_AuthField> {
             child: Text(
               widget.errorText!,
 
-              style: TextStyle(
-                fontSize: 12,
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
                 fontWeight: FontWeight.w500,
                 color: errorColor,
+                height: 1.15,
               ),
             ),
           ),

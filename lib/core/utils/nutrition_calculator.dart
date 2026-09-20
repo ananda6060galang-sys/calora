@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import '../../models/user_profile.dart';
 
 /// Immutable model representing computed macro targets in grams.
@@ -146,4 +146,100 @@ class NutritionCalculator {
       fatG: fatG,
     );
   }
+
+  /// Calculates an actionable goal roadmap & timeline projection from [profile].
+  static GoalRoadmapPlan calculateGoalRoadmap(UserProfile profile) {
+    final currentWeight = profile.weightKg;
+    final goal = profile.goal;
+    final goalPace = profile.goalPace;
+
+    final double paceKgPerWeek;
+    switch (goalPace) {
+      case GoalPace.gentle:
+        paceKgPerWeek = 0.25;
+        break;
+      case GoalPace.moderate:
+        paceKgPerWeek = 0.50;
+        break;
+      case GoalPace.faster:
+        paceKgPerWeek = 0.75;
+        break;
+    }
+
+    final double effectiveTargetWeight;
+    if (goal == Goal.maintainWeight) {
+      effectiveTargetWeight = currentWeight;
+    } else if (profile.targetWeightKg != null && profile.targetWeightKg! > 0) {
+      effectiveTargetWeight = profile.targetWeightKg!;
+    } else {
+      effectiveTargetWeight = goal == Goal.loseWeight
+          ? math.max(currentWeight - 5.0, 30.0)
+          : currentWeight + 5.0;
+    }
+
+    final weightDifference = (currentWeight - effectiveTargetWeight).abs();
+    final int estimatedWeeks;
+    if (goal == Goal.maintainWeight || weightDifference < 0.1 || paceKgPerWeek <= 0) {
+      estimatedWeeks = 0;
+    } else {
+      estimatedWeeks = (weightDifference / paceKgPerWeek).ceil();
+    }
+
+    final estimatedDate = DateTime.now().add(Duration(days: estimatedWeeks * 7));
+    final calorieTarget = profile.dailyCalorieTarget;
+    final tdee = profile.tdee;
+    final bmr = profile.bmr;
+    final deficitOrSurplus = (calorieTarget - tdee).abs();
+    final isBmrClamped = goal == Goal.loseWeight && calorieTarget <= (bmr + 1.0);
+
+    return GoalRoadmapPlan(
+      goal: goal,
+      goalPace: goalPace,
+      currentWeightKg: currentWeight,
+      targetWeightKg: effectiveTargetWeight,
+      weightDifferenceKg: weightDifference,
+      paceKgPerWeek: paceKgPerWeek,
+      estimatedWeeks: estimatedWeeks,
+      estimatedTargetDate: estimatedDate,
+      dailyCalorieTarget: calorieTarget,
+      dailyDeficitOrSurplusKcal: deficitOrSurplus,
+      proteinTargetG: profile.proteinTargetG,
+      isBmrClamped: isBmrClamped,
+    );
+  }
+}
+
+/// Immutable model representing an actionable goal roadmap & timeline projection.
+class GoalRoadmapPlan {
+  final Goal goal;
+  final GoalPace goalPace;
+  final double currentWeightKg;
+  final double targetWeightKg;
+  final double weightDifferenceKg;
+  final double paceKgPerWeek;
+  final int estimatedWeeks;
+  final DateTime estimatedTargetDate;
+  final double dailyCalorieTarget;
+  final double dailyDeficitOrSurplusKcal;
+  final double proteinTargetG;
+  final bool isBmrClamped;
+
+  const GoalRoadmapPlan({
+    required this.goal,
+    required this.goalPace,
+    required this.currentWeightKg,
+    required this.targetWeightKg,
+    required this.weightDifferenceKg,
+    required this.paceKgPerWeek,
+    required this.estimatedWeeks,
+    required this.estimatedTargetDate,
+    required this.dailyCalorieTarget,
+    required this.dailyDeficitOrSurplusKcal,
+    required this.proteinTargetG,
+    required this.isBmrClamped,
+  });
+
+  bool get isMaintenance => goal == Goal.maintainWeight || weightDifferenceKg < 0.1;
+  bool get isWeightLoss => goal == Goal.loseWeight && !isMaintenance;
+  bool get isWeightGain => goal == Goal.gainWeight && !isMaintenance;
 }

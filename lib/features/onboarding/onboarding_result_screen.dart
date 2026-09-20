@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/goal_roadmap_card.dart';
 import '../../models/user_profile.dart';
 import '../../routing/root_shell.dart';
+import 'onboarding_screen.dart';
 
 /// Post-onboarding summary showing the user's computed daily targets.
 class OnboardingResultScreen extends StatelessWidget {
@@ -252,44 +254,9 @@ class OnboardingResultScreen extends StatelessWidget {
                 ],
               ),
 
-              // BMR Floor Safety Notice
-              if (profile.goal == Goal.loseWeight &&
-                  profile.dailyCalorieTarget == profile.bmr) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    border: Border.all(
-                      color: AppColors.accent.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.shield_outlined,
-                        size: 16,
-                        color: AppColors.accent,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'onboarding.bmrFloorNotice'.tr(
-                            args: ['${profile.bmr.round()}'],
-                          ),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              // ─── Goal Roadmap & Timeline Projection ─────────
+              const SizedBox(height: AppSpacing.xl),
+              GoalRoadmapCard(profile: profile),
 
               const SizedBox(height: AppSpacing.section),
 
@@ -306,13 +273,33 @@ class OnboardingResultScreen extends StatelessWidget {
               AppButton(
                 label: 'onboarding.getStarted'.tr(),
                 onPressed: () {
-                  Navigator.of(context).pushReplacement(
+                  Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const RootShell()),
+                    (route) => false,
                   );
                 },
               ),
 
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.sm),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                  );
+                },
+                child: Text(
+                  'onboarding.restartGuide'.tr(),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
