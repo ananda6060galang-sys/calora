@@ -1,10 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/food.dart';
 import '../config/supabase_config.dart';
-
-import 'package:flutter/foundation.dart';
 
 /// Result envelope returned by the AI food scanner
 class AiScanResult {
@@ -29,12 +29,15 @@ class AiScanResult {
 class AiScannerService {
   final ImagePicker _picker;
   final http.Client _httpClient;
+  final SupabaseClient _supabaseClient;
 
   AiScannerService({
     ImagePicker? picker,
     http.Client? httpClient,
+    SupabaseClient? supabaseClient,
   })  : _picker = picker ?? ImagePicker(),
-        _httpClient = httpClient ?? http.Client();
+        _httpClient = httpClient ?? http.Client(),
+        _supabaseClient = supabaseClient ?? Supabase.instance.client;
 
   static final Uri _scanEndpoint = Uri.parse(
     '${SupabaseConfig.url}/functions/v1/scan-food',
@@ -65,13 +68,22 @@ class AiScannerService {
           ? 'image/png'
           : 'image/jpeg';
 
+      final session = _supabaseClient.auth.currentSession;
+      final accessToken = session?.accessToken;
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'apikey': SupabaseConfig.publishableKey,
+      };
+
+      if (accessToken != null && accessToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $accessToken';
+      }
+
       final response = await _httpClient
           .post(
             _scanEndpoint,
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': SupabaseConfig.publishableKey,
-            },
+            headers: headers,
             body: jsonEncode({
               'imageBase64': base64Image,
               'mimeType': mimeType,
@@ -104,6 +116,16 @@ class AiScannerService {
             errorMessage: data['error']?.toString() ?? 'Could not recognize food',
           );
         }
+      } else if (response.statusCode == 401) {
+        return const AiScanResult(
+          success: false,
+          errorMessage: 'Authentication required. Please log in.',
+        );
+      } else if (response.statusCode == 413) {
+        return const AiScanResult(
+          success: false,
+          errorMessage: 'Image is too large. Please select a smaller photo.',
+        );
       } else {
         return AiScanResult(
           success: false,

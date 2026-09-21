@@ -64,16 +64,12 @@ class InsightsDetailScreen extends ConsumerWidget {
 
     // Deep Black Mode & Light Mode surfaces
     final bgColor = isDark ? AppColors.darkBg : const Color(0xFFFAF9F6);
-    final surfaceColor = isDark ? AppColors.darkSurface : Colors.white;
     final textPrimary =
         isDark ? AppColors.darkTextPrimary : const Color(0xFF131814);
     final textSecondary =
         isDark ? AppColors.darkTextSecondary : const Color(0xFF5A665D);
     final textTertiary =
         isDark ? AppColors.darkTextTertiary : const Color(0xFF8C988F);
-    final cardBorderColor = isDark
-        ? AppColors.darkBorder.withValues(alpha: 0.70)
-        : const Color(0xFFEBECEF);
 
     final profile = ref.watch(userProfileProvider);
     final insightsState = ref.watch(insightsProvider);
@@ -105,25 +101,12 @@ class InsightsDetailScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            margin: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: cardBorderColor,
-                width: 0.8,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 15,
-              color: textPrimary,
-            ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: textPrimary,
           ),
         ),
         title: Text(

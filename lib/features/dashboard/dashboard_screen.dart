@@ -10,6 +10,7 @@ import '../../core/widgets/calora_avatar.dart';
 import '../../models/user_profile.dart';
 import '../diary/food_diary_screen.dart';
 import '../diary/providers/diary_provider.dart';
+import '../notifications/notifications_screen.dart';
 import 'providers/profile_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -61,7 +62,11 @@ class DashboardScreen extends ConsumerWidget {
               profile: profile,
               isDark: isDark,
               onSearchTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
-              onNotificationTap: () {},
+              onNotificationTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NotificationsScreen(),
+                ),
+              ),
             ),
             const SizedBox(height: 22),
             _CalorieHeroCard(
@@ -147,7 +152,12 @@ class DashboardScreen extends ConsumerWidget {
             _SectionTitle(title: 'dashboard.todaysInsights'.tr(), isDark: isDark),
             const SizedBox(height: 12),
             _InsightCard(
-              remaining: remaining,
+              insight: _resolveInsight(
+                totals: totals,
+                profile: profile,
+                remaining: remaining,
+                streak: ref.watch(diaryLoggingStreakProvider),
+              ),
               isDark: isDark,
             ),
           ],
@@ -573,13 +583,81 @@ class _QuickActionTile extends StatelessWidget {
   }
 }
 
+/// One resolved insight: an icon plus a title and subtitle line.
+class _InsightContent {
+  const _InsightContent({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+}
+
+/// Picks the single most useful thing to say in Today's Insights.
+///
+/// Priority is deliberate, each branch answers a question the hero card
+/// above does not already show, so the card never just repeats remaining
+/// kcal:
+///   1. empty state (nothing logged): the honest "start here"
+///   2. protein gap: the metric fitness users act on, absent from the hero
+///   3. logging streak: rewards the habit that drives real results
+///   4. calorie pace: the default when the above do not apply
+_InsightContent _resolveInsight({
+  required DiaryTotals totals,
+  required UserProfile profile,
+  required int remaining,
+  required int streak,
+}) {
+  // 1. Nothing logged today yet.
+  if (totals.calories <= 0 && totals.proteinG <= 0) {
+    return _InsightContent(
+      icon: Icons.free_breakfast_outlined,
+      title: 'dashboard.insightNothingLogged'.tr(),
+      subtitle: 'dashboard.startDayNotice'.tr(),
+    );
+  }
+
+  // 2. Protein still well short of target (only meaningful once eating).
+  final proteinGap = profile.proteinTargetG - totals.proteinG;
+  if (profile.proteinTargetG > 0 && proteinGap >= profile.proteinTargetG * 0.4) {
+    return _InsightContent(
+      icon: Icons.egg_alt_outlined,
+      title: 'dashboard.insightProteinTitle'.tr(),
+      subtitle: 'dashboard.proteinDeficitNotice'.tr(args: ['${proteinGap.round()}']),
+    );
+  }
+
+  // 3. An active multi-day logging streak worth celebrating.
+  if (streak >= 2) {
+    return _InsightContent(
+      icon: Icons.local_fire_department_outlined,
+      title: 'dashboard.insightStreakTitle'.tr(args: ['$streak']),
+      subtitle: 'dashboard.insightStreakSubtitle'.tr(),
+    );
+  }
+
+  // 4. Default: how the day is pacing against the calorie target.
+  return _InsightContent(
+    icon: Icons.auto_awesome_rounded,
+    title: remaining >= 0
+        ? 'dashboard.onPaceToday'.tr()
+        : 'dashboard.lightResetNeeded'.tr(),
+    subtitle: remaining >= 0
+        ? 'dashboard.kcalLeftKeepItUp'.tr(args: ['$remaining'])
+        : 'dashboard.kcalOverKeepDinnerLighter'.tr(args: ['${remaining.abs()}']),
+  );
+}
+
 class _InsightCard extends StatelessWidget {
   const _InsightCard({
-    required this.remaining,
+    required this.insight,
     required this.isDark,
   });
 
-  final int remaining;
+  final _InsightContent insight;
   final bool isDark;
 
   @override
@@ -598,7 +676,7 @@ class _InsightCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(
-              Icons.auto_awesome_rounded,
+              insight.icon,
               color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
             ),
           ),
@@ -609,14 +687,12 @@ class _InsightCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  remaining >= 0 ? 'dashboard.onPaceToday'.tr() : 'dashboard.lightResetNeeded'.tr(),
+                  insight.title,
                   style: _textStyle(isDark: isDark, size: 15, weight: FontWeight.w900),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  remaining >= 0
-                      ? 'dashboard.kcalLeftKeepItUp'.tr(args: ['$remaining'])
-                      : 'dashboard.kcalOverKeepDinnerLighter'.tr(args: ['${remaining.abs()}']),
+                  insight.subtitle,
                   style: _textStyle(
                     isDark: isDark,
                     size: 12,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/goal_roadmap_card.dart';
 import '../../models/user_profile.dart';
 import '../../routing/root_shell.dart';
 import 'onboarding_screen.dart';
@@ -48,17 +47,17 @@ class OnboardingResultScreen extends StatelessWidget {
 
               const SizedBox(height: AppSpacing.lg),
 
-              // ─── BMI Illustration ───────────────────────────
+              // ─── Illustration (supporting, not the focal point) ──
               Image.asset(
                 'assets/onboarding5.webp',
                 width: double.infinity,
-                height: 220,
+                height: 150,
                 fit: BoxFit.contain,
               ),
 
               const SizedBox(height: AppSpacing.lg),
 
-              // ─── Calorie Target Hero ────────────────────────
+              // ─── Calorie Target Hero (the one focal point) ──
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -121,149 +120,46 @@ class OnboardingResultScreen extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
 
-              // ─── BMR & TDEE Read-only Baseline ──────────────
+              // ─── Where the baselines & roadmap live ─────────
+              // BMR, TDEE and the goal timeline have a permanent home in
+              // Goals & Nutrition; pointing there keeps this screen a single
+              // "you're ready" moment instead of a reference dump.
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurface
-                            : AppColors.lightSurface,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : AppColors.lightBorder,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'onboarding.bmrCardTitle'.tr(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? AppColors.darkTextSecondary
-                                          : AppColors.lightTextSecondary,
-                                    ),
-                              ),
-                              const Spacer(),
-                              const Icon(
-                                Icons.lock_outline_rounded,
-                                size: 13,
-                                color: AppColors.accent,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${profile.bmr.round()} kcal',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'onboarding.bmrCardDesc'.tr(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  fontSize: 10,
-                                  color: isDark
-                                      ? AppColors.darkTextTertiary
-                                      : AppColors.lightTextTertiary,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  Icon(
+                    Icons.insights_rounded,
+                    size: 15,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurface
-                            : AppColors.lightSurface,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : AppColors.lightBorder,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'onboarding.tdeeCardTitle'.tr(),
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? AppColors.darkTextSecondary
-                                          : AppColors.lightTextSecondary,
-                                    ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'onboarding.baselinesHint'.tr(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextTertiary
+                                : AppColors.lightTextTertiary,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${profile.tdee.round()} kcal',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'onboarding.tdeeCardDesc'.tr(),
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 10,
-                                      color: isDark
-                                          ? AppColors.darkTextTertiary
-                                          : AppColors.lightTextTertiary,
-                                    ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],
               ),
-
-              // ─── Goal Roadmap & Timeline Projection ─────────
-              const SizedBox(height: AppSpacing.xl),
-              GoalRoadmapCard(profile: profile),
 
               const SizedBox(height: AppSpacing.section),
 
               // ─── Disclaimer ─────────────────────────────────
               Text(
                 'onboarding.disclaimer'.tr(),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextTertiary
+                          : AppColors.lightTextTertiary,
+                    ),
                 textAlign: TextAlign.center,
               ),
 

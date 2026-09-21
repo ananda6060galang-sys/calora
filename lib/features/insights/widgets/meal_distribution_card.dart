@@ -176,14 +176,14 @@ class MealDistributionCard extends StatelessWidget {
   String _mealTypeLabel(String mealType) {
     switch (mealType.toLowerCase()) {
       case 'breakfast':
-        return 'diary.breakfast'.tr();
+        return 'diary.meals.breakfast'.tr();
       case 'lunch':
-        return 'diary.lunch'.tr();
+        return 'diary.meals.lunch'.tr();
       case 'dinner':
-        return 'diary.dinner'.tr();
+        return 'diary.meals.dinner'.tr();
       case 'snack':
       case 'snacks':
-        return 'diary.snack'.tr();
+        return 'diary.meals.snack'.tr();
       default:
         return mealType;
     }

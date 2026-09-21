@@ -15,7 +15,7 @@ import '../../models/food.dart';
 import '../dashboard/providers/profile_provider.dart';
 import 'providers/diary_provider.dart';
 import 'providers/food_search_provider.dart';
-import 'food_request_sheet.dart';
+import 'food_request_screen.dart';
 import 'widgets/ai_scanner_sheet.dart';
 import 'widgets/barcode_scanner_screen.dart';
 
@@ -2286,13 +2286,11 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                   GestureDetector(
                     onTap: () {
                       FocusScope.of(context).unfocus();
-                      final sheetRef = widget.ref;
                       Navigator.of(context).pop();
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => FoodRequestSheet(ref: sheetRef),
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const FoodRequestScreen(),
+                        ),
                       );
                     },
                     child: Container(

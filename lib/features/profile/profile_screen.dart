@@ -15,8 +15,10 @@ import '../../models/food_request.dart';
 import '../../models/user_profile.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
-import '../diary/food_request_sheet.dart';
+import '../diary/food_request_screen.dart';
+import '../diary/my_food_submissions_screen.dart';
 import '../diary/providers/food_request_provider.dart';
+import 'privacy_security_screen.dart';
 import 'goals_and_nutrition_screen.dart';
 import 'personal_information_screen.dart';
 import 'providers/weight_log_provider.dart';
@@ -31,17 +33,6 @@ import 'widgets/weight_journey_chart.dart';
 /// Account & Preferences continuation section.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
-
-  String _goalLabel(Goal goal) {
-    switch (goal) {
-      case Goal.loseWeight:
-        return 'dashboard.goals.loseWeight'.tr();
-      case Goal.maintainWeight:
-        return 'dashboard.goals.maintainWeight'.tr();
-      case Goal.gainWeight:
-        return 'dashboard.goals.gainWeight'.tr();
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -353,8 +344,6 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileNavRow(
                       icon: Icons.person_outline_rounded,
                       title: 'onboarding.personalInfoTitle'.tr(),
-                      subtitle:
-                          '${profile.gender == Gender.male ? 'onboarding.male'.tr() : 'onboarding.female'.tr()} • ${profile.age} ${'profile.yearsOld'.tr(args: ['']).trim()} • ${profile.weightKg.toStringAsFixed(1)} kg',
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onTap: () => _openPersonalInformation(context, profile),
@@ -370,8 +359,6 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileNavRow(
                       icon: Icons.track_changes_rounded,
                       title: 'profile.goalsAndNutrition'.tr(),
-                      subtitle:
-                          '${_goalLabel(profile.goal)} • ${'profile.kcalPerDay'.tr(args: [profile.dailyCalorieTarget.round().toString()])}',
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onTap: () => _openGoalsAndNutrition(context, profile),
@@ -404,13 +391,6 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileNavRow(
                       icon: Icons.receipt_long_outlined,
                       title: 'profile.myFoodRequests'.tr(),
-                      subtitle: 'profile.submissionsCount'.tr(args: [
-                        foodRequests.length.toString(),
-                        foodRequests
-                            .where((r) => r.status == 'approved')
-                            .length
-                            .toString(),
-                      ]),
                       badge: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -453,7 +433,6 @@ class ProfileScreen extends ConsumerWidget {
                           ? AppColors.accent
                           : const Color(0xFF2E6319),
                       title: 'profile.submitFood'.tr(),
-                      subtitle: 'profile.submitFoodSubtitle'.tr(),
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onTap: () => _openSubmitFood(context, ref),
@@ -486,7 +465,6 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileNavRow(
                       icon: Icons.tune_rounded,
                       title: 'profile.settings'.tr(),
-                      subtitle: 'profile.managePreferences'.tr(),
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onTap: () => _openSettings(context),
@@ -502,7 +480,6 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileNavRow(
                       icon: Icons.shield_outlined,
                       title: 'profile.privacySecurity'.tr(),
-                      subtitle: 'profile.privacySecuritySubtitle'.tr(),
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onTap: () => _openPrivacySecurity(context),
@@ -513,15 +490,6 @@ class ProfileScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 28),
-
-            // ── 8. CALORA MEMBERSHIP FOOTER BADGE ─────────────────────
-            _CaloraMembershipFooter(
-              isDark: isDark,
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              dividerColor: dividerColor,
-              surfaceColor: surfaceColor,
-            ),
           ],
         ),
       ),
@@ -539,11 +507,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _openEditProfile(BuildContext context, UserProfile profile) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const PersonalInformationScreen(),
-      ),
-    );
+    PersonalInformationScreen.openEditSheet(context, profile);
   }
 
   void _openPersonalInformation(BuildContext context, UserProfile profile) {
@@ -563,11 +527,10 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _openSubmitFood(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => FoodRequestSheet(ref: ref),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const FoodRequestScreen(),
+      ),
     );
   }
 
@@ -576,23 +539,18 @@ class ProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     List<FoodRequest> requests,
   ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _FoodRequestsSheet(
-        requests: requests,
-        onNewRequest: () => _openSubmitFood(context, ref),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const MyFoodSubmissionsScreen(),
       ),
     );
   }
 
   void _openPrivacySecurity(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _PrivacySecuritySheet(),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const PrivacySecurityScreen(),
+      ),
     );
   }
 }
@@ -740,560 +698,6 @@ class _BodyMetricsStrip extends StatelessWidget {
 }
 
 // ════════════════════════════════════════════════════════════════
-// FOOD REQUESTS BOTTOM SHEET
-// ════════════════════════════════════════════════════════════════
-
-class _FoodRequestsSheet extends StatelessWidget {
-  const _FoodRequestsSheet({
-    required this.requests,
-    required this.onNewRequest,
-  });
-
-  final List<FoodRequest> requests;
-  final VoidCallback onNewRequest;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final surfaceAlt =
-        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-      ),
-      padding: EdgeInsets.fromLTRB(
-        22,
-        12,
-        22,
-        MediaQuery.viewInsetsOf(context).bottom + 28,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: divider, width: 0.8)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'profile.myFoodRequests'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'profile.myFoodRequestsSubtitle'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  onNewRequest();
-                },
-                icon: const Icon(Icons.add_circle_outline_rounded),
-                color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-                tooltip: 'profile.submitFood'.tr(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          if (requests.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: surfaceAlt,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: divider, width: 0.8),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 38,
-                    color: textSecondary.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No food submissions yet',
-                    style: GoogleFonts.inter(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Help expand Calora\'s food catalog by submitting foods that are not in the database.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w400,
-                      color: textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      onNewRequest();
-                    },
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text(
-                      'profile.submitFood'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F1410),
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: const Color(0xFF0F1410),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                itemCount: requests.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 10),
-                itemBuilder: (ctx, idx) {
-                  final req = requests[idx];
-                  Color statusColor;
-                  String statusLabel;
-                  IconData statusIcon;
-
-                  switch (req.status) {
-                    case 'approved':
-                      statusColor = isDark
-                          ? AppColors.accent
-                          : const Color(0xFF2E6319);
-                      statusLabel = 'Approved';
-                      statusIcon = Icons.check_circle_outline_rounded;
-                      break;
-                    case 'rejected':
-                      statusColor = AppColors.protein;
-                      statusLabel = 'Rejected';
-                      statusIcon = Icons.cancel_outlined;
-                      break;
-                    case 'pending':
-                    default:
-                      statusColor = AppColors.carbs;
-                      statusLabel = 'Pending Review';
-                      statusIcon = Icons.hourglass_top_rounded;
-                      break;
-                  }
-
-                  return Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: surfaceAlt,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: divider, width: 0.8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                req.foodName,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: textPrimary,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.12),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
-                                border: Border.all(
-                                  color: statusColor.withValues(alpha: 0.25),
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(statusIcon,
-                                      size: 12, color: statusColor),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    statusLabel,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: statusColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${req.servingLabel} • ${req.calories} kcal',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'P: ${req.proteinG.round()}g • C: ${req.carbsG.round()}g • F: ${req.fatG.round()}g',
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: textSecondary.withValues(alpha: 0.8),
-                          ),
-                        ),
-                        if (req.notes != null && req.notes!.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            req.notes!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
-                              color: textSecondary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// PRIVACY & SECURITY SHEET
-// ════════════════════════════════════════════════════════════════
-
-class _PrivacySecuritySheet extends StatelessWidget {
-  const _PrivacySecuritySheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final divider = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final surfaceAlt =
-        isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        22,
-        12,
-        22,
-        MediaQuery.viewInsetsOf(context).bottom + 28,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: divider, width: 0.8)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'profile.privacySecurity'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'How Calora safeguards your personal health & nutrition data.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildSecurityCard(
-            icon: Icons.lock_outline_rounded,
-            title: 'Row-Level Security (RLS)',
-            description:
-                'Your diary entries, workouts, and biometrics are bound to your user ID. No other user or administrator can access your private logs.',
-            surfaceAlt: surfaceAlt,
-            divider: divider,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 10),
-          _buildSecurityCard(
-            icon: Icons.verified_user_outlined,
-            title: 'Catalog Moderation',
-            description:
-                'Public food items are read-only. User-contributed foods are moderated through food_requests to maintain accurate nutritional data.',
-            surfaceAlt: surfaceAlt,
-            divider: divider,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 10),
-          _buildSecurityCard(
-            icon: Icons.fingerprint_rounded,
-            title: 'Local First & Zero Ads',
-            description:
-                'Calora does not include advertisement SDKs or telemetry trackers. All calculations run strictly client-side.',
-            surfaceAlt: surfaceAlt,
-            divider: divider,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? AppColors.darkSurfaceAlt
-                    : const Color(0xFF111111),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                'Got It',
-                style: GoogleFonts.inter(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSecurityCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color surfaceAlt,
-    required Color divider,
-    required Color textPrimary,
-    required Color textSecondary,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: surfaceAlt,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: divider, width: 0.8),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: (isDark ? AppColors.accent : const Color(0xFF2E6319))
-                  .withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: textSecondary,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// CALORA MEMBERSHIP FOOTER
-// ════════════════════════════════════════════════════════════════
-
-class _CaloraMembershipFooter extends StatelessWidget {
-  const _CaloraMembershipFooter({
-    required this.isDark,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.dividerColor,
-    required this.surfaceColor,
-  });
-
-  final bool isDark;
-  final Color textPrimary;
-  final Color textSecondary;
-  final Color dividerColor;
-  final Color surfaceColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 22),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: surfaceColor.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: dividerColor.withValues(alpha: 0.6),
-            width: 0.8,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.accent.withValues(alpha: 0.20)
-                    : const Color(0xFFE8F8D0),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.spa_rounded,
-                size: 15,
-                color: isDark ? AppColors.accent : const Color(0xFF2E6319),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Calora Nutrition & Wellness • v1.0.0',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-// ════════════════════════════════════════════════════════════════
 // PROFILE NAVIGATION ROW
 // ════════════════════════════════════════════════════════════════
 
@@ -1301,7 +705,6 @@ class _ProfileNavRow extends StatelessWidget {
   const _ProfileNavRow({
     required this.icon,
     required this.title,
-    this.subtitle,
     this.badge,
     this.iconColor,
     required this.textPrimary,
@@ -1311,7 +714,6 @@ class _ProfileNavRow extends StatelessWidget {
 
   final IconData icon;
   final String title;
-  final String? subtitle;
   final Widget? badge;
   final Color? iconColor;
   final Color textPrimary;
@@ -1342,19 +744,6 @@ class _ProfileNavRow extends StatelessWidget {
                       color: textPrimary,
                     ),
                   ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),

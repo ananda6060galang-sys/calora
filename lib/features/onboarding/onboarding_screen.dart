@@ -164,7 +164,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = '';
+    // Prefill the name captured at registration so the user confirms it
+    // instead of typing it again (stored in auth metadata as full_name).
+    final metaName =
+        ref.read(authServiceProvider).currentUser?.userMetadata?['full_name'];
+    _nameController.text = (metaName is String) ? metaName.trim() : '';
     _heightController.text = '';
     _weightController.text = '';
     _targetWeightController.text = '';

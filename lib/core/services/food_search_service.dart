@@ -34,12 +34,15 @@ class FatSecretFoodSearchService implements FoodSearchService {
 
   Map<String, String> _buildHeaders() {
     final session = _client.auth.currentSession;
-    final token = session?.accessToken ?? SupabaseConfig.publishableKey;
-    return {
+    final accessToken = session?.accessToken;
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       'apikey': SupabaseConfig.publishableKey,
-      'Authorization': 'Bearer $token',
     };
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $accessToken';
+    }
+    return headers;
   }
 
   @override

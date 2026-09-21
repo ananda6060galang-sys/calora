@@ -24,6 +24,17 @@ import 'providers/weight_log_provider.dart';
 class PersonalInformationScreen extends ConsumerStatefulWidget {
   const PersonalInformationScreen({super.key});
 
+  /// Opens the edit form directly, without routing through this overview
+  /// screen. Used by the profile "Edit Profile" shortcut.
+  static void openEditSheet(BuildContext context, UserProfile profile) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditPersonalDetailsSheet(profile: profile),
+    );
+  }
+
   @override
   ConsumerState<PersonalInformationScreen> createState() =>
       _PersonalInformationScreenState();
@@ -321,22 +332,12 @@ class _PersonalInformationScreenState
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: dividerColor, width: 0.8),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 15,
-              color: textPrimary,
-            ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: textPrimary,
           ),
         ),
         title: FittedBox(
@@ -904,6 +905,11 @@ class _EditPersonalDetailsSheetState
     _nameCtrl.addListener(() => setState(() {}));
     _heightCtrl.addListener(() => setState(() {}));
     _weightCtrl.addListener(() => setState(() {}));
+
+    // Rebuild on focus change so fields can show an accent-colored border.
+    _nameFocus.addListener(() => setState(() {}));
+    _heightFocus.addListener(() => setState(() {}));
+    _weightFocus.addListener(() => setState(() {}));
   }
 
   @override
@@ -1066,6 +1072,9 @@ class _EditPersonalDetailsSheetState
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final textSecondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    // Dark-green on light keeps contrast against the bright lime, which is
+    // too light to sit under text or as a hairline on white (AGENTS.md).
+    final accentColor = isDark ? AppColors.accent : const Color(0xFF2E6319);
 
     return Container(
       height: MediaQuery.sizeOf(context).height * 0.85,
@@ -1138,7 +1147,15 @@ class _EditPersonalDetailsSheetState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Name
+                  // ── GROUP 1: IDENTITY ──────────────────────────
+                  _SectionLabel(
+                    text: 'profile.editGroupIdentity'.tr(),
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Name
                   Text(
                     'onboarding.fullNameHint'.tr(),
                     style: GoogleFonts.inter(
@@ -1155,8 +1172,12 @@ class _EditPersonalDetailsSheetState
                       border: Border.all(
                         color: _nameError != null
                             ? AppColors.danger
-                            : dividerColor,
-                        width: 0.8,
+                            : _nameFocus.hasFocus
+                                ? accentColor
+                                : dividerColor,
+                        width: (_nameFocus.hasFocus && _nameError == null)
+                            ? 1.5
+                            : 0.8,
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(
@@ -1332,9 +1353,17 @@ class _EditPersonalDetailsSheetState
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // 4. Height & Weight
+                  // ── GROUP 2: BODY METRICS ──────────────────────
+                  _SectionLabel(
+                    text: 'profile.editGroupBody'.tr(),
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Height & Weight
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1360,8 +1389,13 @@ class _EditPersonalDetailsSheetState
                                 border: Border.all(
                                   color: _heightError != null
                                       ? AppColors.danger
-                                      : dividerColor,
-                                  width: 0.8,
+                                      : _heightFocus.hasFocus
+                                          ? accentColor
+                                          : dividerColor,
+                                  width: (_heightFocus.hasFocus &&
+                                          _heightError == null)
+                                      ? 1.5
+                                      : 0.8,
                                 ),
                               ),
                               padding:
@@ -1427,8 +1461,13 @@ class _EditPersonalDetailsSheetState
                                 border: Border.all(
                                   color: _weightError != null
                                       ? AppColors.danger
-                                      : dividerColor,
-                                  width: 0.8,
+                                      : _weightFocus.hasFocus
+                                          ? accentColor
+                                          : dividerColor,
+                                  width: (_weightFocus.hasFocus &&
+                                          _weightError == null)
+                                      ? 1.5
+                                      : 0.8,
                                 ),
                               ),
                               padding:
@@ -1474,9 +1513,17 @@ class _EditPersonalDetailsSheetState
                     ],
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // 5. Activity Level
+                  // ── GROUP 3: ACTIVITY ──────────────────────────
+                  _SectionLabel(
+                    text: 'profile.editGroupActivity'.tr(),
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Activity Level
                   Text(
                     'profile.activityLevelTitle'.tr(),
                     style: GoogleFonts.inter(
@@ -1572,6 +1619,49 @@ class _EditPersonalDetailsSheetState
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── SECTION LABEL ───────────────────────────────────────────────
+
+/// Groups the edit form into Identity / Body / Activity. The short accent
+/// bar is the repeated motif that marks each group boundary (it carries
+/// grouping meaning, so it is a signal, not decoration).
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final Color accentColor;
+  final Color textSecondary;
+
+  const _SectionLabel({
+    required this.text,
+    required this.accentColor,
+    required this.textSecondary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: accentColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: textSecondary,
+            letterSpacing: 0.1,
+          ),
+        ),
+      ],
     );
   }
 }

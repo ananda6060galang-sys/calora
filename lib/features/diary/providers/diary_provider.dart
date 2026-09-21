@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/diary_service.dart';
 import '../../../models/food.dart';
-import '../../../models/mock_data.dart';
 
 final diaryServiceProvider = Provider<DiaryService>((ref) => DiaryService());
 
@@ -27,41 +26,8 @@ class DiaryNotifier extends StateNotifier<List<DiaryEntry>> {
       }
     }
 
-    // Default mock data fallback if no remote data exists yet
-    state = [
-      DiaryEntry(
-        id: generateUuidV4(),
-        food: demoFoods[3],
-        servings: 1,
-        meal: 'Breakfast',
-        date: DateTime.now(),
-        portionGrams: 170,
-      ),
-      DiaryEntry(
-        id: generateUuidV4(),
-        food: demoFoods[4],
-        servings: 1,
-        meal: 'Breakfast',
-        date: DateTime.now(),
-        portionGrams: 118,
-      ),
-      DiaryEntry(
-        id: generateUuidV4(),
-        food: demoFoods[0],
-        servings: 1.5,
-        meal: 'Lunch',
-        date: DateTime.now(),
-        portionGrams: 150,
-      ),
-      DiaryEntry(
-        id: generateUuidV4(),
-        food: demoFoods[1],
-        servings: 1,
-        meal: 'Lunch',
-        date: DateTime.now(),
-        portionGrams: 158,
-      ),
-    ];
+    // Default to empty if no entries exist
+    state = [];
   }
 
   void add(
@@ -157,6 +123,27 @@ final diaryTotalsForDateProvider = Provider.family<DiaryTotals, DateTime>((
 
 final diaryTotalsProvider = Provider((ref) {
   return ref.watch(diaryTotalsForDateProvider(DateTime.now()));
+});
+
+/// Consecutive days (ending today) that have at least one diary entry.
+/// Used by the dashboard insight to reward logging consistency.
+/// Returns 0 when nothing is logged today, so the streak only counts an
+/// unbroken run the user is actively continuing.
+final diaryLoggingStreakProvider = Provider<int>((ref) {
+  final entries = ref.watch(diaryProvider);
+  if (entries.isEmpty) return 0;
+
+  final loggedDays = <DateTime>{
+    for (final e in entries) DateUtils.dateOnly(e.date),
+  };
+
+  var streak = 0;
+  var cursor = DateUtils.dateOnly(DateTime.now());
+  while (loggedDays.contains(cursor)) {
+    streak++;
+    cursor = cursor.subtract(const Duration(days: 1));
+  }
+  return streak;
 });
 
 class DiaryTotals {

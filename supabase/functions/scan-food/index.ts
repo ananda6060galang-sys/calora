@@ -5,6 +5,7 @@
 // Zero client credentials: GEMINI_API_KEY is read securely from server-side environment.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +23,71 @@ function jsonResponse(data: unknown, status = 200): Response {
   });
 }
 
+/**
+ * Validates the Authorization header and verifies the caller is an authenticated Supabase user.
+ * Returns the authenticated user or null with an appropriate 401 error response.
+ */
+async function authenticateUser(req: Request): Promise<{ user: any; errorResponse?: Response }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+    };
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+    };
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Server configuration error" }, 500),
+    };
+  }
+
+  try {
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+    if (error || !user) {
+      return {
+        user: null,
+        errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+      };
+    }
+
+    return { user };
+  } catch (err: any) {
+    console.error("Auth verification failed:", err.message);
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+    };
+  }
+}
+
+// Server-side hard limit for incoming image payload: 2 MB
+const MAX_IMAGE_BASE64_BYTES = 2 * 1024 * 1024; // 2,097,152 bytes (~2 MB)
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -31,6 +97,49 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
+  // 1. Enforce authentication first: only authenticated users may use AI scan quota
+  const { user, errorResponse } = await authenticateUser(req);
+  if (errorResponse) {
+    return errorResponse;
+  }
+
+  // 2. Parse request body
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return jsonResponse({ error: "Invalid JSON payload" }, 400);
+  }
+
+  if (!body || typeof body !== "object") {
+    return jsonResponse({ error: "Invalid request body" }, 400);
+  }
+
+  const rawImage = body.imageBase64 ?? body.image_base64;
+  const mimeType = body.mimeType || body.mime_type || "image/jpeg";
+
+  // 3. Validate image existence and type
+  if (!rawImage) {
+    return jsonResponse({ error: "Missing imageBase64 parameter" }, 400);
+  }
+
+  if (typeof rawImage !== "string") {
+    return jsonResponse({ error: "Invalid imageBase64 parameter: expected string" }, 400);
+  }
+
+  // 4. Server-side payload size validation: reject payloads exceeding 2 MB before touching Gemini
+  if (rawImage.length > MAX_IMAGE_BASE64_BYTES) {
+    return jsonResponse({ error: "Image payload too large" }, 413);
+  }
+
+  // Strip data url prefix if present
+  const cleanBase64 = rawImage.replace(/^data:image\/[a-z]+;base64,/, "");
+
+  if (!cleanBase64) {
+    return jsonResponse({ error: "Missing imageBase64 parameter" }, 400);
+  }
+
+  // 5. Verify Gemini API key is configured
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiKey) {
     return jsonResponse(
@@ -40,16 +149,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const body = await req.json();
-    const imageBase64 = body.imageBase64 || body.image_base64;
-    const mimeType = body.mimeType || body.mime_type || "image/jpeg";
-
-    if (!imageBase64) {
-      return jsonResponse({ error: "Missing imageBase64 parameter" }, 400);
-    }
-
-    // Strip data url prefix if present
-    const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, "");
 
     // Explicit model IDs only — predictable routing & quota.
     // Primary model: gemini-3.1-flash-lite (15 RPM / 250K TPM / 500 RPD).

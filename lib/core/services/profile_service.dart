@@ -105,7 +105,8 @@ class ProfileService {
       'carbs_target_g': profile.carbsTargetG,
       'fat_target_g': profile.fatTargetG,
       'avatar_url': profile.avatarUrl,
-      'role': profile.isAdmin ? 'admin' : 'user',
+      // Security: 'role' is intentionally omitted. Authorization roles are
+      // server/database-controlled and must never be assigned or updated by the client.
       'updated_at': DateTime.now().toIso8601String(),
     };
 

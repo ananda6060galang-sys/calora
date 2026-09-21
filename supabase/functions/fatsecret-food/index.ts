@@ -5,6 +5,7 @@
 // Keeps FATSECRET_CLIENT_ID, FATSECRET_CLIENT_SECRET, and USDA_API_KEY secure on the server.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 interface TokenCache {
   accessToken: string;
@@ -27,6 +28,68 @@ function jsonResponse(data: unknown, status = 200): Response {
       "Content-Type": "application/json",
     },
   });
+}
+
+/**
+ * Validates the Authorization header and verifies the caller is an authenticated Supabase user.
+ * Returns the authenticated user or null with an appropriate 401 error response.
+ */
+async function authenticateUser(req: Request): Promise<{ user: any; errorResponse?: Response }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+    };
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+    };
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Server configuration error" }, 500),
+    };
+  }
+
+  try {
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+    if (error || !user) {
+      return {
+        user: null,
+        errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+      };
+    }
+
+    return { user };
+  } catch (err: any) {
+    console.error("Auth verification failed:", err.message);
+    return {
+      user: null,
+      errorResponse: jsonResponse({ error: "Unauthorized" }, 401),
+    };
+  }
 }
 
 /**
@@ -345,6 +408,12 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  // Enforce authentication: only authenticated users may query FatSecret/USDA APIs
+  const { user, errorResponse } = await authenticateUser(req);
+  if (errorResponse) {
+    return errorResponse;
   }
 
   try {

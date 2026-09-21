@@ -6,19 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/theme_provider.dart';
-import '../../models/user_profile.dart';
 import '../auth/login_screen.dart';
 import '../auth/providers/auth_provider.dart';
-import '../dashboard/providers/profile_provider.dart';
-import 'goals_and_nutrition_screen.dart';
-import 'personal_information_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(userProfileProvider);
     final themeMode = ref.watch(themeModeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -28,9 +23,6 @@ class SettingsScreen extends ConsumerWidget {
     final textSecondary = isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
-    final textTertiary = isDark
-        ? AppColors.darkTextTertiary
-        : AppColors.lightTextTertiary;
     final dividerColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
     final surfaceColor = isDark
         ? AppColors.darkSurface
@@ -96,28 +88,6 @@ class SettingsScreen extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  _SettingsOptionRow(
-                    icon: Icons.person_outline_rounded,
-                    title: 'onboarding.personalInfoTitle'.tr(),
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    dividerColor: dividerColor,
-                    showDivider: true,
-                    onTap: () => _openEditProfile(context, profile),
-                  ),
-                  _SettingsOptionRow(
-                    icon: Icons.flag_outlined,
-                    title: 'profile.goalsAndNutrition'.tr(),
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    dividerColor: dividerColor,
-                    showDivider: true,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const GoalsAndNutritionScreen(),
-                      ),
-                    ),
-                  ),
                   _SettingsOptionRow(
                     icon: Icons.palette_outlined,
                     title: 'profile.appearance'.tr(),
@@ -204,19 +174,6 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            // ── APP VERSION ────────────────────────────────────
-            Center(
-              child: Text(
-                'Calora v1.0.0',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: textTertiary,
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -236,14 +193,6 @@ class SettingsScreen extends ConsumerWidget {
       case ThemeMode.system:
         return 'profile.theme.system'.tr();
     }
-  }
-
-  void _openEditProfile(BuildContext context, UserProfile profile) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const PersonalInformationScreen(),
-      ),
-    );
   }
 
   void _showAppearancePicker(

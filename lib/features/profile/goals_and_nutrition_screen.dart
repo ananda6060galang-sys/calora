@@ -264,22 +264,12 @@ class GoalsAndNutritionScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: dividerColor, width: 0.8),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 15,
-              color: textPrimary,
-            ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: textPrimary,
           ),
         ),
         title: FittedBox(

@@ -16,11 +16,22 @@ class AuthService {
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 
   /// Sign up a new user using email and password.
+  ///
+  /// [fullName], when provided, is stored in the auth user's metadata
+  /// (`full_name`) so onboarding can prefill it instead of asking again.
   Future<AuthResponse> signUp({
     required String email,
     required String password,
+    String? fullName,
   }) async {
-    return await _client.auth.signUp(email: email.trim(), password: password);
+    final trimmedName = fullName?.trim();
+    return await _client.auth.signUp(
+      email: email.trim(),
+      password: password,
+      data: (trimmedName != null && trimmedName.isNotEmpty)
+          ? {'full_name': trimmedName}
+          : null,
+    );
   }
 
   /// Sign in an existing user using email and password.

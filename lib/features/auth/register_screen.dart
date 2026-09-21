@@ -105,6 +105,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final response = await authService.signUp(
         email: email,
         password: password,
+        fullName: name,
       );
 
       if (!mounted) return;

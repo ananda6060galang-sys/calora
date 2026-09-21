@@ -11,7 +11,7 @@ import '../../../main.dart';
 import '../../../models/food.dart';
 import '../../../models/mock_data.dart';
 import '../food_diary_screen.dart';
-import '../food_request_sheet.dart';
+import '../food_request_screen.dart';
 
 /// Full-screen Barcode Scanner matching Calora's AI Food Scanner visual language.
 class BarcodeScannerScreen extends ConsumerStatefulWidget {
@@ -695,13 +695,11 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      final sheetRef = ref;
                       Navigator.pop(context);
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => FoodRequestSheet(ref: sheetRef),
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const FoodRequestScreen(),
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
