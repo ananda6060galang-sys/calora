@@ -102,7 +102,7 @@ class MyFoodSubmissionsScreen extends ConsumerWidget {
               accentColor: accentColor,
             )
           : ListView.separated(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
               itemCount: ordered.length + 1,
               separatorBuilder: (context, index) =>
@@ -160,7 +160,7 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,

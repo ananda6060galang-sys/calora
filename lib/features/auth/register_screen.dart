@@ -240,7 +240,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // 2. SCROLLABLE FORM
             // =====================================================
             SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

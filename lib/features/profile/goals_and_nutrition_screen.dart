@@ -287,7 +287,7 @@ class GoalsAndNutritionScreen extends ConsumerWidget {
         ),
       ),
       body: ListView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 48),
         children: [
           // ── SECTION 1: ACTIVE PLAN & WEIGHT PROGRESS CARD ──────────

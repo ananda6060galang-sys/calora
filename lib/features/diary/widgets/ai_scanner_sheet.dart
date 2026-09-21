@@ -1180,7 +1180,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
               child: SafeArea(
                 top: false,
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

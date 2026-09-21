@@ -262,7 +262,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
 
               Expanded(
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 120),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,7 +503,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                   height: 44,
                                   child: SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
-                                    physics: const BouncingScrollPhysics(),
+                                    physics: const ClampingScrollPhysics(),
                                     child: Row(
                                       children: List.generate(12, (index) {
                                         final monthIndex = index + 1;
@@ -587,7 +587,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                           ),
                                           scrollDirection: Axis.horizontal,
                                           physics:
-                                              const BouncingScrollPhysics(),
+                                              const ClampingScrollPhysics(),
                                           itemCount: _totalDays,
                                           separatorBuilder:
                                               (context, index) =>
@@ -1717,7 +1717,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                     height: 36,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
+                      physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.zero,
                       children: [
                         _buildCategoryChip(
@@ -2956,7 +2956,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
         const SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           child: Row(
             children: food.servings.map((serving) {
               final isSelected = _selectedServing?.servingId == serving.servingId;
@@ -3328,7 +3328,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           // Quick Delta Adjusters: [-50g] [-25g] [-10g] [+10g] [+25g] [+50g]
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -3405,7 +3405,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           // ── Mode Porsi (Presets) ──
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

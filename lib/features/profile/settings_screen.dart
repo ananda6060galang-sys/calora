@@ -76,7 +76,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SafeArea(
             child: ListView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               children: [
             // ── SETTINGS LIST ──────────────────────────────────

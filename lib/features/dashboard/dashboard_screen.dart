@@ -55,7 +55,7 @@ class DashboardScreen extends ConsumerWidget {
           SafeArea(
             bottom: false,
         child: ListView(
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 124),
           children: [
             _DashboardHeader(

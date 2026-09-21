@@ -136,7 +136,7 @@ class InsightsDetailScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 60),
         children: [
           // ══════════════════════════════════════════════════════════════

@@ -39,6 +39,24 @@ void main() async {
   );
 }
 
+class CaloraScrollBehavior extends MaterialScrollBehavior {
+  const CaloraScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const ClampingScrollPhysics();
+  }
+}
+
 class CaloraApp extends ConsumerWidget {
   const CaloraApp({super.key});
 
@@ -49,6 +67,7 @@ class CaloraApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Calora',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const CaloraScrollBehavior(),
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,

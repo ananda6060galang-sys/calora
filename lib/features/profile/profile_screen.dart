@@ -57,7 +57,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: bgColor,
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

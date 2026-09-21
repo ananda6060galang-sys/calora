@@ -123,7 +123,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       note: 'Hypertrophy & heavy bench pressing focus',
       durationMinutes: 60,
       totalSets: 10,
-      progressPercent: 70,
+      progressPercent: 70, 
       color: AppColors.accent,
       exercises: [
         GymExercise(
@@ -310,7 +310,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           SafeArea(
             bottom: false,
             child: ListView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
               children: [
                 // ── 1. Header (Unified AppHeader) ───────────────────────────
@@ -355,7 +355,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                   height: 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
+                    physics: const ClampingScrollPhysics(),
                     itemCount: _muscleGroups.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(width: 8),
@@ -1387,7 +1387,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
           // List of Exercises & Logged Sets (workout_sets ERD)
           Expanded(
             child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               itemCount: widget.session.exercises.length,
               separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, exIndex) {

@@ -66,7 +66,7 @@ class NotificationsScreen extends ConsumerWidget {
               dividerColor: dividerColor,
             )
           : ListView.separated(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               itemCount: reminders.length,
               separatorBuilder: (context, index) =>
