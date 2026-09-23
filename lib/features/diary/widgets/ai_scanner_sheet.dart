@@ -13,6 +13,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/input_validators.dart';
 import '../../../main.dart';
 import '../../../models/food.dart';
+import '../food_diary_screen.dart';
 import '../providers/ai_scanner_provider.dart';
 import '../providers/diary_provider.dart';
 
@@ -249,63 +250,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              // =======================================================
-              // [DEMO / MOCK CONTROLS] - 0 Token Gemini
-              // Easy to delete when testing is finished.
-              // =======================================================
-              StatefulBuilder(
-                builder: (context, setMenuState) {
-                  final isMock =
-                      ref.read(aiScannerProvider.notifier).isMockMode;
-                  return SwitchListTile(
-                    secondary: const Icon(
-                      Icons.bolt_rounded,
-                      color: AppColors.accent,
-                    ),
-                    title: Text(
-                      context.locale.languageCode == 'id'
-                          ? 'Mode Hemat Token (Mock)'
-                          : 'Token Saver Mode (Mock)',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      context.locale.languageCode == 'id'
-                          ? 'Ambil foto makanan tanpa memakai token Gemini (0 token).'
-                          : 'Snap food photos without using Gemini tokens (0 tokens).',
-                      style: GoogleFonts.inter(fontSize: 12),
-                    ),
-                    value: isMock,
-                    activeThumbColor: AppColors.accent,
-                    onChanged: (val) {
-                      ref.read(aiScannerProvider.notifier).toggleMockMode(val);
-                      setMenuState(() {});
-                    },
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.visibility_outlined,
-                  color: AppColors.accent,
-                ),
-                title: Text(
-                  context.locale.languageCode == 'id'
-                      ? 'Lihat Contoh Hasil Scan (0 Token)'
-                      : 'Preview Sample Scan (0 Tokens)',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  context.locale.languageCode == 'id'
-                      ? 'Buka layar Food Details langsung tanpa scan.'
-                      : 'Open Food Details directly without scanning.',
-                  style: GoogleFonts.inter(fontSize: 12),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ref.read(aiScannerProvider.notifier).loadMockScanResult();
-                },
-              ),
-              const Divider(height: 16),
+              const SizedBox(height: 12),
               ListTile(
                 leading: const Icon(Icons.tips_and_updates_outlined),
                 title: Text(
@@ -380,12 +325,13 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
     ref.read(aiScannerProvider.notifier).reset();
     Navigator.of(context).pop();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${finalFood.name} added to $_selectedMeal!'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.success,
-      ),
+    FoodDiaryScreen.showFoodLoggedFeedback(
+      context,
+      ref,
+      foodName: finalFood.name,
+      meal: _selectedMeal,
+      entryCalories: finalFood.calories,
+      date: widget.date,
     );
   }
 

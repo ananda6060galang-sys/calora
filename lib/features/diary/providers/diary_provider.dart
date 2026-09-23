@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/diary_service.dart';
 import '../../../models/food.dart';
+import '../../auth/providers/auth_provider.dart';
 
 final diaryServiceProvider = Provider<DiaryService>((ref) => DiaryService());
 
@@ -20,13 +21,10 @@ class DiaryNotifier extends StateNotifier<List<DiaryEntry>> {
 
     if (user != null && _service != null) {
       final remote = await _service.fetchEntries();
-      if (remote.isNotEmpty) {
-        state = remote;
-        return;
-      }
+      state = remote;
+      return;
     }
 
-    // Default to empty if no entries exist
     state = [];
   }
 
@@ -83,18 +81,28 @@ class DiaryNotifier extends StateNotifier<List<DiaryEntry>> {
     }
   }
 
+  void updateEntry(DiaryEntry updated) {
+    state = [
+      for (final e in state)
+        if (e.id == updated.id) updated else e,
+    ];
+    _service?.updateEntry(updated);
+  }
+
   Future<void> reload() async {
     if (_service != null) {
       final remote = await _service.fetchEntries();
-      if (remote.isNotEmpty) {
-        state = remote;
-      }
+      state = remote;
     }
   }
 }
 
 final diaryProvider = StateNotifierProvider<DiaryNotifier, List<DiaryEntry>>(
-  (ref) => DiaryNotifier(ref.watch(diaryServiceProvider)),
+  (ref) {
+    ref.watch(currentUserProvider);
+    final service = ref.watch(diaryServiceProvider);
+    return DiaryNotifier(service);
+  },
 );
 
 final diaryEntriesForDateProvider = Provider.family<List<DiaryEntry>, DateTime>(

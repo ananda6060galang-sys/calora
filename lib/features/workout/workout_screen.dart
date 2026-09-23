@@ -10,6 +10,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_header.dart';
 import '../../models/user_profile.dart';
 import '../dashboard/providers/profile_provider.dart';
+import '../notifications/notifications_screen.dart';
 
 String _muscleGroupLabel(String mg) {
   switch (mg.toLowerCase()) {
@@ -317,6 +318,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                 AppHeader(
                   profile: profile,
                   isDark: isDark,
+                  onNotificationTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  ),
                   onSearchTap: () {
                     // Quick feedback or filter
                     ScaffoldMessenger.of(context).showSnackBar(

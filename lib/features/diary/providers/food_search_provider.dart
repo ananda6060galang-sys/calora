@@ -101,9 +101,10 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
     );
 
     try {
+      final isAll = activeCategory == 'Semua' || activeCategory == 'All';
       final results = await _service.searchFoods(
         query,
-        category: activeCategory == 'Semua' ? null : activeCategory,
+        category: isAll ? null : activeCategory,
       );
 
       // Verify freshness of search
@@ -117,7 +118,7 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
         );
       } else {
         state = state.copyWith(
-          status: query.isEmpty && activeCategory == 'Semua'
+          status: query.isEmpty && isAll
               ? FoodSearchStatus.idle
               : FoodSearchStatus.results,
           foods: results,
@@ -133,7 +134,8 @@ class FoodSearchNotifier extends StateNotifier<FoodSearchState> {
           queryLower.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
 
       var baseList = [...indonesianFoods, ...demoFoods];
-      if (activeCategory != 'Semua') {
+      final isAll = activeCategory == 'Semua' || activeCategory == 'All';
+      if (!isAll) {
         baseList = baseList
             .where((f) => f.category.toLowerCase() == activeCategory.toLowerCase())
             .toList();

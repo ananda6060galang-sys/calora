@@ -31,11 +31,30 @@ import 'widgets/weight_journey_chart.dart';
 /// illustration asset, overlapping circular avatar, edit pencil badge, user metadata,
 /// edit profile pill button, and grouped Personal section card, finished with a matching
 /// Account & Preferences continuation section.
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(userProfileProvider);
     final currentUser = ref.watch(currentUserProvider);
     final foodRequests = ref.watch(foodRequestProvider);
@@ -56,13 +75,16 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 120),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── 1. TOP BANNER & OVERLAPPING AVATAR ─────────────────────
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _scrollController,
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── 1. TOP BANNER & OVERLAPPING AVATAR ─────────────────────
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.topCenter,
@@ -82,73 +104,6 @@ class ProfileScreen extends ConsumerWidget {
                       alignment: Alignment.center,
                       width: double.infinity,
                       height: 195,
-                    ),
-                  ),
-                ),
-
-                // Top Navigation Bar (Profile title, LanguageTogglePill, Settings Button)
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'profile.title'.tr(),
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        // Quick Language Toggle Pill and Settings Action
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const LanguageTogglePill(),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => _openSettings(context),
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkSurfaceAlt
-                                      : Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: isDark
-                                      ? Border.all(
-                                          color: AppColors.darkBorder,
-                                          width: 0.8,
-                                        )
-                                      : null,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: isDark ? 0.25 : 0.08,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.settings_outlined,
-                                  color: isDark
-                                      ? AppColors.accent
-                                      : const Color(0xFF2E6319),
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -493,7 +448,22 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+      Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: _StickyProfileHeader(
+          scrollController: _scrollController,
+          isDark: isDark,
+          bgColor: bgColor,
+          dividerColor: dividerColor,
+          textPrimary: textPrimary,
+          onSettingsTap: () => _openSettings(context),
+        ),
+      ),
+    ],
+  ),
+);
   }
 
   // ─── Helpers & Navigation ────────────────────────────────────
@@ -551,6 +521,132 @@ class ProfileScreen extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => const PrivacySecurityScreen(),
       ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// STICKY PROFILE HEADER
+// ════════════════════════════════════════════════════════════════
+
+class _StickyProfileHeader extends StatelessWidget {
+  const _StickyProfileHeader({
+    required this.scrollController,
+    required this.isDark,
+    required this.bgColor,
+    required this.dividerColor,
+    required this.textPrimary,
+    required this.onSettingsTap,
+  });
+
+  final ScrollController scrollController;
+  final bool isDark;
+  final Color bgColor;
+  final Color dividerColor;
+  final Color textPrimary;
+  final VoidCallback onSettingsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: scrollController,
+      builder: (context, _) {
+        final offset =
+            scrollController.hasClients ? scrollController.offset : 0.0;
+        final t = (offset / 60.0).clamp(0.0, 1.0);
+
+        final barBgColor = bgColor.withValues(alpha: t * 0.98);
+        final titleColor = Color.lerp(Colors.white, textPrimary, t)!;
+        final bottomBorderColor = dividerColor.withValues(alpha: t);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: barBgColor,
+            border: Border(
+              bottom: BorderSide(
+                color: bottomBorderColor,
+                width: t > 0 ? 0.8 : 0.0,
+              ),
+            ),
+            boxShadow: t > 0.2
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.25 * t : 0.06 * t,
+                      ),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 10, 22, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'profile.title'.tr(),
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: titleColor,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const LanguageTogglePill(),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onSettingsTap,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkSurfaceAlt
+                                : Colors.white,
+                            shape: BoxShape.circle,
+                            border: isDark
+                                ? Border.all(
+                                    color: AppColors.darkBorder,
+                                    width: 0.8,
+                                  )
+                                : null,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: isDark ? 0.25 : 0.08,
+                                ),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.settings_outlined,
+                            color: isDark
+                                ? AppColors.accent
+                                : const Color(0xFF2E6319),
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

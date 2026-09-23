@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/food.dart';
+import '../../models/food_category.dart';
 import '../../models/indonesian_foods_data.dart';
 import '../../models/mock_data.dart';
 import '../config/supabase_config.dart';
@@ -54,64 +55,143 @@ class FatSecretFoodSearchService implements FoodSearchService {
   }) async {
     final cleanQuery = query.trim();
 
+    // 1. Fetch matching verified foods from real Supabase public.foods
+    List<Food> supabaseFoods = [];
+    try {
+      var sbQuery = _client
+          .from('foods')
+          .select('*, food_categories(name)');
+
+      if (cleanQuery.isNotEmpty) {
+        sbQuery = sbQuery.ilike('name', '%$cleanQuery%');
+      }
+
+      final hasCategory = category != null &&
+          category.isNotEmpty &&
+          category != 'Semua' &&
+          category != 'All';
+
+      if (hasCategory) {
+        final matchedCat = defaultFoodCategories.where(
+          (c) => c.name.toLowerCase() == category.toLowerCase() ||
+                 c.id == category,
+        ).firstOrNull;
+
+        if (matchedCat != null) {
+          sbQuery = sbQuery.eq('category_id', matchedCat.id);
+        }
+      }
+
+      final sbResponse = await sbQuery
+          .order('created_at', ascending: false)
+          .limit(maxResults);
+
+      final list = sbResponse as List<dynamic>;
+      supabaseFoods = list
+          .map((row) => Food.fromSupabase(row as Map<String, dynamic>))
+          .where((f) {
+            if (!hasCategory) return true;
+            return f.category.toLowerCase() == category.toLowerCase();
+          })
+          .toList();
+    } catch (_) {
+      // Offline / network fallback
+    }
+
+    // 2. Fetch external / local foods
+    List<Food> otherFoods = [];
     try {
       if (cleanQuery.isEmpty) {
-        return _localFallback.searchFoods(
+        otherFoods = await _localFallback.searchFoods(
           cleanQuery,
           page: page,
           maxResults: maxResults,
           category: category,
         );
-      }
+      } else {
+        final response = await _httpClient
+            .post(
+              _edgeFunctionUri,
+              headers: _buildHeaders(),
+              body: jsonEncode({
+                'action': 'search',
+                'query': cleanQuery,
+                'pageNumber': page,
+                'maxResults': maxResults,
+              }),
+            )
+            .timeout(const Duration(seconds: 4));
 
-      final response = await _httpClient
-          .post(
-            _edgeFunctionUri,
-            headers: _buildHeaders(),
-            body: jsonEncode({
-              'action': 'search',
-              'query': cleanQuery,
-              'pageNumber': page,
-              'maxResults': maxResults,
-            }),
-          )
-          .timeout(const Duration(seconds: 4));
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final foodsList = data['foods'] as List<dynamic>? ?? [];
+          final results = foodsList
+              .whereType<Map<String, dynamic>>()
+              .map(Food.fromJson)
+              .toList();
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final foodsList = data['foods'] as List<dynamic>? ?? [];
-        final results = foodsList
-            .whereType<Map<String, dynamic>>()
-            .map(Food.fromJson)
-            .toList();
-
-        if (results.isNotEmpty) {
-          return results;
+          if (results.isNotEmpty) {
+            otherFoods = results;
+          } else {
+            otherFoods = await _localFallback.searchFoods(
+              cleanQuery,
+              page: page,
+              maxResults: maxResults,
+              category: category,
+            );
+          }
+        } else {
+          otherFoods = await _localFallback.searchFoods(
+            cleanQuery,
+            page: page,
+            maxResults: maxResults,
+            category: category,
+          );
         }
       }
-
-      // If FatSecret returned empty or non-200, query Indonesian database
-      return _localFallback.searchFoods(
-        cleanQuery,
-        page: page,
-        maxResults: maxResults,
-        category: category,
-      );
     } catch (_) {
-      // Instant fallback to Indonesian food dataset
-      return _localFallback.searchFoods(
+      otherFoods = await _localFallback.searchFoods(
         cleanQuery,
         page: page,
         maxResults: maxResults,
         category: category,
       );
     }
+
+    // 3. Merge: Prioritize Supabase database items at the top without duplicates
+    final combined = <Food>[...supabaseFoods];
+    final seenNames = {
+      for (final f in supabaseFoods) f.name.toLowerCase().trim()
+    };
+
+    for (final f in otherFoods) {
+      final nameKey = f.name.toLowerCase().trim();
+      if (!seenNames.contains(nameKey)) {
+        seenNames.add(nameKey);
+        combined.add(f);
+      }
+    }
+
+    return combined;
   }
 
   @override
   Future<Food?> getFoodDetails(String foodId) async {
     final cleanId = foodId.trim();
     if (cleanId.isEmpty) return null;
+
+    // Check Supabase public.foods first
+    try {
+      final sbResponse = await _client
+          .from('foods')
+          .select('*, food_categories(name)')
+          .eq('id', cleanId)
+          .maybeSingle();
+
+      if (sbResponse != null) {
+        return Food.fromSupabase(sbResponse);
+      }
+    } catch (_) {}
 
     // Local & Indonesian items are resolved locally without network calls
     if (cleanId.startsWith('indo_') || cleanId.startsWith('local_')) {
@@ -164,7 +244,7 @@ class MockFoodSearchService implements FoodSearchService {
 
     // 1. Filter by category if specified
     List<Food> baseList = _foods;
-    if (category != null && category.isNotEmpty && category != 'Semua') {
+    if (category != null && category.isNotEmpty && category != 'Semua' && category != 'All') {
       baseList = baseList.where((f) {
         final foodCat = f.category.toLowerCase();
         return foodCat == category.toLowerCase();

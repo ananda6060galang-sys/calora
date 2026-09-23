@@ -68,6 +68,28 @@ class DiaryService {
     }
   }
 
+  /// Update an existing diary entry.
+  Future<void> updateEntry(DiaryEntry entry) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      await _client.from('diary_entries').update({
+        'food_name': entry.food.name,
+        'meal_type': entry.meal.toLowerCase(),
+        'servings': entry.servings,
+        'calories': entry.calories,
+        'protein_g': entry.proteinG,
+        'carbs_g': entry.carbsG,
+        'fat_g': entry.fatG,
+        'portion_grams': entry.portionGrams,
+        'serving_label': entry.food.servingLabel,
+      }).eq('id', entry.id).eq('user_id', user.id);
+    } catch (_) {
+      // Gracefully handle offline / connection error
+    }
+  }
+
   /// Delete a diary entry by ID.
   Future<void> deleteEntry(String id) async {
     final user = _client.auth.currentUser;

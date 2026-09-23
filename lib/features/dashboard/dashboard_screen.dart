@@ -11,6 +11,7 @@ import '../../models/user_profile.dart';
 import '../diary/food_diary_screen.dart';
 import '../diary/providers/diary_provider.dart';
 import '../notifications/notifications_screen.dart';
+import '../notifications/providers/notifications_provider.dart';
 import 'providers/profile_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -20,10 +21,11 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
     final totals = ref.watch(diaryTotalsProvider);
+    final hasUnread = ref.watch(hasUnreadNotificationsProvider);
 
     final target = profile.dailyCalorieTarget;
     final remaining = (target - totals.calories).round();
-    final calorieProgress = target <= 0 ? 0.0 : totals.calories / target;
+    final calorieProgress = target <= 0 ? 0.0 : (totals.calories / target).clamp(0.0, 1.0);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -61,6 +63,7 @@ class DashboardScreen extends ConsumerWidget {
             _DashboardHeader(
               profile: profile,
               isDark: isDark,
+              hasUnread: hasUnread,
               onSearchTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
               onNotificationTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -184,12 +187,14 @@ class _DashboardHeader extends StatelessWidget {
   const _DashboardHeader({
     required this.profile,
     required this.isDark,
+    this.hasUnread = false,
     this.onSearchTap,
     this.onNotificationTap,
   });
 
   final UserProfile profile;
   final bool isDark;
+  final bool hasUnread;
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationTap;
 
@@ -238,6 +243,7 @@ class _DashboardHeader extends StatelessWidget {
         _CircleIconButton(
           icon: Icons.notifications_none_rounded,
           isDark: isDark,
+          hasBadge: hasUnread,
           onTap: onNotificationTap,
         ),
       ],
@@ -714,11 +720,13 @@ class _CircleIconButton extends StatelessWidget {
   const _CircleIconButton({
     required this.icon,
     required this.isDark,
+    this.hasBadge = false,
     this.onTap,
   });
 
   final IconData icon;
   final bool isDark;
+  final bool hasBadge;
   final VoidCallback? onTap;
 
   @override
@@ -748,14 +756,34 @@ class _CircleIconButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           customBorder: const CircleBorder(),
-          child: Center(
-            child: Icon(
-              icon,
-              size: 19,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
-            ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 19,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+              if (hasBadge)
+                Positioned(
+                  top: 7,
+                  right: 7,
+                  child: Container(
+                    width: 8.5,
+                    height: 8.5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE53935),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? AppColors.darkSurface : Colors.white,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

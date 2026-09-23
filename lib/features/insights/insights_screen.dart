@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/calora_avatar.dart';
 import '../dashboard/providers/profile_provider.dart';
 import '../diary/providers/diary_provider.dart';
+import '../notifications/notifications_screen.dart';
+import '../notifications/providers/notifications_provider.dart';
 import 'insights_detail_screen.dart';
 import 'widgets/nutrition_summary_card.dart';
 import 'widgets/organic_aura.dart';
@@ -136,6 +138,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
     // Real Calora Data from Providers
     final profile = ref.watch(userProfileProvider);
+    final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final diaryTotals = ref.watch(diaryTotalsForDateProvider(_selectedDate));
 
     final consumedCalories = diaryTotals.calories;
@@ -254,58 +257,63 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           ),
 
                           // Right: Notification Icon with badge
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkSurface
-                                      : Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: isDark ? 0.35 : 0.08,
-                                      ),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const NotificationsScreen(),
+                              ),
+                            ),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkSurface
+                                    : Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.35 : 0.08,
                                     ),
-                                  ],
-                                ),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
                                 alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.notifications_none_rounded,
-                                  size: 22,
-                                  color: isDark
-                                      ? AppColors.darkTextPrimary
-                                      : const Color(0xFF131814),
-                                ),
-                              ),
-                              Positioned(
-                                top: 2,
-                                right: 2,
-                                child: Container(
-                                  width: 17,
-                                  height: 17,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFE53935),
-                                    shape: BoxShape.circle,
+                                children: [
+                                  Icon(
+                                    Icons.notifications_none_rounded,
+                                    size: 22,
+                                    color: isDark
+                                        ? AppColors.darkTextPrimary
+                                        : const Color(0xFF131814),
                                   ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    '2',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                  if (hasUnread)
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Container(
+                                        width: 8.5,
+                                        height: 8.5,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE53935),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isDark
+                                                ? AppColors.darkSurface
+                                                : Colors.white,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),

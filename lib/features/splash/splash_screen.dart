@@ -5,6 +5,9 @@ import '../../routing/root_shell.dart';
 import '../auth/login_screen.dart';
 import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
+import '../diary/providers/diary_provider.dart';
+import '../diary/providers/food_request_provider.dart';
+import '../profile/providers/weight_log_provider.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -142,6 +145,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       if (profile != null) {
         ref.read(userProfileProvider.notifier).state = profile;
+        ref.read(diaryProvider.notifier).reload();
+        ref.read(foodRequestProvider.notifier).reload();
+        ref.read(weightLogProvider.notifier).reload();
 
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(

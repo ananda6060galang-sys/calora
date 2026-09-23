@@ -6,6 +6,7 @@ import '../features/dashboard/dashboard_screen.dart';
 import '../features/diary/food_diary_screen.dart';
 import '../features/insights/insights_screen.dart';
 import '../features/profile/profile_screen.dart';
+import 'widgets/draggable_pill_navigation.dart';
 
 /// The main authenticated app shell.
 class RootShell extends StatefulWidget {
@@ -26,17 +27,17 @@ class _RootShellState extends State<RootShell> {
   ];
 
   static const _destinations = [
-    _NavDestination(icon: Icons.dashboard_rounded, label: 'Home'),
-    _NavDestination(icon: Icons.restaurant_menu_rounded, label: 'Diary'),
-    _NavDestination(icon: Icons.insights_rounded, label: 'Insights'),
-    _NavDestination(icon: Icons.person_rounded, label: 'Profile'),
+    NavDestination(icon: Icons.dashboard_rounded, label: 'Home'),
+    NavDestination(icon: Icons.restaurant_menu_rounded, label: 'Diary'),
+    NavDestination(icon: Icons.insights_rounded, label: 'Insights'),
+    NavDestination(icon: Icons.person_rounded, label: 'Profile'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),
-      bottomNavigationBar: _PillBottomNavigation(
+      bottomNavigationBar: DraggablePillNavigation(
         currentIndex: _index,
         destinations: _destinations,
         onSelected: (i) => setState(() => _index = i),
@@ -45,13 +46,14 @@ class _RootShellState extends State<RootShell> {
   }
 }
 
-class _NavDestination {
-  const _NavDestination({required this.icon, required this.label});
+// ─────────────────────────────────────────────────────────────────────────────
+// BACKUP NAVBAR (Original static pill navigation — kept intact for easy revert)
+// To revert: simply replace DraggablePillNavigation above with _PillBottomNavigation
+// ─────────────────────────────────────────────────────────────────────────────
 
-  final IconData icon;
-  final String label;
-}
+typedef _NavDestination = NavDestination;
 
+// ignore: unused_element
 class _PillBottomNavigation extends StatelessWidget {
   const _PillBottomNavigation({
     required this.currentIndex,
@@ -60,7 +62,7 @@ class _PillBottomNavigation extends StatelessWidget {
   });
 
   final int currentIndex;
-  final List<_NavDestination> destinations;
+  final List<NavDestination> destinations;
   final ValueChanged<int> onSelected;
 
   static const _duration = Duration(milliseconds: 360);

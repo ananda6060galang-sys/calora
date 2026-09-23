@@ -1,13 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../features/notifications/notifications_screen.dart';
+import '../../features/notifications/providers/notifications_provider.dart';
 import '../../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import 'calora_avatar.dart';
 
 /// Unified user greeting header used across Dashboard and Workout screens.
-class AppHeader extends StatelessWidget {
+class AppHeader extends ConsumerWidget {
   const AppHeader({
     super.key,
     required this.profile,
@@ -26,9 +29,10 @@ class AppHeader extends StatelessWidget {
   final bool showNotification;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final displayName =
         profile.name.trim().isNotEmpty ? profile.name.trim() : 'Calora User';
+    final hasUnread = ref.watch(hasUnreadNotificationsProvider);
 
     return Row(
       children: [
@@ -88,7 +92,15 @@ class AppHeader extends StatelessWidget {
           _HeaderCircleButton(
             icon: Icons.notifications_none_rounded,
             isDark: isDark,
-            onTap: onNotificationTap,
+            hasBadge: hasUnread,
+            onTap: onNotificationTap ??
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+                },
           ),
         ],
       ],
@@ -100,11 +112,13 @@ class _HeaderCircleButton extends StatelessWidget {
   const _HeaderCircleButton({
     required this.icon,
     required this.isDark,
+    this.hasBadge = false,
     this.onTap,
   });
 
   final IconData icon;
   final bool isDark;
+  final bool hasBadge;
   final VoidCallback? onTap;
 
   @override
@@ -136,12 +150,36 @@ class _HeaderCircleButton extends StatelessWidget {
                     ),
                   ],
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+              if (hasBadge)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 8.5,
+                    height: 8.5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE53935),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.darkSurface
+                            : AppColors.lightSurface,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

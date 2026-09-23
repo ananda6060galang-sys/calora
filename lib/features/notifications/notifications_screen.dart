@@ -12,11 +12,27 @@ import 'providers/notifications_provider.dart';
 /// logs, streak). Read-only, no fabricated entries: an empty list shows an
 /// honest "all caught up" state. Chrome follows the project's full-page
 /// pattern (plain back button, left-aligned title).
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final reminders = ref.read(remindersProvider);
+      ref.read(viewedNotificationsProvider.notifier).markAllAsViewed(reminders);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final reminders = ref.watch(remindersProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

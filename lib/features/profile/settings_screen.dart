@@ -6,8 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/theme_provider.dart';
+import '../../models/mock_data.dart';
 import '../auth/login_screen.dart';
 import '../auth/providers/auth_provider.dart';
+import '../dashboard/providers/profile_provider.dart';
+import '../diary/providers/diary_provider.dart';
+import '../notifications/notifications_screen.dart';
+import 'providers/weight_log_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -123,14 +128,9 @@ class SettingsScreen extends ConsumerWidget {
                     dividerColor: dividerColor,
                     showDivider: true,
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            context.locale.languageCode == 'id'
-                                ? 'Pengaturan notifikasi diperbarui'
-                                : 'Notification settings updated',
-                          ),
-                          duration: const Duration(seconds: 2),
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const NotificationsScreen(),
                         ),
                       );
                     },
@@ -497,6 +497,9 @@ class SettingsScreen extends ConsumerWidget {
                         Navigator.of(dialogCtx).pop();
                         try {
                           await ref.read(authServiceProvider).signOut();
+                          ref.read(userProfileProvider.notifier).state = demoProfile;
+                          ref.read(diaryProvider.notifier).reload();
+                          ref.read(weightLogProvider.notifier).clearLogs();
                         } catch (_) {}
 
                         if (!context.mounted) return;

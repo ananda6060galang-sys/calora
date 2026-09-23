@@ -114,3 +114,37 @@ final remindersProvider = Provider<List<AppReminder>>((ref) {
 
   return reminders;
 });
+
+/// Tracks keys of reminders that have been viewed by the user.
+class ViewedNotificationsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => <String>{};
+
+  void markAllAsViewed(List<AppReminder> reminders) {
+    state = reminders
+        .map((r) => '${r.kind.name}_${r.titleKey}_${r.bodyArgs.join("_")}')
+        .toSet();
+  }
+
+  void reset() {
+    state = <String>{};
+  }
+}
+
+final viewedNotificationsProvider =
+    NotifierProvider<ViewedNotificationsNotifier, Set<String>>(
+  ViewedNotificationsNotifier.new,
+);
+
+/// Indicates whether there are unread notifications to display with a red dot.
+final hasUnreadNotificationsProvider = Provider<bool>((ref) {
+  final reminders = ref.watch(remindersProvider);
+  if (reminders.isEmpty) return false;
+
+  final viewedKeys = ref.watch(viewedNotificationsProvider);
+  final currentKeys = reminders
+      .map((r) => '${r.kind.name}_${r.titleKey}_${r.bodyArgs.join("_")}')
+      .toSet();
+  return currentKeys.difference(viewedKeys).isNotEmpty;
+});
+

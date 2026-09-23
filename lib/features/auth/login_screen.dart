@@ -10,6 +10,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/language_toggle_pill.dart';
 import '../../routing/root_shell.dart';
 import '../dashboard/providers/profile_provider.dart';
+import '../diary/providers/diary_provider.dart';
+import '../diary/providers/food_request_provider.dart';
+import '../profile/providers/weight_log_provider.dart';
 import 'forgot_password_screen.dart';
 import 'providers/auth_provider.dart';
 import 'register_screen.dart';
@@ -89,6 +92,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         if (profile != null) {
           ref.read(userProfileProvider.notifier).state = profile;
+          ref.read(diaryProvider.notifier).reload();
+          ref.read(foodRequestProvider.notifier).reload();
+          ref.read(weightLogProvider.notifier).reload();
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const RootShell()),
           );

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'food_category.dart';
 
 String generateUuidV4() {
   final rng = Random.secure();
@@ -124,6 +125,54 @@ class Food {
           .whereType<Map<String, dynamic>>()
           .map(FoodServing.fromJson)
           .toList(),
+    );
+  }
+
+  factory Food.fromSupabase(Map<String, dynamic> row, [String? categoryName]) {
+    final catId = row['category_id']?.toString();
+    final fallbackCatName = catId != null
+        ? defaultFoodCategories.where((c) => c.id == catId).firstOrNull?.name
+        : null;
+
+    final catName = categoryName ??
+        (row['food_categories'] is Map
+            ? (row['food_categories'] as Map)['name']?.toString()
+            : null) ??
+        fallbackCatName ??
+        'General';
+
+    final foodId = row['id']?.toString() ?? generateUuidV4();
+    final servingLabel = row['serving_label']?.toString() ?? '1 serving';
+    final calories = (row['calories'] as num?)?.round() ?? 0;
+    final proteinG = (row['protein_g'] as num?)?.toDouble() ?? 0.0;
+    final carbsG = (row['carbs_g'] as num?)?.toDouble() ?? 0.0;
+    final fatG = (row['fat_g'] as num?)?.toDouble() ?? 0.0;
+    final portionGrams = (row['portion_grams'] as num?)?.toDouble() ?? 100.0;
+
+    return Food(
+      id: foodId,
+      name: row['name']?.toString() ?? 'Food',
+      servingLabel: servingLabel,
+      calories: calories,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
+      portionGrams: portionGrams,
+      category: catName,
+      source: row['source']?.toString() ?? 'supabase',
+      servings: [
+        FoodServing(
+          servingId: foodId,
+          servingDescription: servingLabel,
+          calories: calories,
+          proteinG: proteinG,
+          carbsG: carbsG,
+          fatG: fatG,
+          metricServingAmount: portionGrams,
+          metricServingUnit: 'g',
+          numberOfUnits: 1.0,
+        ),
+      ],
     );
   }
 
