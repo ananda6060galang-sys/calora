@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -74,7 +75,7 @@ class FeaturedInsightCard extends StatelessWidget {
                       children: [
                         // Tag: SMART INSIGHT
                         Text(
-                          'SMART INSIGHT',
+                          'insights.smartInsightsTitle'.tr().toUpperCase(),
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,

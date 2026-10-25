@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/language_toggle_pill.dart';
+import '../../routing/root_shell.dart';
+import '../dashboard/providers/profile_provider.dart';
+import '../diary/providers/diary_provider.dart';
+import '../diary/providers/food_request_provider.dart';
+import '../profile/providers/weight_log_provider.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'providers/auth_provider.dart';
 
@@ -18,7 +24,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
+    with WidgetsBindingObserver {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -34,6 +41,156 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _passwordError;
   String? _confirmError;
   bool _loading = false;
+  bool _loadingGoogle = false;
+  bool _handlingAuthSuccess = false;
+  StreamSubscription<AuthState>? _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _listenToAuthState();
+  }
+
+  void _listenToAuthState() {
+    _authSubscription =
+        ref.read(authServiceProvider).onAuthStateChange.listen((data) async {
+      if (data.event == AuthChangeEvent.signedIn) {
+        final user = data.session?.user ??
+            ref.read(authServiceProvider).currentUser;
+        if (user != null && mounted && !_handlingAuthSuccess) {
+          _handlingAuthSuccess = true;
+          await _onAuthSuccess(user.id);
+        }
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _loadingGoogle) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted &&
+            _loadingGoogle &&
+            ref.read(authServiceProvider).currentUser == null) {
+          setState(() => _loadingGoogle = false);
+        }
+      });
+    }
+  }
+
+  Future<void> _onAuthSuccess(String userId) async {
+    try {
+      final authService = ref.read(authServiceProvider);
+      final profile =
+          await ref.read(profileServiceProvider).getProfile(userId);
+
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadingGoogle = false;
+      });
+
+      if (profile != null) {
+        if (profile.isBlocked) {
+          await authService.signOut();
+          if (!mounted) return;
+          _showBlockedDialog();
+          return;
+        }
+
+        ref.read(userProfileProvider.notifier).state = profile;
+        ref.read(diaryProvider.notifier).reload();
+        ref.read(foodRequestProvider.notifier).reload();
+        ref.read(weightLogProvider.notifier).reload();
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const RootShell()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadingGoogle = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    if (_loading || _loadingGoogle) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _loadingGoogle = true);
+
+    try {
+      final success = await ref.read(authServiceProvider).signInWithGoogle();
+      if (!success && mounted) {
+        setState(() => _loadingGoogle = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingGoogle = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('auth.googleSignInFailed'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showBlockedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.block_rounded, color: Colors.red, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'auth.accountBlockedTitle'.tr(),
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'auth.accountBlockedMessage'.tr(),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'OK',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // =========================================================
   // REGISTER
@@ -163,6 +320,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _authSubscription?.cancel();
     _name.dispose();
     _email.dispose();
     _password.dispose();
@@ -240,7 +399,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // 2. SCROLLABLE FORM
             // =====================================================
             SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -506,7 +665,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           height: 52,
 
                           child: OutlinedButton(
-                            onPressed: () {},
+                            onPressed: _loading || _loadingGoogle
+                                ? null
+                                : _handleGoogleSignIn,
 
                             style: OutlinedButton.styleFrom(
                               backgroundColor: isDark
@@ -527,30 +688,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ),
 
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: _loadingGoogle
+                                ? SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF1E1E1E),
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
 
-                              children: [
-                                // Google logo
-                                // dari icons_plus
-                                Brand(Brands.google, size: 21),
+                                    children: [
+                                      // Google logo
+                                      // dari icons_plus
+                                      Brand(Brands.google, size: 21),
 
-                                const SizedBox(width: 12),
+                                      const SizedBox(width: 12),
 
-                                Text(
-                                  'auth.continueWithGoogle'.tr(),
+                                      Text(
+                                        'auth.continueWithGoogle'.tr(),
 
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
 
-                                    color: isDark
-                                        ? Colors.white
-                                        : const Color(0xFF1E1E1E),
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF1E1E1E),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
 

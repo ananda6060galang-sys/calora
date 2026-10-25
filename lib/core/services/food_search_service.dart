@@ -109,45 +109,42 @@ class FatSecretFoodSearchService implements FoodSearchService {
           category: category,
         );
       } else {
-        final response = await _httpClient
-            .post(
-              _edgeFunctionUri,
-              headers: _buildHeaders(),
-              body: jsonEncode({
-                'action': 'search',
-                'query': cleanQuery,
-                'pageNumber': page,
-                'maxResults': maxResults,
-              }),
-            )
-            .timeout(const Duration(seconds: 4));
+        // Fetch external search results (FatSecret / USDA Edge Function)
+        List<Food> externalResults = [];
+        try {
+          final response = await _httpClient
+              .post(
+                _edgeFunctionUri,
+                headers: _buildHeaders(),
+                body: jsonEncode({
+                  'action': 'search',
+                  'query': cleanQuery,
+                  'pageNumber': page,
+                  'maxResults': maxResults,
+                }),
+              )
+              .timeout(const Duration(seconds: 4));
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as Map<String, dynamic>;
-          final foodsList = data['foods'] as List<dynamic>? ?? [];
-          final results = foodsList
-              .whereType<Map<String, dynamic>>()
-              .map(Food.fromJson)
-              .toList();
-
-          if (results.isNotEmpty) {
-            otherFoods = results;
-          } else {
-            otherFoods = await _localFallback.searchFoods(
-              cleanQuery,
-              page: page,
-              maxResults: maxResults,
-              category: category,
-            );
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body) as Map<String, dynamic>;
+            final foodsList = data['foods'] as List<dynamic>? ?? [];
+            externalResults = foodsList
+                .whereType<Map<String, dynamic>>()
+                .map(Food.fromJson)
+                .toList();
           }
-        } else {
-          otherFoods = await _localFallback.searchFoods(
-            cleanQuery,
-            page: page,
-            maxResults: maxResults,
-            category: category,
-          );
-        }
+        } catch (_) {}
+
+        // Always query local/curated Indonesian database as well
+        final localResults = await _localFallback.searchFoods(
+          cleanQuery,
+          page: page,
+          maxResults: maxResults,
+          category: category,
+        );
+
+        // Put curated local/Indonesian foods first, then external results
+        otherFoods = [...localResults, ...externalResults];
       }
     } catch (_) {
       otherFoods = await _localFallback.searchFoods(

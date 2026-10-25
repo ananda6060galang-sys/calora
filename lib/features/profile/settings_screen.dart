@@ -81,7 +81,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SafeArea(
             child: ListView(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               children: [
             // ── SETTINGS LIST ──────────────────────────────────
@@ -393,7 +393,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'A modern calorie & gym workout tracking mobile app designed to help you reach your body goals with precision.',
+              'profile.aboutDescription'.tr(),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -404,7 +404,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Built with Flutter & Supabase',
+              'profile.aboutBuiltWith'.tr(),
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

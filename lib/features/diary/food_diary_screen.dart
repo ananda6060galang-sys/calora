@@ -12,6 +12,7 @@ import '../../core/widgets/progress_ring.dart';
 import '../../core/utils/input_validators.dart';
 
 import '../../models/food.dart';
+import '../../core/widgets/skeleton_loading.dart';
 
 import '../dashboard/providers/profile_provider.dart';
 import 'providers/diary_provider.dart';
@@ -376,7 +377,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
 
               Expanded(
                 child: CustomScrollView(
-                  physics: const ClampingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   slivers: [
                     // "Set your daily meal plan" + Image
                     SliverToBoxAdapter(
@@ -626,7 +627,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                   height: 44,
                                   child: SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
-                                    physics: const ClampingScrollPhysics(),
+                                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                                     child: Row(
                                       children: List.generate(12, (index) {
                                         final monthIndex = index + 1;
@@ -710,7 +711,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                           ),
                                           scrollDirection: Axis.horizontal,
                                           physics:
-                                              const ClampingScrollPhysics(),
+                                              const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                                           itemCount: _totalDays,
                                           separatorBuilder:
                                               (context, index) =>
@@ -1806,7 +1807,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                       // Form Body
                       Expanded(
                         child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
+                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                           padding: EdgeInsets.fromLTRB(
                             20,
                             4,
@@ -2357,7 +2358,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                     height: 36,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      physics: const ClampingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                       padding: EdgeInsets.zero,
                       children: [
                         _buildCategoryChip(
@@ -2783,20 +2784,9 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
     FoodSearchState searchState,
     bool isDark,
   ) {
-    // 1. Loading State
+    // 1. Loading State (Silky Skeleton Loading)
     if (searchState.status == FoodSearchStatus.loading) {
-      return Center(
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              isDark ? AppColors.accent : const Color(0xFF2C5E3B),
-            ),
-          ),
-        ),
-      );
+      return const FoodSearchSkeletonList(itemCount: 6);
     }
 
     // 2. Error State
@@ -2931,7 +2921,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Scan dengan AI',
+                            'diary.scanAi'.tr(),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
@@ -3011,7 +3001,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
 
     // 4. Clean Editorial Results List
     return CustomScrollView(
-      physics: const ClampingScrollPhysics(),
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
@@ -3071,7 +3061,20 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
     final p = food.proteinG.round();
     final c = food.carbsG.round();
     final f = food.fatG.round();
-    final macroLine = '$servingText · P ${p}g · C ${c}g · F ${f}g';
+    // Determine clean, subtle database source indicator (no badge / no pill)
+    final String sourceLabel;
+    final isCaloraDb = food.source == 'supabase' ||
+        food.source == 'local_indo' ||
+        food.source == 'local';
+    if (isCaloraDb) {
+      sourceLabel = 'Calora DB';
+    } else if (food.source == 'usda') {
+      sourceLabel = 'USDA';
+    } else {
+      sourceLabel = 'Global';
+    }
+
+    final macroLine = '$servingText · P ${p}g · C ${c}g · F ${f}g · $sourceLabel';
 
     return InkWell(
       onTap: () => _onSelectFood(food),
@@ -3106,7 +3109,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Level 3: Nutrition details (12-13px, muted, no bold, no pills, no dots)
+                  // Level 3: Nutrition details + subtle source (12.5px, muted, clean, no pills)
                   Text(
                     macroLine,
                     maxLines: 1,
@@ -3304,7 +3307,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
         // ── Scrollable Body Area ──
         Flexible(
           child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -3645,7 +3648,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
         const SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           child: Row(
             children: food.servings.map((serving) {
               final isSelected = _selectedServing?.servingId == serving.servingId;
@@ -4017,7 +4020,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           // Quick Delta Adjusters: [-50g] [-25g] [-10g] [+10g] [+25g] [+50g]
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -4094,7 +4097,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           // ── Mode Porsi (Presets) ──
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -4189,7 +4192,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        'Custom',
+                        'diary.custom'.tr(),
                         style: GoogleFonts.inter(
                           fontSize: 13.5,
                           fontWeight: _isCustomServing

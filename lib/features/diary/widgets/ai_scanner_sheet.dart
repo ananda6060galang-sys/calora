@@ -254,15 +254,11 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
               ListTile(
                 leading: const Icon(Icons.tips_and_updates_outlined),
                 title: Text(
-                  context.locale.languageCode == 'id'
-                      ? 'Tips Pemindaian Makanan'
-                      : 'Food Scanning Tips',
+                  'diary.scannerTipsTitle'.tr(),
                   style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
-                  context.locale.languageCode == 'id'
-                      ? 'Posisikan seluruh piring di dalam bingkai dengan pencahayaan yang cukup.'
-                      : 'Place the entire food plate inside the frame with clear lighting.',
+                  'diary.scannerTipsBody'.tr(),
                   style: GoogleFonts.inter(fontSize: 12),
                 ),
                 onTap: () => Navigator.pop(ctx),
@@ -270,9 +266,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
               ListTile(
                 leading: const Icon(Icons.restart_alt_rounded),
                 title: Text(
-                  context.locale.languageCode == 'id'
-                      ? 'Reset Pemindai'
-                      : 'Reset Scanner',
+                  'diary.resetScanner'.tr(),
                   style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                 ),
                 onTap: () {
@@ -503,7 +497,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
 
                     // Centered title
                     Text(
-                      'AI Scanner',
+                      'diary.aiScannerTitle'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -736,7 +730,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                   if (_isCameraMode) ...[
                     const SizedBox(width: 6),
                     Text(
-                      'Camera',
+                      'diary.scanWithCamera'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -783,7 +777,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                   if (!_isCameraMode) ...[
                     const SizedBox(width: 6),
                     Text(
-                      'Gallery',
+                      'dashboard.chooseGallery'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -1126,7 +1120,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
               child: SafeArea(
                 top: false,
                 child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1607,7 +1601,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       // Dedicated Scrollable Form Area with Keyboard Avoidance
                       Expanded(
                         child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
+                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                           padding: EdgeInsets.fromLTRB(
                             20,
                             4,
@@ -1824,9 +1818,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                                     Navigator.of(sheetContext).pop();
                                   },
                                   child: Text(
-                                    sheetInnerContext.locale.languageCode == 'id'
-                                        ? 'Terapkan Perubahan'
-                                        : 'Apply Changes',
+                                    'diary.applyChanges'.tr(),
                                     style: GoogleFonts.inter(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,

@@ -20,9 +20,14 @@ import 'providers/food_request_provider.dart';
 /// Designed for everyday users: zero visual bloat, no intimidating headers,
 /// fast and delightful data entry.
 class FoodRequestScreen extends ConsumerStatefulWidget {
-  const FoodRequestScreen({super.key, this.editRequest});
+  const FoodRequestScreen({
+    super.key,
+    this.editRequest,
+    this.initialBarcode,
+  });
 
   final FoodRequest? editRequest;
+  final String? initialBarcode;
 
   @override
   ConsumerState<FoodRequestScreen> createState() => _FoodRequestScreenState();
@@ -185,9 +190,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
                   Expanded(
                     child: Text(
                       edit.status.toLowerCase() == 'rejected'
-                          ? (context.locale.languageCode == 'id'
-                              ? 'Pengajuan berhasil direvisi dan dikirim kembali untuk review!'
-                              : 'Submission revised and resubmitted for review!')
+                          ? 'diary.foodRequest.resubmittedSuccess'.tr()
                           : 'profile.submissionUpdated'.tr(),
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.w600,
@@ -219,6 +222,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
               fatG: fat,
               notes:
                   _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+              barcode: widget.initialBarcode,
             );
 
         if (mounted) {
@@ -260,7 +264,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit: $e'),
+            content: Text('diary.foodRequest.submitFailed'.tr(args: ['$e'])),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -387,9 +391,81 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
           children: [
             Expanded(
               child: ListView(
-                physics: const ClampingScrollPhysics(),
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
                 children: [
+                  if (widget.initialBarcode != null) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurfaceAlt
+                            : const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.5),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.qr_code_rounded,
+                              color: Color(0xFF4D7800),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Barcode Kemasan Terdeteksi',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? AppColors.darkTextSecondary
+                                        : const Color(0xFF6B7280),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.initialBarcode!,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.1,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF111827),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: AppColors.success,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   // ── 1. LIVE NUTRITION CARD PREVIEW (THE HERO) ─────────────
                   _LiveNutritionHero(
                     name: _nameCtrl.text.trim(),
@@ -423,8 +499,8 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
                         // Food Name
                         _SimpleInputField(
                           controller: _nameCtrl,
-                          label: 'Food Name',
-                          hint: 'e.g. Chicken Rice, Oatmeal, Smoothie',
+                          label: 'diary.foodRequest.foodNameLabel'.tr(),
+                          hint: 'diary.foodRequest.foodNameHint'.tr(),
                           icon: Icons.restaurant_rounded,
                           errorText: _nameError,
                           isDark: isDark,
@@ -442,8 +518,8 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
                         // Portion / Serving
                         _SimpleInputField(
                           controller: _servingCtrl,
-                          label: 'Serving Size',
-                          hint: 'e.g. 1 bowl (250g), 1 cup, 100g',
+                          label: 'diary.foodRequest.portionLabel'.tr(),
+                          hint: 'diary.foodRequest.portionHint'.tr(),
                           icon: Icons.scale_rounded,
                           errorText: _servingError,
                           isDark: isDark,
@@ -460,7 +536,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
 
                         // Category Chips
                         Text(
-                          'Category',
+                          'diary.foodRequest.categoryLabel'.tr(),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -638,7 +714,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
                           color: textSecondary,
                         ),
                         label: Text(
-                          'Add brand or notes (optional)',
+                          'diary.foodRequest.notesHint'.tr(),
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -657,7 +733,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
                       ),
                       child: _SimpleInputField(
                         controller: _notesCtrl,
-                        label: 'Brand / Notes (Optional)',
+                        label: 'diary.foodRequest.notesHint'.tr(),
                         hint: 'e.g. Brand name, restaurant, or barcode',
                         icon: Icons.notes_rounded,
                         maxLines: 2,

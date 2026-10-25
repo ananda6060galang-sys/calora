@@ -29,6 +29,7 @@ class FoodRequestNotifier extends StateNotifier<List<FoodRequest>> {
     required double carbsG,
     required double fatG,
     String? notes,
+    String? barcode,
   }) async {
     try {
       final created = await _service.submitRequest(
@@ -40,6 +41,7 @@ class FoodRequestNotifier extends StateNotifier<List<FoodRequest>> {
         carbsG: carbsG,
         fatG: fatG,
         notes: notes,
+        barcode: barcode,
       );
 
       if (created != null) {

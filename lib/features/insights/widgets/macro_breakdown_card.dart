@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -30,7 +31,7 @@ class MacroBreakdownCard extends StatelessWidget {
       children: [
         // Section Header
         Text(
-          'MACRO PROGRESS',
+          'insights.macroProgress'.tr().toUpperCase(),
           style: GoogleFonts.inter(
             fontSize: 10.5,
             fontWeight: FontWeight.w700,

@@ -59,27 +59,36 @@ class GoalRoadmapCard extends StatelessWidget {
     final String paceLabel;
     switch (plan.goalPace) {
       case GoalPace.gentle:
-        paceLabel = 'Pace Santai (0.25 kg/mg)';
+        paceLabel = 'profile.goalRoadmap.paceGentle'.tr();
         break;
       case GoalPace.moderate:
-        paceLabel = 'Pace Sedang (0.50 kg/mg)';
+        paceLabel = 'profile.goalRoadmap.paceModerate'.tr();
         break;
       case GoalPace.faster:
-        paceLabel = 'Pace Cepat (0.75 kg/mg)';
+        paceLabel = 'profile.goalRoadmap.paceFaster'.tr();
         break;
     }
 
     // Concise, natural Apple-style insight copy
     final String insightText;
     if (plan.isMaintenance) {
-      insightText =
-          'Target harianmu disesuaikan tepat di TDEE (${plan.dailyCalorieTarget.round()} kcal) untuk menjaga berat badan tetap stabil & fit.';
+      insightText = 'profile.goalRoadmap.insightMaintenance'.tr(
+        args: ['${plan.dailyCalorieTarget.round()}'],
+      );
     } else if (plan.isWeightLoss) {
-      insightText =
-          'Defisit terukur ${plan.dailyDeficitOrSurplusKcal.round()} kcal/hari membakar lemak ~${plan.paceKgPerWeek.toStringAsFixed(2)} kg/minggu tanpa mengganggu metabolisme tubuh.';
+      insightText = 'profile.goalRoadmap.insightLoss'.tr(
+        args: [
+          '${plan.dailyDeficitOrSurplusKcal.round()}',
+          plan.paceKgPerWeek.toStringAsFixed(2),
+        ],
+      );
     } else {
-      insightText =
-          'Surplus terukur ${plan.dailyDeficitOrSurplusKcal.round()} kcal/hari memberi energi optimal untuk membangun massa otot ~${plan.paceKgPerWeek.toStringAsFixed(2)} kg/minggu.';
+      insightText = 'profile.goalRoadmap.insightGain'.tr(
+        args: [
+          '${plan.dailyDeficitOrSurplusKcal.round()}',
+          plan.paceKgPerWeek.toStringAsFixed(2),
+        ],
+      );
     }
 
     return Container(
@@ -107,7 +116,7 @@ class GoalRoadmapCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'TARGET SAYA',
+                        'profile.goalRoadmap.myGoal'.tr(),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -138,7 +147,7 @@ class GoalRoadmapCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
-                    '${plan.paceKgPerWeek.toStringAsFixed(2)} kg/mg',
+                    '${plan.paceKgPerWeek.toStringAsFixed(2)} ${context.locale.languageCode == 'id' ? 'kg/mg' : 'kg/wk'}',
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
@@ -162,7 +171,7 @@ class GoalRoadmapCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Saat Ini',
+                      'profile.goalRoadmap.currentWeight'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -237,7 +246,7 @@ class GoalRoadmapCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Target',
+                      'profile.goalRoadmap.targetWeight'.tr(),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -318,12 +327,12 @@ class GoalRoadmapCard extends StatelessWidget {
                 child: _AppleMetricTile(
                   icon: Icons.access_time_rounded,
                   iconColor: isDark ? AppColors.accent : const Color(0xFF85C500),
-                  label: 'PROYEKSI SELESAI',
+                  label: 'profile.goalRoadmap.projectionFinish'.tr(),
                   value: plan.isMaintenance
-                      ? 'Stabil'
-                      : '~${plan.estimatedWeeks} Minggu',
+                      ? 'profile.trendStable'.tr()
+                      : '~${'profile.goalRoadmap.weeksCount'.tr(args: ['${plan.estimatedWeeks}'])}',
                   sub: plan.isMaintenance
-                      ? 'Target tercapai'
+                      ? 'profile.goalRoadmap.goalReached'.tr()
                       : 'Est. $formattedDate',
                   surface: surfaceAlt,
                   textPrimary: textPrimary,
@@ -337,13 +346,13 @@ class GoalRoadmapCard extends StatelessWidget {
                 child: _AppleMetricTile(
                   icon: Icons.local_fire_department_rounded,
                   iconColor: const Color(0xFFFF8A48),
-                  label: 'TARGET KALORI',
+                  label: 'profile.goalRoadmap.calorieTarget'.tr(),
                   value: '${plan.dailyCalorieTarget.round()} kcal',
                   sub: plan.isMaintenance
-                      ? 'Keseimbangan TDEE'
+                      ? 'profile.goalRoadmap.maintainBalance'.tr()
                       : plan.isWeightLoss
-                          ? 'Defisit ${plan.dailyDeficitOrSurplusKcal.round()} kcal/hari'
-                          : 'Surplus ${plan.dailyDeficitOrSurplusKcal.round()} kcal/hari',
+                          ? 'profile.goalRoadmap.dailyDeficit'.tr(args: ['${plan.dailyDeficitOrSurplusKcal.round()}'])
+                          : 'profile.goalRoadmap.dailySurplus'.tr(args: ['${plan.dailyDeficitOrSurplusKcal.round()}']),
                   surface: surfaceAlt,
                   textPrimary: textPrimary,
                   textSecondary: textSecondary,
@@ -361,9 +370,9 @@ class GoalRoadmapCard extends StatelessWidget {
                 child: _AppleMetricTile(
                   icon: Icons.fitness_center_rounded,
                   iconColor: AppColors.protein,
-                  label: 'TARGET PROTEIN',
+                  label: 'profile.goalRoadmap.proteinTarget'.tr(),
                   value: '${plan.proteinTargetG.round()} g',
-                  sub: 'Fokus otot & kenyang',
+                  sub: 'profile.goalRoadmap.proteinFocus'.tr(),
                   surface: surfaceAlt,
                   textPrimary: textPrimary,
                   textSecondary: textSecondary,
@@ -376,9 +385,9 @@ class GoalRoadmapCard extends StatelessWidget {
                 child: _AppleMetricTile(
                   icon: Icons.speed_rounded,
                   iconColor: const Color(0xFF38BDF8),
-                  label: 'PACE MINGGUAN',
+                  label: 'profile.goalRoadmap.weeklyPace'.tr(),
                   value: plan.isMaintenance
-                      ? 'Pertahankan'
+                      ? 'profile.goalRoadmap.maintain'.tr()
                       : '${plan.paceKgPerWeek.toStringAsFixed(2)} kg',
                   sub: paceLabel,
                   surface: surfaceAlt,
@@ -445,7 +454,9 @@ class GoalRoadmapCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Defisit dijaga minimal BMR (${profile.bmr.round()} kcal) demi menjaga kesehatan metabolismemu.',
+                      'profile.goalRoadmap.bmrSafetyFootnote'.tr(
+                        args: ['${profile.bmr.round()}'],
+                      ),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,

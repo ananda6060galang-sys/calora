@@ -84,6 +84,9 @@ class Food {
     this.portionGrams,
     this.source = 'local',
     this.servings = const [],
+    this.barcode,
+    this.brand,
+    this.imageUrl,
   });
 
   final String id;
@@ -96,8 +99,11 @@ class Food {
   final String category;
   final bool isPrivate;
   final double? portionGrams;
-  final String source; // 'local' | 'fatsecret'
+  final String source; // 'local' | 'fatsecret' | 'openfoodfacts' | 'usda' | 'calora'
   final List<FoodServing> servings;
+  final String? barcode;
+  final String? brand;
+  final String? imageUrl;
 
   factory Food.fromJson(Map<String, dynamic> json) {
     final rawServings = json['servings'] as List<dynamic>? ?? [];
@@ -125,6 +131,9 @@ class Food {
           .whereType<Map<String, dynamic>>()
           .map(FoodServing.fromJson)
           .toList(),
+      barcode: json['barcode'] as String?,
+      brand: json['brand'] as String?,
+      imageUrl: json['imageUrl'] as String? ?? json['image_url'] as String?,
     );
   }
 
@@ -159,7 +168,7 @@ class Food {
       fatG: fatG,
       portionGrams: portionGrams,
       category: catName,
-      source: row['source']?.toString() ?? 'supabase',
+      source: row['source']?.toString() ?? 'calora',
       servings: [
         FoodServing(
           servingId: foodId,
@@ -173,6 +182,9 @@ class Food {
           numberOfUnits: 1.0,
         ),
       ],
+      barcode: row['barcode']?.toString(),
+      brand: row['brand']?.toString(),
+      imageUrl: row['image_url']?.toString(),
     );
   }
 
@@ -189,6 +201,9 @@ class Food {
     double? portionGrams,
     String? source,
     List<FoodServing>? servings,
+    String? barcode,
+    String? brand,
+    String? imageUrl,
   }) {
     return Food(
       id: id ?? this.id,
@@ -203,6 +218,9 @@ class Food {
       portionGrams: portionGrams ?? this.portionGrams,
       source: source ?? this.source,
       servings: servings ?? this.servings,
+      barcode: barcode ?? this.barcode,
+      brand: brand ?? this.brand,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

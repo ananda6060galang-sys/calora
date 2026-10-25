@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Centralized scrollbar dimensions & colors */
+  --scrollbar-width: 5px;
+  --scrollbar-width-wide: 8px;
+  --scrollbar-thumb-light: #D4DDD3;
+  --scrollbar-thumb-hover-light: #B4C0B3;
+  --scrollbar-thumb-dark: #1F2E23;
+  --scrollbar-thumb-hover-dark: #2F4535;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased text-[#111111] bg-[#F8FAF6] dark:bg-[#0C120E] dark:text-[#F3F5EF] selection:bg-[#B8FF3B] selection:text-[#0C2417];
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-light) transparent;
+  }
+
+  .dark body {
+    scrollbar-color: var(--scrollbar-thumb-dark) transparent;
+  }
+
+  /* Custom Clean Minimal Scrollbar matching Calora subtle wellness palette */
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-width);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-light);
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-dark);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover-light);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover-dark);
+  }
+
+  /* Utility for contexts where wider scrollbar is needed for usability (e.g. wide data tables) */
+  .scrollbar-wide::-webkit-scrollbar {
+    width: var(--scrollbar-width-wide);
+    height: var(--scrollbar-width-wide);
+  }
+}
+
+/* Restrained, purposeful fade-in entry */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom scrollbar utility for scrollable panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}

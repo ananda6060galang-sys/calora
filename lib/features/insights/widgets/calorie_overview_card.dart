@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -38,7 +39,7 @@ class CalorieOverviewCard extends StatelessWidget {
         if (showHeader) ...[
           // Section Header
           Text(
-            '7-DAY CALORIE INTAKE',
+            'insights.sevenDayCalorieIntake'.tr().toUpperCase(),
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,

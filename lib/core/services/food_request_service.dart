@@ -41,11 +41,12 @@ class FoodRequestService {
     required double carbsG,
     required double fatG,
     String? notes,
+    String? barcode,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) throw StateError('User not authenticated');
 
-    final payload = {
+    final payload = <String, dynamic>{
       'user_id': user.id,
       'category_id': categoryId,
       'food_name': foodName,
@@ -56,6 +57,7 @@ class FoodRequestService {
       'fat_g': fatG,
       'status': 'pending',
       'notes': notes,
+      if (barcode != null && barcode.isNotEmpty) 'barcode': barcode,
     };
 
     final response = await _client

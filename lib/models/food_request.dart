@@ -16,8 +16,9 @@ class FoodRequest {
     required this.proteinG,
     required this.carbsG,
     required this.fatG,
-    required this.status,
+    this.status = 'pending',
     this.notes,
+    this.barcode,
     required this.createdAt,
   });
 
@@ -36,6 +37,7 @@ class FoodRequest {
   final String status;
 
   final String? notes;
+  final String? barcode;
   final DateTime createdAt;
 
   factory FoodRequest.fromSupabase(Map<String, dynamic> row) {
@@ -57,6 +59,7 @@ class FoodRequest {
       fatG: (row['fat_g'] as num?)?.toDouble() ?? 0.0,
       status: row['status']?.toString() ?? 'pending',
       notes: row['notes']?.toString(),
+      barcode: row['barcode']?.toString(),
       createdAt: row['created_at'] != null
           ? DateTime.parse(row['created_at'] as String)
           : DateTime.now(),
@@ -74,6 +77,7 @@ class FoodRequest {
       'carbs_g': carbsG,
       'fat_g': fatG,
       'notes': notes,
+      if (barcode != null && barcode!.isNotEmpty) 'barcode': barcode,
     };
   }
 
@@ -90,6 +94,7 @@ class FoodRequest {
     double? fatG,
     String? status,
     String? notes,
+    String? barcode,
     DateTime? createdAt,
   }) {
     return FoodRequest(
@@ -105,6 +110,7 @@ class FoodRequest {
       fatG: fatG ?? this.fatG,
       status: status ?? this.status,
       notes: notes ?? this.notes,
+      barcode: barcode ?? this.barcode,
       createdAt: createdAt ?? this.createdAt,
     );
   }

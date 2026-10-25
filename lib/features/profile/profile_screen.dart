@@ -79,7 +79,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: [
           SingleChildScrollView(
             controller: _scrollController,
-            physics: const ClampingScrollPhysics(),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.only(bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1359,7 +1359,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
 
           Flexible(
             child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1632,18 +1632,18 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          items: const [
+                          items: [
                             DropdownMenuItem(
                               value: GoalPace.gentle,
-                              child: Text('Gentle'),
+                              child: Text('onboarding.paces.gentle'.tr()),
                             ),
                             DropdownMenuItem(
                               value: GoalPace.moderate,
-                              child: Text('Moderate'),
+                              child: Text('onboarding.paces.moderate'.tr()),
                             ),
                             DropdownMenuItem(
                               value: GoalPace.faster,
-                              child: Text('Faster'),
+                              child: Text('onboarding.paces.faster'.tr()),
                             ),
                           ],
                           onChanged: (v) {
@@ -1657,7 +1657,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Target calories & macros will automatically update.',
+                    'profile.paceAutoUpdateNotice'.tr(),
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,

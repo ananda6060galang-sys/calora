@@ -311,7 +311,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           SafeArea(
             bottom: false,
             child: ListView(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
               children: [
                 // ── 1. Header (Unified AppHeader) ───────────────────────────
@@ -361,7 +361,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                   height: 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    physics: const ClampingScrollPhysics(),
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                     itemCount: _muscleGroups.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(width: 8),
@@ -1393,7 +1393,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
           // List of Exercises & Logged Sets (workout_sets ERD)
           Expanded(
             child: ListView.separated(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               itemCount: widget.session.exercises.length,
               separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, exIndex) {
@@ -1655,7 +1655,7 @@ class _RecordGymSessionSheetState extends State<_RecordGymSessionSheet> {
               ),
               alignment: Alignment.center,
               child: Text(
-                'Save Gym Session Log',
+                'workout.saveGymSessionLog'.tr(),
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,

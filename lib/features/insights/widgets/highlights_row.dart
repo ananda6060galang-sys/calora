@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -37,7 +38,7 @@ class HighlightsRow extends StatelessWidget {
       children: [
         // Section Header (Matching reference "TODAY'S HIGHLIGHTS")
         Text(
-          "THIS WEEK'S NUTRITION",
+          'insights.weekInNutrition'.tr().toUpperCase(),
           style: GoogleFonts.inter(
             fontSize: 10.5,
             fontWeight: FontWeight.w700,

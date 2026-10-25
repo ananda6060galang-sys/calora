@@ -58,7 +58,7 @@ class PrivacySecurityScreen extends StatelessWidget {
         ),
       ),
       body: ListView(
-        physics: const ClampingScrollPhysics(),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           Text(

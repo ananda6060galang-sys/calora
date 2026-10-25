@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -28,7 +29,7 @@ class SmartInsightsSection extends StatelessWidget {
       children: [
         // Title: SMART INSIGHTS
         Text(
-          'SMART INSIGHTS',
+          'insights.smartInsights'.tr().toUpperCase(),
           style: GoogleFonts.inter(
             fontSize: 10.5,
             fontWeight: FontWeight.w700,

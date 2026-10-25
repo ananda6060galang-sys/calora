@@ -179,7 +179,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           SafeArea(
             bottom: false,
             child: ListView(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               padding: EdgeInsets.zero,
               children: [
                 Padding(
@@ -373,7 +373,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           controller: _pageController,
                           clipBehavior: Clip.none,
                           scrollDirection: Axis.horizontal,
-                          physics: const ClampingScrollPhysics(),
+                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                           itemCount: _totalDays,
                           onPageChanged: _onPageChanged,
                           itemBuilder: (context, index) {

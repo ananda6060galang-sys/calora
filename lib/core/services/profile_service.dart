@@ -50,6 +50,7 @@ class ProfileService {
     final goalPace = _goalPaceFromDb(goalPaceStr);
     final customCalorieTarget = (response['custom_calorie_target'] as num?)?.toDouble();
     final role = response['role'] as String? ?? 'user';
+    final isBlocked = response['is_blocked'] as bool? ?? false;
     final avatarUrl = response['avatar_url'] as String?;
 
     return UserProfile(
@@ -64,6 +65,7 @@ class ProfileService {
       goalPace: goalPace,
       customCalorieTarget: customCalorieTarget,
       isAdmin: role == 'admin',
+      isBlocked: isBlocked,
       avatarUrl: avatarUrl,
     );
   }

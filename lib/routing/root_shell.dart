@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
@@ -26,21 +27,100 @@ class _RootShellState extends State<RootShell> {
     ProfileScreen(),
   ];
 
-  static const _destinations = [
-    NavDestination(icon: Icons.dashboard_rounded, label: 'Home'),
-    NavDestination(icon: Icons.restaurant_menu_rounded, label: 'Diary'),
-    NavDestination(icon: Icons.insights_rounded, label: 'Insights'),
-    NavDestination(icon: Icons.person_rounded, label: 'Profile'),
-  ];
+  @override
+  Widget build(BuildContext context) {
+    final destinations = [
+      NavDestination(
+        icon: Icons.dashboard_rounded,
+        label: 'navigation.home'.tr(),
+      ),
+      NavDestination(
+        icon: Icons.restaurant_menu_rounded,
+        label: 'navigation.diary'.tr(),
+      ),
+      NavDestination(
+        icon: Icons.insights_rounded,
+        label: 'navigation.insights'.tr(),
+      ),
+      NavDestination(
+        icon: Icons.person_rounded,
+        label: 'navigation.profile'.tr(),
+      ),
+    ];
+
+    return Scaffold(
+      body: AnimatedIndexedStack(
+        index: _index,
+        children: _tabs,
+      ),
+      bottomNavigationBar: DraggablePillNavigation(
+        currentIndex: _index,
+        destinations: destinations,
+        onSelected: (i) => setState(() => _index = i),
+      ),
+    );
+  }
+}
+
+class AnimatedIndexedStack extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+  final Duration duration;
+
+  const AnimatedIndexedStack({
+    super.key,
+    required this.index,
+    required this.children,
+    this.duration = const Duration(milliseconds: 240),
+  });
+
+  @override
+  State<AnimatedIndexedStack> createState() => _AnimatedIndexedStackState();
+}
+
+class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.index;
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    _controller.value = 1.0;
+  }
+
+  @override
+  void didUpdateWidget(AnimatedIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != oldWidget.index) {
+      _currentIndex = widget.index;
+      _controller.forward(from: 0.15);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _index, children: _tabs),
-      bottomNavigationBar: DraggablePillNavigation(
-        currentIndex: _index,
-        destinations: _destinations,
-        onSelected: (i) => setState(() => _index = i),
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: IndexedStack(
+        index: _currentIndex,
+        children: widget.children,
       ),
     );
   }

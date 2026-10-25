@@ -64,6 +64,24 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     }
   }
 
+  static String _getDayLabel(DateTime date) {
+    try {
+      return DateFormat.E().format(date);
+    } catch (_) {
+      return DateFormat.E('en').format(date);
+    }
+  }
+
+  static String _getDayInitial(DateTime date) {
+    try {
+      final label = DateFormat.E().format(date);
+      return label.isNotEmpty ? label.substring(0, 1).toUpperCase() : '';
+    } catch (_) {
+      final label = DateFormat.E('en').format(date);
+      return label.isNotEmpty ? label.substring(0, 1).toUpperCase() : '';
+    }
+  }
+
   static InsightsState _calculateState({
     required UserProfile profile,
     required List<DiaryEntry> diaryEntries,
@@ -106,9 +124,6 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     double totalCarbsLogged = 0;
     double totalFatLogged = 0;
 
-    const dayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
     for (int i = 0; i < 7; i++) {
       final date = now.subtract(Duration(days: 6 - i));
       final dayEntries = diaryEntries.where(
@@ -130,12 +145,11 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
         totalFatLogged += dayFat;
       }
 
-      final weekdayIndex = date.weekday - 1; // 0 = Mon, 6 = Sun
       days.add(
         DailyCalorieData(
-          dayLabel: dayNames[weekdayIndex],
+          dayLabel: _getDayLabel(date),
           dayNumber: date.day,
-          dayInitial: dayInitials[weekdayIndex],
+          dayInitial: _getDayInitial(date),
           calories: dayCalories.toDouble(),
           targetCalories: targetCal,
           date: date,
@@ -161,27 +175,27 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     final avgFat = totalFatLogged / loggedCount;
 
     // Macro status labels
-    String proteinStatus = 'Good';
+    String proteinStatus = 'insights.statusGood'.tr();
     if (avgProtein < targetProtein * 0.8) {
-      proteinStatus = 'Low';
+      proteinStatus = 'insights.statusLow'.tr();
     } else if (avgProtein >= targetProtein * 0.95) {
-      proteinStatus = 'Target hit';
+      proteinStatus = 'insights.statusTargetHit'.tr();
     }
 
-    String carbsStatus = 'Good';
+    String carbsStatus = 'insights.statusGood'.tr();
     if (avgCarbs > targetCarbs * 1.15) {
-      carbsStatus = 'High';
+      carbsStatus = 'insights.statusHigh'.tr();
     } else if (avgCarbs < targetCarbs * 0.75) {
-      carbsStatus = 'Low';
+      carbsStatus = 'insights.statusLow'.tr();
     } else {
-      carbsStatus = 'On track';
+      carbsStatus = 'insights.statusOnTrack'.tr();
     }
 
-    String fatStatus = 'On track';
+    String fatStatus = 'insights.statusOnTrack'.tr();
     if (avgFat > targetFat * 1.2) {
-      fatStatus = 'High';
+      fatStatus = 'insights.statusHigh'.tr();
     } else if (avgFat < targetFat * 0.75) {
-      fatStatus = 'Low';
+      fatStatus = 'insights.statusLow'.tr();
     }
 
     // Dynamic Smart Insights
@@ -190,26 +204,23 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     // 1. Protein Insight
     if (avgProtein < targetProtein * 0.85) {
       smartInsights.add(
-        const SmartInsightItem(
+        SmartInsightItem(
           icon: Icons.fitness_center_rounded,
-          tag: 'PROTEIN INTAKE',
-          title: 'Protein is slightly low',
-          description:
-              'Your average protein intake is below your daily target this week.',
-          recommendation:
-              'Try adding eggs, tofu, Greek yogurt, or another protein source.',
+          tag: 'insights.tagProtein'.tr(),
+          title: 'insights.proteinLowTitle'.tr(),
+          description: 'insights.proteinLowDesc'.tr(),
+          recommendation: 'insights.proteinLowAction'.tr(),
           badgeColor: AppColors.protein,
         ),
       );
     } else {
       smartInsights.add(
-        const SmartInsightItem(
+        SmartInsightItem(
           icon: Icons.verified_rounded,
-          tag: 'PROTEIN INTAKE',
-          title: 'Protein on target',
-          description:
-              'You hit your protein goal consistently over your logged days.',
-          recommendation: 'Keep maintaining this balance for optimal recovery.',
+          tag: 'insights.tagProtein'.tr(),
+          title: 'insights.proteinOnTargetTitle'.tr(),
+          description: 'insights.proteinOnTargetDesc'.tr(),
+          recommendation: 'insights.proteinOnTargetAction'.tr(),
           badgeColor: AppColors.protein,
         ),
       );
@@ -219,13 +230,12 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     final diff = avgCalories - targetCal;
     if (diff.abs() <= targetCal * 0.08) {
       smartInsights.add(
-        const SmartInsightItem(
+        SmartInsightItem(
           icon: Icons.track_changes_rounded,
-          tag: 'CALORIE BALANCE',
-          title: 'Calories are on track',
-          description:
-              'Your average intake stayed close to your daily target this week.',
-          recommendation: 'Steady energy levels support consistent progress.',
+          tag: 'insights.tagCalorieBalance'.tr(),
+          title: 'insights.caloriesOnTrackTitle'.tr(),
+          description: 'insights.caloriesOnTrackDesc'.tr(),
+          recommendation: 'insights.caloriesOnTrackAction'.tr(),
           badgeColor: AppColors.accent,
         ),
       );
@@ -233,11 +243,10 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
       smartInsights.add(
         SmartInsightItem(
           icon: Icons.trending_down_rounded,
-          tag: 'CALORIE BALANCE',
-          title: 'Below calorie target',
-          description:
-              'You averaged ${diff.abs().round()} kcal below target across logged days.',
-          recommendation: 'Ensure you are fueling enough for your daily activity.',
+          tag: 'insights.tagCalorieBalance'.tr(),
+          title: 'insights.caloriesBelowTargetTitle'.tr(),
+          description: 'insights.caloriesBelowTargetDesc'.tr(args: ['${diff.abs().round()}']),
+          recommendation: 'insights.caloriesBelowTargetAction'.tr(),
           badgeColor: AppColors.accent,
         ),
       );
@@ -245,11 +254,10 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
       smartInsights.add(
         SmartInsightItem(
           icon: Icons.trending_up_rounded,
-          tag: 'CALORIE BALANCE',
-          title: 'Slight surplus intake',
-          description:
-              'Your average intake is ${diff.round()} kcal above target this week.',
-          recommendation: 'Check portion sizes on carb or fat-heavy meals.',
+          tag: 'insights.tagCalorieBalance'.tr(),
+          title: 'insights.caloriesSurplusTitle'.tr(),
+          description: 'insights.caloriesSurplusDesc'.tr(args: ['${diff.round()}']),
+          recommendation: 'insights.caloriesSurplusAction'.tr(),
           badgeColor: AppColors.warning,
         ),
       );
@@ -260,11 +268,10 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
       smartInsights.add(
         SmartInsightItem(
           icon: Icons.calendar_today_rounded,
-          tag: 'HABIT',
-          title: 'Strong logging consistency',
-          description: 'You logged meals on $loggedCount of the last 7 days.',
-          recommendation:
-              'Consistent tracking provides the clearest picture of your health.',
+          tag: 'insights.tagHabit'.tr(),
+          title: 'insights.consistencyStrongTitle'.tr(),
+          description: 'insights.consistencyStrongDesc'.tr(args: ['$loggedCount']),
+          recommendation: 'insights.consistencyStrongAction'.tr(),
           badgeColor: const Color(0xFF67B26F),
         ),
       );
@@ -272,10 +279,10 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
       smartInsights.add(
         SmartInsightItem(
           icon: Icons.edit_calendar_rounded,
-          tag: 'HABIT',
-          title: 'Build daily logging',
-          description: 'You logged $loggedCount of 7 days this week.',
-          recommendation: 'Try logging meals right after eating to capture portions.',
+          tag: 'insights.tagHabit'.tr(),
+          title: 'insights.consistencyBuildTitle'.tr(),
+          description: 'insights.consistencyBuildDesc'.tr(args: ['$loggedCount']),
+          recommendation: 'insights.consistencyBuildAction'.tr(),
           badgeColor: const Color(0xFF67B26F),
         ),
       );
@@ -322,20 +329,17 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     double targetFat,
   ) {
     final now = DateTime.now();
-    const dayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const demoValues = [1820.0, 1950.0, 1780.0, 1890.0, 2020.0, 0.0, 1842.0];
 
     final List<DailyCalorieData> days = [];
     for (int i = 0; i < 7; i++) {
       final date = now.subtract(Duration(days: 6 - i));
       final val = demoValues[i];
-      final weekdayIndex = date.weekday - 1;
       days.add(
         DailyCalorieData(
-          dayLabel: dayNames[weekdayIndex],
+          dayLabel: _getDayLabel(date),
           dayNumber: date.day,
-          dayInitial: dayInitials[weekdayIndex],
+          dayInitial: _getDayInitial(date),
           calories: val,
           targetCalories: targetCal,
           date: date,
@@ -356,50 +360,46 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
         currentG: 78,
         targetG: targetProtein,
         color: AppColors.protein,
-        statusLabel: 'Low',
+        statusLabel: 'insights.statusLow'.tr(),
       ),
       carbs: MacroInsightItem(
         label: 'dashboard.carbs'.tr(),
         currentG: 210,
         targetG: targetCarbs,
         color: AppColors.carbs,
-        statusLabel: 'Good',
+        statusLabel: 'insights.statusGood'.tr(),
       ),
       fat: MacroInsightItem(
         label: 'dashboard.fat'.tr(),
         currentG: 58,
         targetG: targetFat,
         color: AppColors.fat,
-        statusLabel: 'On track',
+        statusLabel: 'insights.statusOnTrack'.tr(),
       ),
-      smartInsights: const [
+      smartInsights: [
         SmartInsightItem(
           icon: Icons.fitness_center_rounded,
-          tag: 'PROTEIN INTAKE',
-          title: 'Protein is slightly low',
-          description:
-              'Your average protein intake is below your daily target this week.',
-          recommendation:
-              'Try adding eggs, tofu, Greek yogurt, or another protein source.',
+          tag: 'insights.tagProtein'.tr(),
+          title: 'insights.proteinLowTitle'.tr(),
+          description: 'insights.proteinLowDesc'.tr(),
+          recommendation: 'insights.proteinLowAction'.tr(),
           badgeColor: AppColors.protein,
         ),
         SmartInsightItem(
           icon: Icons.track_changes_rounded,
-          tag: 'CALORIE BALANCE',
-          title: 'Calories are on track',
-          description:
-              'Your average intake stayed close to your daily target this week.',
-          recommendation: 'Steady energy levels support consistent progress.',
+          tag: 'insights.tagCalorieBalance'.tr(),
+          title: 'insights.caloriesOnTrackTitle'.tr(),
+          description: 'insights.caloriesOnTrackDesc'.tr(),
+          recommendation: 'insights.caloriesOnTrackAction'.tr(),
           badgeColor: AppColors.accent,
         ),
         SmartInsightItem(
           icon: Icons.calendar_today_rounded,
-          tag: 'HABIT',
-          title: 'Strong logging consistency',
-          description: 'You logged meals on 6 of the last 7 days.',
-          recommendation:
-              'Consistent tracking provides the clearest picture of your health.',
-          badgeColor: Color(0xFF67B26F),
+          tag: 'insights.tagHabit'.tr(),
+          title: 'insights.consistencyStrongTitle'.tr(),
+          description: 'insights.consistencyStrongDesc'.tr(args: ['6']),
+          recommendation: 'insights.consistencyStrongAction'.tr(),
+          badgeColor: const Color(0xFF67B26F),
         ),
       ],
       loggedDaysCount: 6,
@@ -415,18 +415,15 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
     double targetFat,
   ) {
     final now = DateTime.now();
-    const dayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     final List<DailyCalorieData> days = [];
     for (int i = 0; i < 7; i++) {
       final date = now.subtract(Duration(days: 6 - i));
-      final weekdayIndex = date.weekday - 1;
       days.add(
         DailyCalorieData(
-          dayLabel: dayNames[weekdayIndex],
+          dayLabel: _getDayLabel(date),
           dayNumber: date.day,
-          dayInitial: dayInitials[weekdayIndex],
+          dayInitial: _getDayInitial(date),
           calories: 0,
           targetCalories: targetCal,
           date: date,
@@ -447,21 +444,21 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
         currentG: 0,
         targetG: targetProtein,
         color: AppColors.protein,
-        statusLabel: 'No data',
+        statusLabel: 'insights.statusNoData'.tr(),
       ),
       carbs: MacroInsightItem(
         label: 'dashboard.carbs'.tr(),
         currentG: 0,
         targetG: targetCarbs,
         color: AppColors.carbs,
-        statusLabel: 'No data',
+        statusLabel: 'insights.statusNoData'.tr(),
       ),
       fat: MacroInsightItem(
         label: 'dashboard.fat'.tr(),
         currentG: 0,
         targetG: targetFat,
         color: AppColors.fat,
-        statusLabel: 'No data',
+        statusLabel: 'insights.statusNoData'.tr(),
       ),
       smartInsights: const [],
       loggedDaysCount: 0,

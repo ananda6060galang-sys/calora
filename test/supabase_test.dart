@@ -52,5 +52,12 @@ void main() {
 
       expect(profileService, isNotNull);
     });
+
+    test('5. Verify AuthService.signInWithGoogle is configured', () {
+      final client = Supabase.instance.client;
+      final authService = AuthService(client);
+
+      expect(authService.signInWithGoogle, isA<Function>());
+    });
   });
 }

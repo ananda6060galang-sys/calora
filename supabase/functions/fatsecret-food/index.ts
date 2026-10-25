@@ -527,6 +527,101 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Food details not found" }, 404);
     }
 
+    // 3. ACTION: BARCODE
+    if (action === "barcode") {
+      const barcode = String(body.barcode || "").trim();
+      if (!barcode) {
+        return jsonResponse({ error: "Missing 'barcode' parameter" }, 400);
+      }
+
+      // Step 1: Query USDA FoodData Central by GTIN/UPC barcode
+      try {
+        const apiKey = Deno.env.get("USDA_API_KEY") || "DEMO_KEY";
+        const url = new URL("https://api.nal.usda.gov/fdc/v1/foods/search");
+        url.searchParams.set("query", barcode);
+        url.searchParams.set("dataType", "Branded");
+        url.searchParams.set("pageSize", "5");
+        url.searchParams.set("api_key", apiKey);
+
+        const res = await fetch(url.toString(), {
+          headers: { "Accept": "application/json" },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const foods = data.foods || [];
+          if (foods.length > 0) {
+            const cleanBarcode = barcode.replace(/\D/g, "");
+            const match = foods.find((f: any) => {
+              const upc = String(f.gtinUpc || "").replace(/\D/g, "");
+              return upc === cleanBarcode || upc.endsWith(cleanBarcode) || cleanBarcode.endsWith(upc);
+            }) || foods[0];
+
+            return jsonResponse({
+              food: normalizeUsdaFood(match),
+              source: "usda",
+              attribution: "Data provided by USDA FoodData Central (fdc.nal.usda.gov)",
+            });
+          }
+        }
+      } catch (err: any) {
+        console.warn("USDA barcode search error:", err.message);
+      }
+
+      // Step 2: Query FatSecret food.find_id_for_barcode
+      try {
+        const token = await getFatSecretToken();
+        const params = new URLSearchParams({
+          method: "food.find_id_for_barcode",
+          barcode: barcode,
+          format: "json",
+        });
+
+        const fsRes = await fetch("https://platform.fatsecret.com/rest/server.api", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: params.toString(),
+        });
+
+        if (fsRes.ok) {
+          const fsData = await fsRes.json();
+          const foodId = fsData.food_id?.value || fsData.food_id;
+          if (foodId) {
+            const detailParams = new URLSearchParams({
+              method: "food.get.v2",
+              food_id: String(foodId),
+              format: "json",
+            });
+            const detailRes = await fetch("https://platform.fatsecret.com/rest/server.api", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: detailParams.toString(),
+            });
+            if (detailRes.ok) {
+              const detailData = await detailRes.json();
+              if (detailData.food && !detailData.error) {
+                return jsonResponse({
+                  food: normalizeFatSecretFood(detailData.food),
+                  source: "fatsecret",
+                  attribution: "Powered by fatsecret nutrition API (www.fatsecret.com)",
+                });
+              }
+            }
+          }
+        }
+      } catch (err: any) {
+        console.warn("FatSecret barcode search error:", err.message);
+      }
+
+      return jsonResponse({ food: null, error: "Food not found for barcode" }, 404);
+    }
+
     return jsonResponse({ error: `Unknown action: ${action}` }, 400);
   } catch (err: any) {
     console.error("Internal Edge Function error:", err.message);

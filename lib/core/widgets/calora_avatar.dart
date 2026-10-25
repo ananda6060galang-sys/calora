@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import 'skeleton_loading.dart';
 
 /// Centralized, reusable avatar widget for Calora.
 ///
@@ -88,6 +89,11 @@ class CaloraAvatar extends StatelessWidget {
   }
 
   Widget _buildFallback(bool isDark, {bool isLoading = false}) {
+    if (isLoading) {
+      return CaloraShimmer(
+        child: SkeletonBox.circle(size: size),
+      );
+    }
     final cleanName = displayName.trim();
     final initialLetter =
         cleanName.isNotEmpty ? cleanName[0].toUpperCase() : 'C';
@@ -97,16 +103,7 @@ class CaloraAvatar extends StatelessWidget {
       height: size,
       color: AppColors.accent,
       alignment: Alignment.center,
-      child: isLoading
-          ? SizedBox(
-              width: size * 0.35,
-              height: size * 0.35,
-              child: const CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0F1410)),
-              ),
-            )
-          : Text(
+      child: Text(
               initialLetter,
               style: GoogleFonts.inter(
                 fontSize: size * 0.40,

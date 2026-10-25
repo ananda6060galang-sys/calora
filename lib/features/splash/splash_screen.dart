@@ -144,6 +144,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (!mounted) return;
 
       if (profile != null) {
+        if (profile.isBlocked) {
+          await authService.signOut();
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const LoginScreen(
+                initialBlockedNotice: true,
+              ),
+            ),
+          );
+          return;
+        }
+
         ref.read(userProfileProvider.notifier).state = profile;
         ref.read(diaryProvider.notifier).reload();
         ref.read(foodRequestProvider.notifier).reload();

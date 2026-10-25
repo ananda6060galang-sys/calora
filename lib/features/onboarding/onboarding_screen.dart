@@ -90,6 +90,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         targetWeight = double.tryParse(_targetWeightController.text.trim());
       }
 
+      final currentUser = ref.read(authServiceProvider).currentUser;
+      final googleAvatar = currentUser?.userMetadata?['avatar_url'] as String? ??
+          currentUser?.userMetadata?['picture'] as String?;
+
       final profile = UserProfile(
         name: _nameController.text.trim(),
         dateOfBirth: dob,
@@ -100,11 +104,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         goal: goal,
         targetWeightKg: targetWeight,
         goalPace: _goalPace,
+        avatarUrl: googleAvatar,
       );
       ref.read(userProfileProvider.notifier).state = profile;
 
       // Save profile data to Supabase profiles table if authenticated
-      final currentUser = ref.read(authServiceProvider).currentUser;
       if (currentUser != null) {
         try {
           await ref
@@ -164,10 +168,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    // Prefill the name captured at registration so the user confirms it
-    // instead of typing it again (stored in auth metadata as full_name).
-    final metaName =
-        ref.read(authServiceProvider).currentUser?.userMetadata?['full_name'];
+    // Prefill the name captured at registration or from Google OAuth
+    // so the user confirms it instead of typing it again.
+    final metadata =
+        ref.read(authServiceProvider).currentUser?.userMetadata;
+    final metaName = metadata?['full_name'] ?? metadata?['name'];
     _nameController.text = (metaName is String) ? metaName.trim() : '';
     _heightController.text = '';
     _weightController.text = '';

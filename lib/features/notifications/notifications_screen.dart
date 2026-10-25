@@ -82,7 +82,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               dividerColor: dividerColor,
             )
           : ListView.separated(
-              physics: const ClampingScrollPhysics(),
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               itemCount: reminders.length,
               separatorBuilder: (context, index) =>
