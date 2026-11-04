@@ -74,7 +74,8 @@ PRD.md
 *PRD*.docx
 DEMO-CHECKLIST.md
 *CHECKLIST*.md
-docs/
+docs/*
+!docs/screenshots/
 
 # Calora Admin Dashboard (Vite / React)
 admin/node_modules/
