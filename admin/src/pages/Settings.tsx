@@ -45,14 +45,14 @@ export const Settings: React.FC = () => {
       />
 
       {/* Admin Profile Card */}
-      <div className="p-6 bg-white dark:bg-[#141C17] rounded-2xl border border-[#E9EFE8] dark:border-[#212E23] shadow-xs space-y-4 transition-colors duration-200">
+      <div className="p-6 bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs space-y-4 transition-colors duration-200">
         <div className="flex items-center space-x-3">
-          <div className="relative w-12 h-12 rounded-2xl bg-[#0B2114] flex items-center justify-center text-[#B8FF3B] overflow-hidden shrink-0 ring-1 ring-[#1E3B2A]">
+          <div className="relative w-12 h-12 rounded-full bg-[#0B2114] flex items-center justify-center text-[#B8FF3B] overflow-hidden shrink-0 ring-1 ring-[#1E3B2A]">
             {user?.avatar_url ? (
               <img
                 src={user.avatar_url}
                 alt={user.name || 'Admin'}
-                className="w-full h-full object-cover rounded-2xl absolute inset-0"
+                className="w-full h-full object-cover rounded-full absolute inset-0"
                 onError={(e) => {
                   (e.currentTarget as HTMLElement).style.display = 'none';
                 }}
@@ -85,7 +85,7 @@ export const Settings: React.FC = () => {
           </div>
           <div>
             <span className="text-gray-400 font-medium block">Console Role</span>
-            <span className="inline-flex items-center px-2 py-0.5 mt-0.5 rounded-full text-[10px] font-bold bg-[#B8FF3B] text-[#0C2417]">
+            <span className="inline-flex items-center px-2.5 py-0.5 mt-0.5 rounded-full text-[10px] font-bold bg-[#B8FF3B] text-[#0C2417]">
               Super Admin
             </span>
           </div>
@@ -101,7 +101,7 @@ export const Settings: React.FC = () => {
         <div className="pt-3 border-t border-[#F2F5F0] dark:border-[#202C22] flex justify-end">
           <button
             onClick={() => logout()}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-bold border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-1.5 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-bold border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5 stroke-[1.8]" />
             <span>{t('logout')}</span>
@@ -110,10 +110,10 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Backend Integration Diagnostics */}
-      <div className="p-6 bg-white dark:bg-[#141C17] rounded-2xl border border-[#E9EFE8] dark:border-[#212E23] shadow-xs space-y-4 transition-colors duration-200">
+      <div className="p-6 bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs space-y-4 transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-[#14331C] text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-[#14331C] text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Database className="w-5 h-5 stroke-[1.8]" />
             </div>
             <div>
@@ -129,7 +129,7 @@ export const Settings: React.FC = () => {
           <button
             onClick={testSupabaseConnection}
             disabled={isTesting}
-            className="px-4 py-2 rounded-xl text-xs font-bold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#1E2A20] text-gray-700 dark:text-gray-200 flex items-center space-x-1.5 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#1E2A20] text-gray-700 dark:text-gray-200 flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
           >
             <RotateCw className={`w-3.5 h-3.5 stroke-[1.8] ${isTesting ? 'animate-spin text-[#16A34A] dark:text-[#B8FF3B]' : ''}`} />
             <span>{isTesting ? 'Testing...' : 'Test Connection'}</span>

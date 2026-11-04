@@ -168,55 +168,55 @@ export const Categories: React.FC = () => {
       />
 
       {/* ── 4 STAT CARDS ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Card 1: Total Categories */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#B8FF3B] text-[#0C2417]">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#B8FF3B] text-[#0C2417]">
             <Folder className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {categories.length}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('totalCategories')}
           </span>
         </div>
 
         {/* Card 2: In Use */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalInUse}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('inUseLabel')}
           </span>
         </div>
 
         {/* Card 3: Empty */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-gray-500 dark:text-gray-400">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-gray-500 dark:text-gray-400">
             <MinusCircle className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalEmpty}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('emptyLabel')}
           </span>
         </div>
 
         {/* Card 4: Total Classified Foods */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
             <Layers className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {foods.length}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('catalogItems')}
           </span>
         </div>
@@ -293,7 +293,7 @@ export const Categories: React.FC = () => {
       </div>
 
       {/* ── TABLE CONTAINER ─────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#141C17] rounded-2xl border border-[#E9EFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
+      <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
         <div className="p-4 border-b border-[#F2F5F0] dark:border-[#202C22] flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <span className="font-bold text-[#111111] dark:text-[#F3F5EF]">
             {totalEntries} {t('taxonomy')}

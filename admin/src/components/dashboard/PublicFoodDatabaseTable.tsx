@@ -26,7 +26,7 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
   onEditFood,
 }) => {
   const { foods, deleteFood, deleteFoods, categories } = useAdmin();
-  const { t } = useThemeLanguage();
+  const { t, language } = useThemeLanguage();
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -98,9 +98,8 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
 
   const handleDeleteBulk = () => {
     const targets = foods.filter((f) => selectedIds.includes(f.id));
-    if (targets.length === 0) return;
-    setFoodToDelete(null);
     setBulkFoodsToDelete(targets);
+    setFoodToDelete(null);
     setIsDeleteModalOpen(true);
   };
 
@@ -115,23 +114,23 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
   };
 
   return (
-    <div className="bg-white dark:bg-[#141C17] rounded-2xl p-5 sm:p-6 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs transition-colors duration-200 space-y-4">
-      {/* ── HEADER & TOOLBAR ────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+    <div className="bg-white dark:bg-[#141C16] rounded-[24px] p-6 sm:p-7 shadow-soft hover-card-lift border-0 space-y-5 select-none animate-card-rise stagger-4">
+      {/* ── 1. TOOLBAR: Search, Category Filter & Add Food (Soft Rounded Pills) ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight">
-            {t('publicFoodDatabase')}
+          <h3 className="text-base sm:text-lg font-semibold text-stone-900 dark:text-white tracking-tight">
+            {t('publicFoodDatabase') || (language === 'id' ? 'Database Makanan Publik' : 'Public Food Database')}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            {totalEntries} {t('itemsCataloged')}
+          <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+            {totalEntries} {language === 'id' ? 'menu terdaftar' : 'items cataloged'}
           </p>
         </div>
 
-        {/* Search, Filter & Actions */}
-        <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-          {/* Live Search Input */}
+        {/* Search, Filter & Actions (Pill Controls) */}
+        <div className="flex items-center space-x-2.5 flex-wrap gap-y-2">
+          {/* Live Search Input (Rounded Pill) */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
+            <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
             <input
               type="text"
               value={searchTerm}
@@ -139,8 +138,8 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder={t('searchPlaceholder')}
-              className="bg-gray-50 dark:bg-[#1A241E] border border-gray-200 dark:border-gray-700 text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-8 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#B8FF3B] w-48 sm:w-56 transition-colors shadow-2xs"
+              placeholder={t('searchPlaceholder') || (language === 'id' ? 'Cari di sini...' : 'Search foods...')}
+              className="bg-[#F4F6F2] dark:bg-[#1A251D] border-0 text-xs text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-stone-500 rounded-full pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50 w-44 sm:w-52 transition-all"
             />
             {searchTerm && (
               <button
@@ -149,34 +148,38 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
                   setCurrentPage(1);
                 }}
                 aria-label="Clear search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 dark:hover:text-white cursor-pointer"
               >
-                <X className="w-3 h-3 stroke-[2]" />
+                <X className="w-3.5 h-3.5 stroke-[2]" />
               </button>
             )}
           </div>
 
-          {/* Category Filter Dropdown */}
+          {/* Category Filter Dropdown (Rounded Pill) */}
           <div className="relative">
             <button
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-              className="px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A241E] hover:bg-gray-50 dark:hover:bg-[#223026] text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5 shadow-2xs cursor-pointer transition-colors"
+              className="px-4 py-2 rounded-full bg-[#F4F6F2] dark:bg-[#1A251D] hover:bg-[#EAEFE8] dark:hover:bg-white/10 text-xs text-stone-700 dark:text-stone-200 flex items-center space-x-2 cursor-pointer transition-colors"
             >
-              <span>{selectedCategory === 'all' ? t('category') : selectedCategory}</span>
-              <ChevronDown className="w-3 h-3 text-gray-400 stroke-[2]" />
+              <span className="max-w-[120px] truncate">
+                {selectedCategory === 'all'
+                  ? (language === 'id' ? 'Semua Kategori' : 'All Categories')
+                  : selectedCategory}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-stone-400 stroke-[2] shrink-0" />
             </button>
 
             {isCategoryOpen && (
-              <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-[#18221B] border border-gray-200 dark:border-[#2A3B2E] rounded-xl shadow-lg z-30 py-1 text-xs">
+              <div className="absolute right-0 mt-1.5 w-48 bg-white dark:bg-[#1A251D] rounded-2xl shadow-lg z-30 py-1.5 text-xs border border-stone-100 dark:border-white/10">
                 <button
                   onClick={() => {
                     setSelectedCategory('all');
                     setIsCategoryOpen(false);
                     setCurrentPage(1);
                   }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-[#202E23] text-gray-700 dark:text-gray-200 cursor-pointer font-medium"
+                  className="w-full text-left px-4 py-2 hover:bg-[#F4F6F2] dark:hover:bg-white/[0.06] text-stone-700 dark:text-stone-200 cursor-pointer font-medium"
                 >
-                  {t('allCategories')}
+                  {language === 'id' ? 'Semua Kategori' : 'All Categories'}
                 </button>
                 {categories.map((cat) => (
                   <button
@@ -186,7 +189,7 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
                       setIsCategoryOpen(false);
                       setCurrentPage(1);
                     }}
-                    className="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-[#202E23] text-gray-700 dark:text-gray-200 truncate cursor-pointer font-medium"
+                    className="w-full text-left px-4 py-2 hover:bg-[#F4F6F2] dark:hover:bg-white/[0.06] text-stone-700 dark:text-stone-200 truncate cursor-pointer font-medium"
                   >
                     {cat.name}
                   </button>
@@ -195,63 +198,63 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
             )}
           </div>
 
-          {/* Primary CTA Button: Add Food */}
+          {/* Primary CTA Button: Add Food (Dark Pill with Lime Icon) */}
           <button
             onClick={onOpenFoodModal}
-            className="px-4 py-1.5 rounded-full bg-[#B8FF3B] hover:brightness-105 active:scale-95 text-[#0C2417] text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+            className="px-4 py-2 rounded-full bg-[#0B120C] hover:bg-[#18241A] dark:bg-white dark:hover:bg-stone-200 text-white dark:text-black text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer active:scale-95 shadow-2xs"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
-            <span>{t('addFood')}</span>
+            <Plus className="w-3.5 h-3.5 text-[#B8FF3B] dark:text-stone-900 stroke-[2.5]" />
+            <span>{t('addFood') || (language === 'id' ? 'Tambah Makanan' : 'Add Food')}</span>
           </button>
         </div>
       </div>
 
       {/* ── BULK ACTION BAR ─────────────────────────────────────────── */}
       {selectedIds.length > 0 && (
-        <div className="p-3 bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="flex items-center space-x-2">
-            <span className="w-5 h-5 rounded-full bg-red-600 text-white text-[11px] font-bold flex items-center justify-center">
+        <div className="p-3 bg-rose-50 dark:bg-rose-950/30 rounded-2xl flex items-center justify-between flex-wrap gap-2 animate-in fade-in duration-200">
+          <div className="flex items-center space-x-2.5">
+            <span className="w-5 h-5 rounded-full bg-rose-600 text-white text-[11px] font-bold flex items-center justify-center">
               {selectedIds.length}
             </span>
-            <span className="text-xs font-semibold text-red-900 dark:text-red-200">
-              {selectedIds.length} {t('itemsSelected')}
+            <span className="text-xs font-medium text-rose-800 dark:text-rose-200">
+              {selectedIds.length} {language === 'id' ? 'item dipilih' : 'items selected'}
             </span>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
               onClick={handleDeleteBulk}
-              className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+              className="px-3.5 py-1.5 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5 stroke-[2]" />
-              <span>{t('deleteSelected')}</span>
+              <span>{t('deleteSelected') || (language === 'id' ? 'Hapus Terpilih' : 'Delete Selected')}</span>
             </button>
             <button
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-[#1A241E] text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-full bg-white dark:bg-white/10 hover:bg-rose-100 dark:hover:bg-white/20 text-xs font-medium text-rose-700 dark:text-gray-300 transition-colors cursor-pointer"
             >
-              {t('deselectAll')}
+              {language === 'id' ? 'Batal' : 'Deselect All'}
             </button>
           </div>
         </div>
       )}
 
-      {/* ── TABLE ───────────────────────────────────────────────────── */}
+      {/* ── TABLE: 64PX ROWS, SOFT HAIRLINE DIVIDERS, SENTENCE CASE HEADERS ── */}
       <div className="overflow-x-auto scrollbar-wide">
         <table className="w-full text-left border-collapse text-xs min-w-[700px]">
           <thead>
-            <tr className="border-b border-[#F2F5F0] dark:border-[#202C22] text-[11px] font-semibold text-gray-400 dark:text-gray-500 pb-3">
+            <tr className="border-b border-stone-100 dark:border-white/[0.06] text-xs font-medium text-stone-400 dark:text-stone-500 pb-3">
               {/* Checkbox Header */}
-              <th className="pb-3 pl-2 w-10">
+              <th className="pb-3 pl-3 w-10">
                 <button
                   onClick={toggleSelectAll}
                   aria-label="Select all rows on this page"
-                  className={`w-4 h-4 rounded flex items-center justify-center transition-all cursor-pointer ${
+                  className={`w-4 h-4 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                     isAllPaginatedSelected
-                      ? 'bg-[#111111] dark:bg-white text-white dark:text-[#111111]'
+                      ? 'bg-[#B8FF3B] text-black font-bold'
                       : isSomePaginatedSelected
-                      ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white'
-                      : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A241E]'
+                      ? 'bg-stone-500 text-white'
+                      : 'border border-stone-300 dark:border-white/20 bg-white dark:bg-white/[0.04]'
                   }`}
                 >
                   {isAllPaginatedSelected ? (
@@ -261,21 +264,21 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
                   ) : null}
                 </button>
               </th>
-              <th className="pb-3 font-semibold">{t('foodName')}</th>
-              <th className="pb-3 font-semibold">{t('categoryField')}</th>
-              <th className="pb-3 font-semibold">{t('calories')}</th>
-              <th className="pb-3 font-semibold">{t('protein')}</th>
-              <th className="pb-3 font-semibold">{t('carbs')}</th>
-              <th className="pb-3 font-semibold">{t('fat')}</th>
-              <th className="pb-3 font-semibold">{t('servingLabel')}</th>
-              <th className="pb-3 font-semibold text-center w-20">{t('action')}</th>
+              <th className="pb-3 font-medium">{t('foodName') || (language === 'id' ? 'Nama makanan' : 'Food name')}</th>
+              <th className="pb-3 font-medium">{t('categoryField') || (language === 'id' ? 'Kategori' : 'Category')}</th>
+              <th className="pb-3 font-medium text-right pr-4">{t('calories') || (language === 'id' ? 'Kalori' : 'Calories')}</th>
+              <th className="pb-3 font-medium text-right pr-4">{t('protein') || (language === 'id' ? 'Protein' : 'Protein')}</th>
+              <th className="pb-3 font-medium text-right pr-4">{t('carbs') || (language === 'id' ? 'Karbo' : 'Carbs')}</th>
+              <th className="pb-3 font-medium text-right pr-4">{t('fat') || (language === 'id' ? 'Lemak' : 'Fat')}</th>
+              <th className="pb-3 font-medium">{t('servingLabel') || (language === 'id' ? 'Porsi' : 'Serving')}</th>
+              <th className="pb-3 font-medium text-center w-20">{t('action') || (language === 'id' ? 'Aksi' : 'Action')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F2F5F0] dark:divide-[#202C22]">
+          <tbody className="divide-y divide-stone-100 dark:divide-white/[0.04]">
             {paginatedFoods.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-                  {t('noFoodsFound')}
+                <td colSpan={9} className="py-12 text-center text-sm text-stone-400 dark:text-stone-500">
+                  {t('noFoodsFound') || (language === 'id' ? 'Tidak ada makanan ditemukan' : 'No foods found')}
                 </td>
               </tr>
             ) : (
@@ -285,19 +288,19 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
                 return (
                   <tr
                     key={food.id}
-                    className={`hover:bg-[#F9FBF8] dark:hover:bg-[#19241D] transition-colors group ${
-                      isChecked ? 'bg-green-50/30 dark:bg-[#18231B]/50' : ''
+                    className={`h-16 hover:bg-[#F8FAF7] dark:hover:bg-white/[0.02] transition-colors group ${
+                      isChecked ? 'bg-[#EDF7E7]/40 dark:bg-[#18261B]/30' : ''
                     }`}
                   >
                     {/* Checkbox */}
-                    <td className="py-3.5 pl-2">
+                    <td className="py-0 pl-3">
                       <button
                         onClick={() => toggleSelect(food.id)}
                         aria-label={`Select ${food.name}`}
-                        className={`w-4 h-4 rounded flex items-center justify-center transition-all cursor-pointer ${
+                        className={`w-4 h-4 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                           isChecked
-                            ? 'bg-[#111111] dark:bg-white text-white dark:text-[#111111]'
-                            : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A241E]'
+                            ? 'bg-[#B8FF3B] text-black font-bold'
+                            : 'border border-stone-300 dark:border-white/20 bg-white dark:bg-white/[0.04]'
                         }`}
                       >
                         {isChecked && (
@@ -306,57 +309,64 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
                       </button>
                     </td>
 
-                    {/* Food Name */}
-                    <td className="py-3.5 font-semibold text-[#111111] dark:text-[#F3F5EF] group-hover:text-[#16A34A] dark:group-hover:text-[#B8FF3B] transition-colors">
-                      {food.name}
+                    {/* Food Name with Clean Monogram Avatar */}
+                    <td className="py-0 font-medium text-stone-900 dark:text-white group-hover:text-black dark:group-hover:text-[#B8FF3B] transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-full bg-[#EDF7E7] dark:bg-white/[0.08] text-[#16A34A] dark:text-[#B8FF3B] flex items-center justify-center text-sm font-semibold shrink-0 group-hover:scale-105 transition-transform">
+                          {food.name ? food.name.charAt(0).toUpperCase() : 'F'}
+                        </div>
+                        <span className="truncate max-w-[200px] text-sm">{food.name}</span>
+                      </div>
                     </td>
 
-                    {/* Category */}
-                    <td className="py-3.5 text-gray-600 dark:text-gray-300 font-medium">
-                      {food.category || 'General'}
+                    {/* Category Soft Tinted Pill */}
+                    <td className="py-0">
+                      <span className="px-3 py-1 rounded-full bg-[#EDF7E7] dark:bg-[#18261B] text-[11px] font-medium text-[#16A34A] dark:text-[#B8FF3B] inline-block">
+                        {food.category || 'General'}
+                      </span>
                     </td>
 
-                    {/* Calories */}
-                    <td className="py-3.5 font-bold text-[#111111] dark:text-white">
-                      {food.calories} kcal
+                    {/* Calories (Right-aligned, tabular figures) */}
+                    <td className="py-0 text-sm text-right tabular-nums pr-4 text-stone-900 dark:text-white font-semibold">
+                      {food.calories} <span className="text-[11px] text-stone-400 dark:text-stone-500 font-normal">kcal</span>
                     </td>
 
-                    {/* Protein */}
-                    <td className="py-3.5 text-gray-600 dark:text-gray-300 font-medium">
+                    {/* Protein (Right-aligned) */}
+                    <td className="py-0 text-sm text-right tabular-nums pr-4 text-stone-700 dark:text-stone-300 font-medium">
                       {food.protein_g}g
                     </td>
 
-                    {/* Carbs */}
-                    <td className="py-3.5 text-gray-600 dark:text-gray-300 font-medium">
+                    {/* Carbs (Right-aligned) */}
+                    <td className="py-0 text-sm text-right tabular-nums pr-4 text-stone-700 dark:text-stone-300 font-medium">
                       {food.carbs_g}g
                     </td>
 
-                    {/* Fat */}
-                    <td className="py-3.5 text-gray-600 dark:text-gray-300 font-medium">
+                    {/* Fat (Right-aligned) */}
+                    <td className="py-0 text-sm text-right tabular-nums pr-4 text-stone-700 dark:text-stone-300 font-medium">
                       {food.fat_g}g
                     </td>
 
                     {/* Serving Label */}
-                    <td className="py-3.5 text-gray-500 dark:text-gray-400 font-medium">
+                    <td className="py-0 text-xs text-stone-500 dark:text-stone-400">
                       {food.serving_label || '100g standard'}
                     </td>
 
-                    {/* Actions */}
-                    <td className="py-3.5 text-center">
+                    {/* Actions (Circular Soft Buttons) */}
+                    <td className="py-0 text-center">
                       <div className="flex items-center justify-center space-x-1">
                         {onEditFood && (
                           <button
                             onClick={() => onEditFood(food)}
-                            title={t('edit')}
-                            className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-[#253628] flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors cursor-pointer"
+                            title={t('edit') || 'Edit'}
+                            className="w-8 h-8 rounded-full hover:bg-stone-100 dark:hover:bg-white/10 flex items-center justify-center text-stone-400 hover:text-stone-700 dark:hover:text-white transition-colors cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5 stroke-[1.8]" />
                           </button>
                         )}
                         <button
                           onClick={() => handleDeleteSingle(food)}
-                          title={t('delete')}
-                          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                          title={t('delete') || 'Delete'}
+                          className="w-8 h-8 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5 stroke-[1.8]" />
                         </button>
@@ -372,21 +382,21 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
 
       {/* ── PAGINATION CONTROLS ─────────────────────────────────────── */}
       {totalPages > 1 && (
-        <div className="pt-2 border-t border-[#F2F5F0] dark:border-[#202C22] flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="pt-3 border-t border-stone-100 dark:border-white/[0.06] flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
           <span>
-            {t('showingText')}{' '}
+            {language === 'id' ? 'Menampilkan' : 'Showing'}{' '}
             {Math.min(totalEntries, (validCurrentPage - 1) * pageSize + 1)}{' '}
-            {t('toText')}{' '}
+            {language === 'id' ? 'hingga' : 'to'}{' '}
             {Math.min(totalEntries, validCurrentPage * pageSize)}{' '}
-            {t('ofText')} {totalEntries} {t('entriesText')}
+            {language === 'id' ? 'dari' : 'of'} {totalEntries} {language === 'id' ? 'entri' : 'entries'}
           </span>
 
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={validCurrentPage === 1}
               aria-label="Previous page"
-              className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-[#202820] transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#F4F6F2] dark:bg-white/[0.06] flex items-center justify-center disabled:opacity-30 hover:bg-[#EAEFE8] dark:hover:bg-white/10 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5 stroke-[2]" />
             </button>
@@ -395,10 +405,10 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`w-8 h-8 rounded-full text-xs transition-colors cursor-pointer ${
                   page === validCurrentPage
-                    ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
-                    : 'hover:bg-gray-50 dark:hover:bg-[#202820] text-gray-600 dark:text-gray-400'
+                    ? 'bg-[#0B120C] text-white dark:bg-white dark:text-black font-semibold'
+                    : 'hover:bg-[#F4F6F2] dark:hover:bg-white/[0.05] text-stone-600 dark:text-stone-400'
                 }`}
               >
                 {page}
@@ -409,7 +419,7 @@ export const PublicFoodDatabaseTable: React.FC<PublicFoodDatabaseTableProps> = (
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={validCurrentPage === totalPages}
               aria-label="Next page"
-              className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-[#202820] transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#F4F6F2] dark:bg-white/[0.06] flex items-center justify-center disabled:opacity-30 hover:bg-[#EAEFE8] dark:hover:bg-white/10 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-3.5 h-3.5 stroke-[2]" />
             </button>

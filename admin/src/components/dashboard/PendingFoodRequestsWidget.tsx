@@ -27,7 +27,7 @@ export const PendingFoodRequestsWidget: React.FC<PendingFoodRequestsWidgetProps>
   };
 
   return (
-    <div className="bg-white dark:bg-[#141C17] rounded-2xl p-5 sm:p-6 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col justify-between transition-colors duration-200 h-full">
+    <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-6 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col justify-between transition-colors duration-200 h-full">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -66,10 +66,10 @@ export const PendingFoodRequestsWidget: React.FC<PendingFoodRequestsWidgetProps>
                   </p>
                 </div>
 
-                {/* Review Action */}
+                {/* Review Action (Pill button matching reference) */}
                 <button
                   onClick={() => onOpenRequestModal(item)}
-                  className="px-3.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A241E] hover:bg-gray-50 dark:hover:bg-[#223026] text-[#111111] dark:text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0 hover:border-gray-400 active:scale-95"
+                  className="px-4 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A241E] hover:bg-gray-50 dark:hover:bg-[#223026] text-[#111111] dark:text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0 hover:border-gray-400 active:scale-95"
                 >
                   {t('review')}
                 </button>
@@ -86,7 +86,7 @@ export const PendingFoodRequestsWidget: React.FC<PendingFoodRequestsWidgetProps>
           className="text-xs font-semibold text-[#16A34A] dark:text-[#B8FF3B] hover:underline flex items-center justify-between"
         >
           <span>{t('viewAll')}</span>
-          <span className="text-[10px] font-mono bg-[#EBF7EA] dark:bg-[#152B1E] px-2 py-0.5 rounded-full text-[#16A34A] dark:text-[#B8FF3B]">
+          <span className="text-[11px] font-semibold bg-[#EBF7EA] dark:bg-[#152B1E] px-3 py-0.5 rounded-full text-[#16A34A] dark:text-[#B8FF3B]">
             {pendingList.length} {t('pending').toLowerCase()}
           </span>
         </Link>

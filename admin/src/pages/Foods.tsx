@@ -170,55 +170,55 @@ export const Foods: React.FC = () => {
       />
 
       {/* ── 4 STAT CARDS ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Card 1: Total Foods */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#B8FF3B] text-[#0C2417]">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#B8FF3B] text-[#0C2417]">
             <Utensils className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {foods.length.toLocaleString()}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('totalFoods')}
           </span>
         </div>
 
         {/* Card 2: Total Categories */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
             <Folder className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {categories.length}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('totalCategories')}
           </span>
         </div>
 
         {/* Card 3: Average Calories */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-amber-600 dark:text-amber-400">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-amber-600 dark:text-amber-400">
             <Flame className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {avgCalories} <span className="text-xs font-normal text-gray-400">kcal</span>
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             Avg {t('calories')}
           </span>
         </div>
 
         {/* Card 4: High Protein */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
             <Zap className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {highProteinDishes}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             High Protein (&ge;20g)
           </span>
         </div>
@@ -233,7 +233,7 @@ export const Foods: React.FC = () => {
               setFoodCategoryFilter('all');
               setCurrentPage(1);
             }}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all whitespace-nowrap cursor-pointer ${
+            className={`px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap cursor-pointer ${
               foodCategoryFilter === 'all'
                 ? 'bg-[#B8FF3B] text-[#0C2417] font-bold shadow-2xs'
                 : 'bg-white dark:bg-[#181E19] text-gray-600 dark:text-gray-400 border border-[#EAECE8] dark:border-[#263226] hover:text-[#111111] dark:hover:text-white'
@@ -248,7 +248,7 @@ export const Foods: React.FC = () => {
                 setFoodCategoryFilter(c.name);
                 setCurrentPage(1);
               }}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap cursor-pointer ${
                 foodCategoryFilter === c.name
                   ? 'bg-[#B8FF3B] text-[#0C2417] font-bold shadow-2xs'
                   : 'bg-white dark:bg-[#181E19] text-gray-600 dark:text-gray-400 border border-[#EAECE8] dark:border-[#263226] hover:text-[#111111] dark:hover:text-white'
@@ -270,7 +270,7 @@ export const Foods: React.FC = () => {
               setCurrentPage(1);
             }}
             placeholder={t('searchPlaceholder')}
-            className="bg-white dark:bg-[#181E19] border border-[#EAECE8] dark:border-[#263226] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-9 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-[#B8FF3B] w-full sm:w-64 transition-colors shadow-2xs"
+            className="bg-[#EFF2EE] dark:bg-[#181E19] border border-[#E0E5DF] dark:border-[#263226] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-9 pr-8 py-2 focus:outline-none focus:border-[#B8FF3B] focus:ring-1 focus:ring-[#B8FF3B] w-full sm:w-64 transition-colors shadow-2xs"
           />
           {searchTerm && (
             <button
@@ -285,7 +285,7 @@ export const Foods: React.FC = () => {
       </div>
 
       {/* ── FOODS TABLE ─────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#141C17] rounded-2xl border border-[#E9EFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
+      <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
         <div className="p-4 border-b border-[#F2F5F0] dark:border-[#202C22] flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <span className="font-bold text-[#111111] dark:text-[#F3F5EF]">
             {totalEntries} {t('itemsCataloged')}

@@ -153,62 +153,62 @@ export const UsersPage: React.FC = () => {
       />
 
       {/* ── 4 STAT CARDS ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Card 1: Total Users */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#B8FF3B] text-[#0C2417]">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#B8FF3B] text-[#0C2417]">
             <Users className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {users.length.toLocaleString()}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('userDirectory')}
           </span>
         </div>
 
         {/* Card 2: Staff Administrators */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
             <ShieldCheck className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalAdmins}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('administrator')}
           </span>
         </div>
 
         {/* Card 3: Active Members */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalActive}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('active')}
           </span>
         </div>
 
         {/* Card 4: Blocked Members */}
-        <div className="bg-white dark:bg-[#141C17] rounded-2xl p-4 border border-[#E9EFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 mb-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
             <Ban className="w-4 h-4 stroke-[1.8]" />
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalBlocked}
           </span>
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mt-0.5">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
             {t('blocked')}
           </span>
         </div>
       </div>
 
       {/* ── PRIVACY NOTE ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#EBF7EA] dark:bg-[#14331C]/60 border border-[#D5EED1] dark:border-[#234B2D] text-xs">
+      <div className="flex items-center justify-between p-4 rounded-[20px] bg-[#EBF7EA] dark:bg-[#14331C]/60 border border-[#D5EED1] dark:border-[#234B2D] text-xs">
         <div className="flex items-center space-x-2.5">
           <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center text-xs shrink-0">
             <Lock className="w-3.5 h-3.5 stroke-[2]" />
@@ -220,7 +220,7 @@ export const UsersPage: React.FC = () => {
       </div>
 
       {/* ── USERS TABLE CONTAINER ───────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#141C17] rounded-2xl border border-[#E9EFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
+      <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
         {/* TOOLBAR */}
         <div className="p-4 border-b border-[#F2F5F0] dark:border-[#202C22] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
           <div className="flex items-center space-x-2">

@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@calora.app"
-                  className="w-full px-4 py-3.5 rounded-[1rem] border border-gray-200 bg-white text-[13px] font-medium text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#111111] focus:border-transparent transition-all placeholder:font-normal placeholder:text-gray-400"
+                  className="w-full px-4 py-3 rounded-full border border-gray-200 bg-white text-[13px] font-medium text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#B8FF3B] focus:border-transparent transition-all placeholder:font-normal placeholder:text-gray-400"
                 />
               </div>
 
@@ -101,7 +101,7 @@ export const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3.5 rounded-[1rem] border border-gray-200 bg-white text-[13px] font-medium text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#111111] focus:border-transparent transition-all placeholder:font-normal placeholder:text-gray-400"
+                  className="w-full px-4 py-3 rounded-full border border-gray-200 bg-white text-[13px] font-medium text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#B8FF3B] focus:border-transparent transition-all placeholder:font-normal placeholder:text-gray-400"
                 />
               </div>
 
@@ -109,10 +109,10 @@ export const Login: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-4 bg-[#5E9E00] hover:bg-[#528C00] text-white font-bold text-[13px] rounded-[1rem] shadow-sm shadow-[#5E9E00]/25 transition-all flex items-center justify-center space-x-2 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 bg-[#B8FF3B] hover:brightness-105 text-[#0C2417] font-bold text-[13px] rounded-full shadow-xs transition-all flex items-center justify-center space-x-2 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   <span>{isLoading ? 'Authenticating...' : 'Log in'}</span>
-                  {!isLoading && <ArrowRight className="w-4 h-4 text-white" strokeWidth={2.5} />}
+                  {!isLoading && <ArrowRight className="w-4 h-4 text-[#0C2417]" strokeWidth={2.5} />}
                 </button>
               </div>
             </form>

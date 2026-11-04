@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Gauge,
@@ -9,7 +9,6 @@ import {
   Users,
   SlidersHorizontal,
   ChevronLeft,
-  ChevronRight,
   SunMedium,
   Moon,
   X,
@@ -17,8 +16,8 @@ import {
 } from 'lucide-react';
 import { useThemeLanguage } from '../../context/ThemeLanguageContext';
 import { useAdmin } from '../../context/AdminContext';
-import fullLogoImg from '../../assets/full_logo.png';
 import iconLogoImg from '../../assets/Icon_logo.png';
+import fullLogoImg from '../../assets/full_logo.png';
 
 interface AdminSidebarProps {
   onOpenFoodModal?: () => void;
@@ -30,10 +29,43 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile,
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  // Remember collapsed/expanded state across reloads via localStorage
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('calora_admin_sidebar_expanded');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
   const { isDark, toggleTheme, language, setLanguage, t } = useThemeLanguage();
   const { user, stats, logout } = useAdmin();
   const navigate = useNavigate();
+
+  const handleToggleExpand = () => {
+    setIsExpanded((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('calora_admin_sidebar_expanded', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  // Keyboard shortcut Ctrl/Cmd + B to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        handleToggleExpand();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const mainNavItems = [
     {
@@ -86,93 +118,114 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     }
   };
 
+  const isWide = isExpanded || isMobileOpen;
+
   return (
     <>
       {/* ── MOBILE BACKDROP ────────────────────────────────────────── */}
       {isMobileOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs md:hidden transition-opacity duration-300"
+          aria-hidden="true"
         />
       )}
 
-      {/* ── SIDEBAR CONTAINER ──────────────────────────────────────── */}
+      {/* ── PREMIUM CALORA FLOATING SIDEBAR CONTAINER ──────────────── */}
       <aside
-        className={`bg-[#0B0F0C] text-gray-300 flex flex-col justify-between py-5 select-none shrink-0 transition-all duration-300 ease-in-out h-screen z-50 border border-[#18261C] border-l-0 rounded-r-[32px] sm:rounded-r-[36px] rounded-l-none shadow-xl shadow-black/10 ${
-          /* Mobile Drawer Positioning vs Desktop Sticky */
+        className={`bg-[#0B120C] text-gray-300 flex flex-col justify-between py-6 select-none shrink-0 transition-[width,padding] duration-350 ease-[cubic-bezier(0.22,1,0.36,1)] h-full z-50 relative border border-white/[0.08] shadow-[0_20px_45px_rgba(0,0,0,0.25)] md:rounded-[28px] ${
           isMobileOpen
-            ? 'fixed top-0 left-0 w-[245px] px-4 shadow-2xl flex'
-            : 'hidden md:flex sticky top-0'
+            ? 'fixed top-0 left-0 bottom-0 w-[265px] px-4 shadow-2xl flex z-50 bg-[#0B120C] rounded-none border-r border-white/10'
+            : 'hidden md:flex'
         } ${
-          !isMobileOpen && (isExpanded ? 'w-[230px] sm:w-[245px] px-4' : 'w-[76px] px-2.5 items-center')
+          !isMobileOpen && (isExpanded ? 'w-[250px] lg:w-[260px] px-4' : 'w-[80px] px-2.5 items-center')
         }`}
       >
-        {/* ── COLLAPSE / EXPAND TOGGLE (Desktop Only) ──────────────── */}
+        {/* ── COLLAPSE / EXPAND TOGGLE WITH ROTATING CHEVRON (Desktop Only) ── */}
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          title={isExpanded ? t('collapseSidebar') : t('expandSidebar')}
-          className="hidden md:flex absolute -right-3 top-7 w-6 h-6 rounded-full bg-[#0B0F0C] border border-[#1E3B2A] text-[#B8FF3B] hover:text-white items-center justify-center shadow-lg transition-all z-40 cursor-pointer hover:scale-110 active:scale-95"
+          onClick={handleToggleExpand}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? t('collapseSidebar') : t('expandSidebar')}
+          title={`${isExpanded ? t('collapseSidebar') : t('expandSidebar')} (Ctrl+B)`}
+          className="hidden md:flex absolute -right-3.5 top-8 w-7 h-7 rounded-full bg-[#152018] border border-white/15 text-gray-300 hover:text-[#B8FF3B] hover:border-[#B8FF3B]/50 items-center justify-center shadow-lg transition-all duration-300 z-50 cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-[#B8FF3B] focus-visible:outline-none"
         >
-          {isExpanded ? (
-            <ChevronLeft className="w-3.5 h-3.5 stroke-[2.2]" />
-          ) : (
-            <ChevronRight className="w-3.5 h-3.5 stroke-[2.2]" />
-          )}
+          <ChevronLeft
+            className={`w-3.5 h-3.5 stroke-[2.2] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              !isExpanded ? 'rotate-180' : 'rotate-0'
+            }`}
+          />
         </button>
 
         {/* ── CLOSE BUTTON (Mobile Drawer Only) ────────────────────── */}
         {isMobileOpen && (
           <button
             onClick={onCloseMobile}
-            className="md:hidden absolute right-3 top-5 p-1 rounded-lg text-gray-400 hover:text-white cursor-pointer"
+            aria-label="Close navigation"
+            className="md:hidden absolute right-3.5 top-5 p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/[0.05] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#B8FF3B]"
           >
             <X className="w-5 h-5 stroke-[2]" />
           </button>
         )}
 
-        {/* ── TOP: LOGO ─────────────────────────────────────────────── */}
+        {/* ── TOP: BRAND LOGO (Smooth Crossfade Between Full & Icon-Only) ── */}
         <div className="w-full shrink-0">
           <div
             onClick={() => {
               navigate('/dashboard');
               handleNavClick();
             }}
-            className={`flex items-center cursor-pointer transition-transform active:scale-95 ${
-              isExpanded || isMobileOpen ? 'px-2 pb-2 justify-start' : 'justify-center pb-2'
+            className={`relative h-10 w-full flex items-center cursor-pointer transition-transform active:scale-95 mb-8 ${
+              isWide ? 'px-3.5 justify-start' : 'justify-center'
             }`}
             title="Calora"
           >
-            {isExpanded || isMobileOpen ? (
-              <div className="h-9 flex items-center">
-                <img
-                  src={fullLogoImg}
-                  alt="Calora"
-                  className="h-8 w-auto object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/full_logo.png';
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-[#121A15] border border-[#1E2E23] flex items-center justify-center p-2 shadow-inner hover:border-[#B8FF3B]/50 transition-colors">
-                <img
-                  src={iconLogoImg}
-                  alt="Calora"
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/Icon_logo.png';
-                  }}
-                />
-              </div>
-            )}
+            {/* FULL LOGO (Visible when expanded, smooth crossfade + scale/slide, aligned with nav items) */}
+            <div
+              className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-8 flex items-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isWide
+                  ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto'
+                  : 'opacity-0 scale-95 -translate-x-3 pointer-events-none'
+              }`}
+            >
+              <img
+                src={fullLogoImg}
+                alt="Calora Logo"
+                className="h-7 w-auto object-contain select-none"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/full_logo.png';
+                }}
+              />
+            </div>
+
+            {/* ICON-ONLY LOGO (Visible when collapsed, centered, clean direct icon without outline) */}
+            <div
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                !isWide
+                  ? 'opacity-100 scale-100 pointer-events-auto'
+                  : 'opacity-0 scale-85 pointer-events-none'
+              }`}
+            >
+              <img
+                src={iconLogoImg}
+                alt="Calora Icon"
+                className="w-7 h-7 object-contain select-none"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/Icon_logo.png';
+                }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* ── MIDDLE: NAV ───────────────────────────────────────────── */}
-        <nav className="flex-1 w-full overflow-y-auto overflow-x-hidden space-y-1 py-4 custom-scrollbar">
+        {/* ── MIDDLE: NAV ITEMS (44px Height, Lime Active Pill, Hover Nudge, Tooltips) ── */}
+        <nav
+          className={`flex-1 w-full space-y-1.5 py-1 ${
+            isWide ? 'overflow-y-auto overflow-x-hidden custom-scrollbar' : 'overflow-visible'
+          }`}
+          aria-label="Main Navigation"
+        >
           {mainNavItems.map((item) => {
             const Icon = item.icon;
-            const expandedMode = isExpanded || isMobileOpen;
 
             return (
               <NavLink
@@ -180,57 +233,73 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 to={item.to}
                 onClick={handleNavClick}
                 className={({ isActive }) =>
-                  `relative flex items-center transition-all duration-200 group cursor-pointer ${
-                    expandedMode
-                      ? `px-4 py-2.5 rounded-full space-x-3 text-xs tracking-tight ${
+                  `relative flex items-center h-11 transition-all duration-200 group cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#B8FF3B] focus-visible:outline-none ${
+                    isWide
+                      ? `px-3.5 rounded-full space-x-3 text-sm font-medium ${
                           isActive
-                            ? 'bg-[#B8FF3B] text-[#0C2417] font-bold shadow-xs'
-                            : 'text-gray-400 hover:text-white hover:bg-[#141C16] font-medium'
+                            ? 'bg-[#B8FF3B] text-black font-semibold shadow-[0_2px_12px_rgba(184,255,59,0.3)]'
+                            : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
                         }`
-                      : `justify-center w-10 h-10 mx-auto rounded-xl ${
+                      : `justify-center w-11 mx-auto rounded-full ${
                           isActive
-                            ? 'bg-[#B8FF3B] text-[#0C2417] shadow-xs'
-                            : 'text-gray-400 hover:text-white hover:bg-[#141C16]'
+                            ? 'bg-[#B8FF3B] text-black font-semibold shadow-[0_2px_12px_rgba(184,255,59,0.3)]'
+                            : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
                         }`
                   }`
                 }
-                title={!expandedMode ? item.label : undefined}
               >
                 {({ isActive }) => (
                   <>
                     <Icon
                       strokeWidth={1.8}
-                      className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                      className={`w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                         isActive
-                          ? 'text-[#0C2417]'
+                          ? 'text-black'
                           : 'text-gray-400 group-hover:text-white'
                       }`}
                     />
 
-                    {expandedMode && (
-                      <span className="truncate flex-1 font-medium">
+                    {/* Nav Item Label (Slides and Fades Smoothly) */}
+                    {isWide && (
+                      <span className="truncate flex-1 tracking-tight text-[14px] transition-all duration-200 whitespace-nowrap overflow-hidden">
                         {item.label}
                       </span>
                     )}
 
-                    {item.badge !== null && item.badge !== undefined && (
+                    {/* Notification Badge in Expanded Mode */}
+                    {isWide && item.badge !== null && item.badge !== undefined && (
                       <span
-                        className={
-                          expandedMode
-                            ? `text-[10px] font-bold rounded-full px-1.5 py-0.2 shrink-0 ${
-                                isActive
-                                  ? 'bg-[#0C2417] text-[#B8FF3B]'
-                                  : 'bg-[#B8FF3B] text-[#0C2417]'
-                              }`
-                            : `absolute top-1.5 right-1.5 w-2 h-2 rounded-full p-0 pointer-events-none ${
-                                isActive
-                                  ? 'bg-[#0C2417] ring-1 ring-[#0C2417]'
-                                  : 'bg-[#B8FF3B] ring-2 ring-[#0B0F0C]'
-                              }`
-                        }
+                        className={`text-[10px] font-bold rounded-full px-2 py-0.5 shrink-0 transition-transform duration-200 ${
+                          isActive
+                            ? 'bg-black text-[#B8FF3B]'
+                            : 'bg-[#B8FF3B] text-black shadow-xs'
+                        }`}
                       >
-                        {expandedMode ? item.badge : null}
+                        {item.badge}
                       </span>
+                    )}
+
+                    {/* Mini Indicator Dot in Collapsed Mode */}
+                    {!isWide && item.badge !== null && item.badge !== undefined && (
+                      <span
+                        className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full p-0 pointer-events-none bg-[#B8FF3B] ring-2 ring-[#0B120C] shadow-xs animate-pulse"
+                        aria-label={`${item.badge} notifications`}
+                      />
+                    )}
+
+                    {/* Collapsed Mode Tooltip on Hover/Focus (Positioned to the Right, Never Clipped) */}
+                    {!isWide && (
+                      <div
+                        role="tooltip"
+                        className="absolute left-full ml-3 px-3 py-1.5 rounded-xl bg-[#141C16] text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-white/10 opacity-0 -translate-x-1 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 group-focus-visible:opacity-100 group-focus-visible:translate-x-0 transition-all duration-200 z-50 flex items-center space-x-1.5"
+                      >
+                        <span>{item.label}</span>
+                        {item.badge !== null && item.badge !== undefined && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-[#B8FF3B] text-black text-[10px] font-bold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </>
                 )}
@@ -239,111 +308,136 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           })}
         </nav>
 
-        {/* ── BOTTOM: CONTROLS + PROFILE ────────────────────────────── */}
-        <div className="w-full pt-3 border-t border-[#152419] shrink-0 space-y-3">
-          {/* Language + Theme toggles (Clean Apple-like segmented pill) */}
-          {isExpanded || isMobileOpen ? (
-            <div className="flex items-center gap-2 px-1">
-              {/* Language: segmented pill */}
-              <div className="flex-1 h-8 rounded-lg bg-[#141C16] p-0.5 flex border border-[#1C281F]">
+        {/* ── BOTTOM: GROUPED FOOTER CONTROLS ────────────────────────── */}
+        <div className="w-full pt-4 border-t border-white/[0.06] shrink-0 space-y-3.5">
+          {/* Controls in Expanded Mode (Horizontal Row) vs Collapsed Mode (Vertical Stack) */}
+          {isWide ? (
+            <div className="flex items-center justify-between px-1">
+              {/* Language Switcher Pill (EN | ID) */}
+              <div className="h-8 rounded-full bg-[#152017] p-1 flex border border-white/[0.06] w-28">
                 <button
                   onClick={() => setLanguage('en')}
-                  className={`flex-1 rounded-md text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
+                  aria-label="Switch to English"
+                  className={`flex-1 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-[#B8FF3B] ${
                     language === 'en'
-                      ? 'bg-[#1E2E23] text-white shadow-xs'
-                      : 'text-gray-500 hover:text-gray-300'
+                      ? 'bg-[#253628] text-white shadow-xs'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   EN
                 </button>
                 <button
                   onClick={() => setLanguage('id')}
-                  className={`flex-1 rounded-md text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
+                  aria-label="Switch to Bahasa Indonesia"
+                  className={`flex-1 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-[#B8FF3B] ${
                     language === 'id'
-                      ? 'bg-[#1E2E23] text-white shadow-xs'
-                      : 'text-gray-500 hover:text-gray-300'
+                      ? 'bg-[#253628] text-white shadow-xs'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   ID
                 </button>
               </div>
 
-              {/* Theme toggle */}
+              {/* Theme Toggle Button */}
               <button
                 onClick={toggleTheme}
                 title={isDark ? t('switchToLight') : t('switchToDark')}
-                className="w-8 h-8 rounded-lg bg-[#141C16] border border-[#1C281F] flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                aria-label={isDark ? t('switchToLight') : t('switchToDark')}
+                className="w-8 h-8 rounded-full bg-[#152017] border border-white/[0.06] flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-[#B8FF3B] active:scale-95"
               >
                 {isDark ? (
-                  <SunMedium className="w-4 h-4 text-[#B8FF3B]" strokeWidth={1.8} />
+                  <SunMedium className="w-3.5 h-3.5 text-[#B8FF3B]" strokeWidth={1.8} />
                 ) : (
                   <Moon className="w-3.5 h-3.5" strokeWidth={1.8} />
                 )}
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 relative">
+              {/* Collapsed Language Toggle Button */}
               <button
                 onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-                title={language === 'en' ? 'Ganti ke Bahasa Indonesia' : 'Switch to English'}
-                className="w-10 h-8 rounded-lg bg-[#141C16] border border-[#1C281F] flex items-center justify-center text-[10px] font-bold text-gray-400 hover:text-white transition-colors cursor-pointer uppercase"
+                title={`Language: ${language.toUpperCase()} (Click to toggle)`}
+                aria-label={`Language: ${language.toUpperCase()}`}
+                className="w-8 h-8 rounded-full bg-[#152017] border border-white/[0.06] flex items-center justify-center text-gray-300 hover:text-[#B8FF3B] hover:border-[#B8FF3B]/40 text-[10px] font-bold uppercase transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#B8FF3B] active:scale-95"
               >
-                {language}
+                <span>{language}</span>
+                <div
+                  role="tooltip"
+                  className="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-[#141C16] text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-white/10 opacity-0 -translate-x-1 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 z-50"
+                >
+                  {language === 'en' ? 'Switch to Bahasa Indonesia' : 'Switch to English'}
+                </div>
               </button>
+
+              {/* Collapsed Theme Toggle Button */}
               <button
                 onClick={toggleTheme}
                 title={isDark ? t('switchToLight') : t('switchToDark')}
-                className="w-10 h-8 rounded-lg bg-[#141C16] border border-[#1C281F] flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+                aria-label={isDark ? t('switchToLight') : t('switchToDark')}
+                className="w-8 h-8 rounded-full bg-[#152017] border border-white/[0.06] flex items-center justify-center text-gray-400 hover:text-white hover:border-[#B8FF3B]/40 transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#B8FF3B] active:scale-95"
               >
                 {isDark ? (
-                  <SunMedium className="w-4 h-4 text-[#B8FF3B]" strokeWidth={1.8} />
+                  <SunMedium className="w-3.5 h-3.5 text-[#B8FF3B]" strokeWidth={1.8} />
                 ) : (
                   <Moon className="w-3.5 h-3.5" strokeWidth={1.8} />
                 )}
+                <div
+                  role="tooltip"
+                  className="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-[#141C16] text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-white/10 opacity-0 -translate-x-1 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 z-50"
+                >
+                  {isDark ? t('switchToLight') : t('switchToDark')}
+                </div>
               </button>
             </div>
           )}
 
-          {/* Admin profile and Log Out */}
-          <div className={`flex ${isExpanded || isMobileOpen ? 'items-center gap-1.5' : 'flex-col items-center gap-2 w-full'}`}>
+          {/* User Profile Block & Logout Action */}
+          <div
+            className={`flex ${
+              isWide ? 'items-center justify-between gap-2' : 'flex-col items-center gap-2 w-full'
+            }`}
+          >
+            {/* User Info Clickable Pill */}
             <div
               onClick={() => {
                 navigate('/settings');
                 handleNavClick();
               }}
-              className={`flex items-center cursor-pointer p-1.5 rounded-xl hover:bg-[#141C16] transition-colors ${
-                isExpanded || isMobileOpen ? 'flex-1 space-x-2.5 overflow-hidden' : 'w-full justify-center'
+              aria-label="User Settings"
+              className={`flex items-center cursor-pointer p-1 rounded-full hover:bg-white/[0.04] transition-colors group relative ${
+                isWide ? 'flex-1 space-x-2.5 overflow-hidden' : 'w-full justify-center'
               }`}
-              title={user?.name || 'Admin'}
+              title={user?.name || 'Calora Admin'}
             >
-              <div className="relative w-8 h-8 min-w-[32px] min-h-[32px] rounded-full overflow-hidden ring-1 ring-white/20 shrink-0 aspect-square shadow-xs bg-[#1B281E] flex items-center justify-center text-xs font-bold text-[#B8FF3B]">
-                {user?.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.name || 'Admin'}
-                    className="w-full h-full object-cover rounded-full absolute inset-0"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                ) : null}
-                <span>{user?.name?.[0]?.toUpperCase() || 'A'}</span>
-                <span className="w-2 h-2 rounded-full bg-[#B8FF3B] absolute bottom-0 right-0 ring-1 ring-[#0B0F0C] z-10" />
+              <div className="w-8 h-8 rounded-full bg-[#182B1D] border border-[#2D4A33] text-[#B8FF3B] font-bold flex items-center justify-center text-xs shrink-0 shadow-xs group-hover:border-[#B8FF3B]/50 transition-colors">
+                {user?.name?.[0]?.toUpperCase() || 'C'}
               </div>
 
-              {(isExpanded || isMobileOpen) && (
+              {isWide && (
                 <div className="overflow-hidden flex-1">
-                  <h4 className="text-xs font-bold text-white truncate leading-tight">
-                    {user?.name || 'Admin'}
+                  <h4 className="text-xs font-semibold text-white truncate leading-tight group-hover:text-[#B8FF3B] transition-colors">
+                    {user?.name || 'Calora Admin'}
                   </h4>
                   <p className="text-[10px] text-gray-400 truncate mt-0.5">
                     {user?.email || 'admin@calora.app'}
                   </p>
                 </div>
               )}
+
+              {/* Tooltip in Collapsed Mode */}
+              {!isWide && (
+                <div
+                  role="tooltip"
+                  className="absolute left-full ml-3 px-3 py-1.5 rounded-xl bg-[#141C16] text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-white/10 opacity-0 -translate-x-1 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 z-50"
+                >
+                  {user?.name || 'Calora Admin'} ({user?.email || 'admin@calora.app'})
+                </div>
+              )}
             </div>
 
-            {/* Logout button */}
+            {/* Logout Action Button */}
             <button
               onClick={async (e) => {
                 e.stopPropagation();
@@ -351,13 +445,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               }}
               title={t('logout')}
               aria-label={t('logout')}
-              className={`h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer shrink-0 ${
-                isExpanded || isMobileOpen ? 'px-2.5 space-x-1.5' : 'w-8 h-8 mx-auto'
+              className={`h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer shrink-0 group relative focus-visible:ring-2 focus-visible:ring-rose-500 active:scale-95 ${
+                isWide ? 'px-2.5 space-x-1 text-xs' : 'w-8 h-8 mx-auto'
               }`}
             >
               <LogOut className="w-3.5 h-3.5 stroke-[1.8]" />
-              {(isExpanded || isMobileOpen) && (
-                <span className="text-[11px] font-semibold">{t('logout')}</span>
+              {isWide && (
+                <span className="text-[11px] font-medium">{t('logout')}</span>
+              )}
+
+              {/* Tooltip in Collapsed Mode */}
+              {!isWide && (
+                <div
+                  role="tooltip"
+                  className="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-[#141C16] text-rose-300 text-xs font-semibold whitespace-nowrap shadow-xl border border-white/10 opacity-0 -translate-x-1 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 z-50"
+                >
+                  {t('logout')}
+                </div>
               )}
             </button>
           </div>

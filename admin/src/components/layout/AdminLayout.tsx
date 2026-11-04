@@ -55,17 +55,17 @@ export const AdminLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-[#F8FAF6] dark:bg-[#0C120E] font-sans antialiased text-[#111111] dark:text-[#F3F5EF] transition-colors duration-200">
-      {/* ── LEFT: SIDEBAR (Sticky on desktop, slide drawer on mobile) ── */}
+    <div className="h-screen w-screen overflow-hidden flex bg-[#F4F6F2] dark:bg-[#0B120C] text-[#111111] dark:text-[#F3F5EF] font-sans antialiased selection:bg-[#B8FF3B] selection:text-[#0C2417] transition-colors duration-200 p-0 md:p-3 lg:p-3.5 gap-0 md:gap-4 relative">
+      {/* ── LEFT: REFINED CALORA FLOATING SIDEBAR (LOCKED) ── */}
       <AdminSidebar
         onOpenFoodModal={handleOpenFoodModal}
         isMobileOpen={isMobileNavOpen}
         onCloseMobile={() => setIsMobileNavOpen(false)}
       />
 
-      {/* ── RIGHT: MAIN CONTENT AREA ──────────────────────────────── */}
-      <main className="flex-1 h-screen overflow-y-auto min-w-0 flex flex-col px-4 sm:px-8 lg:px-10 py-6">
-        <div className="w-full max-w-[1600px] mx-auto pb-12">
+      {/* ── RIGHT: FLAT WARM OFF-WHITE CONTENT AREA (32px Page Padding, Max 1440px) ── */}
+      <main className="flex-1 h-full overflow-y-auto min-w-0 flex flex-col p-6 sm:p-8 custom-scrollbar bg-transparent">
+        <div className="w-full max-w-[1440px] mx-auto pb-12">
           <Outlet
             context={{
               handleOpenRequestModal,

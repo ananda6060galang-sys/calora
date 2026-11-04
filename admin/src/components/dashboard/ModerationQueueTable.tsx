@@ -189,16 +189,16 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-[#181E19] rounded-2xl border border-[#EAECE8] dark:border-[#263226] shadow-xs overflow-hidden transition-colors duration-200">
+    <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
       {/* ── TOOLBAR: SEARCH & FILTER CONTROLS ───────────────────────── */}
-      <div className="p-5 border-b border-[#EAECE8] dark:border-[#222D23] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="p-5 border-b border-[#EAECE8] dark:border-[#212E23] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
             <h3 className="text-base font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight">
               {t('recentSubmissions')}
             </h3>
             {pendingCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF7EA] dark:bg-[#152B1E] text-[#16A34A] dark:text-[#B8FF3B]">
                 {pendingCount} Pending
               </span>
             )}
@@ -212,7 +212,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
         <div className="flex items-center flex-wrap gap-2.5">
           {/* 1. SEARCH INPUT */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.8} />
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
             <input
               type="text"
               value={searchTerm}
@@ -221,14 +221,14 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setCurrentPage(1);
               }}
               placeholder="Search dishes or users..."
-              className="bg-gray-50 dark:bg-[#202820] border border-gray-200 dark:border-[#2D382D] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-xl pl-8 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#74D100] w-48 transition-colors"
+              className="bg-[#EFF2EE] dark:bg-[#1A241E] border border-[#E0E5DF] dark:border-[#263226] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-9 pr-7 py-2 focus:outline-none focus:border-[#B8FF3B] focus:ring-1 focus:ring-[#B8FF3B] w-48 sm:w-56 transition-colors"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
               >
-                <X className="w-3 h-3" strokeWidth={1.8} />
+                <X className="w-3 h-3 stroke-[2]" />
               </button>
             )}
           </div>
@@ -241,7 +241,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-gray-50 dark:bg-[#202820] border border-gray-200 dark:border-[#2D382D] rounded-xl px-2.5 py-1.5 text-xs text-gray-700 dark:text-gray-300 focus:outline-none cursor-pointer"
+              className="bg-white dark:bg-[#1A241E] border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-2xs"
             >
               <option value="all">All Categories</option>
               {categoriesList.map((c) => (
@@ -253,58 +253,58 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
           )}
 
           {/* 2. STATUS TABS */}
-          <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-[#202820] rounded-xl border border-gray-200 dark:border-[#2D382D] overflow-x-auto text-xs font-semibold">
+          <div className="flex items-center space-x-1 p-0.5 bg-[#EFF2EE] dark:bg-[#1A241E] rounded-full border border-gray-200 dark:border-gray-700 overflow-x-auto text-xs font-semibold">
             <button
               onClick={() => {
                 setStatusFilter('all');
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'all'
-                  ? 'bg-white dark:bg-[#181E19] text-[#111111] dark:text-[#F3F5EF] shadow-2xs font-extrabold'
-                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-[#253628] text-[#111111] dark:text-white shadow-2xs font-bold'
+                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              {t('allTab')} ({requests.length})
+              All
             </button>
             <button
               onClick={() => {
                 setStatusFilter('pending');
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'pending'
-                  ? 'bg-amber-500 text-white shadow-2xs font-extrabold'
-                  : 'text-gray-500 hover:text-amber-600'
+                  ? 'bg-[#B8FF3B] text-[#0C2417] font-bold shadow-2xs'
+                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              {t('pendingTab')} ({pendingCount})
+              Pending ({pendingCount})
             </button>
             <button
               onClick={() => {
                 setStatusFilter('approved');
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'approved'
-                  ? 'bg-[#16A34A] dark:bg-[#3DDC84] text-white dark:text-[#0C2417] shadow-2xs font-extrabold'
-                  : 'text-gray-500 hover:text-[#16A34A]'
+                  ? 'bg-white dark:bg-[#253628] text-[#111111] dark:text-white shadow-2xs font-bold'
+                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              {t('approvedTab')} ({approvedCount})
+              Approved ({approvedCount})
             </button>
             <button
               onClick={() => {
                 setStatusFilter('rejected');
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'rejected'
-                  ? 'bg-[#FF5A5F] text-white shadow-2xs font-extrabold'
-                  : 'text-gray-500 hover:text-[#FF5A5F]'
+                  ? 'bg-white dark:bg-[#253628] text-[#111111] dark:text-white shadow-2xs font-bold'
+                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              {t('rejectedTab')} ({rejectedCount})
+              Rejected ({rejectedCount})
             </button>
           </div>
         </div>

@@ -100,24 +100,24 @@ export const ActivityChart: React.FC = () => {
   }, [requests, timeframe, language]);
 
   return (
-    <div className="p-6 bg-white dark:bg-calora-dark-surface rounded-2xl border border-gray-100 dark:border-calora-dark-border shadow-xs">
+    <div className="p-6 bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs">
       {/* Header with Title & Timeframe Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-base font-extrabold text-calora-light-text dark:text-calora-dark-text tracking-tight">
+          <h3 className="text-base font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight">
             {t('activityChartTitle')}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-calora-dark-muted mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {t('activityChartSubtitle')}
           </p>
         </div>
 
-        <div className="flex items-center space-x-1 p-1 bg-gray-50 dark:bg-calora-dark-surface-alt rounded-xl border border-gray-100 dark:border-calora-dark-border self-start">
+        <div className="flex items-center space-x-1 p-1 bg-[#EFF2EE] dark:bg-[#1A241E] rounded-full border border-gray-200 dark:border-gray-700 self-start">
           <button
             onClick={() => setTimeframe('7d')}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
               timeframe === '7d'
-                ? 'bg-calora-accent text-[#111111] shadow-xs'
+                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
@@ -125,9 +125,9 @@ export const ActivityChart: React.FC = () => {
           </button>
           <button
             onClick={() => setTimeframe('30d')}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
               timeframe === '30d'
-                ? 'bg-calora-accent text-[#111111] shadow-xs'
+                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
@@ -135,9 +135,9 @@ export const ActivityChart: React.FC = () => {
           </button>
           <button
             onClick={() => setTimeframe('1y')}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
               timeframe === '1y'
-                ? 'bg-calora-accent text-[#111111] shadow-xs'
+                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
             }`}
           >

@@ -3,7 +3,8 @@ import { useOutletContext } from 'react-router-dom';
 import { AdminHeader } from '../components/layout/AdminHeader';
 import { DashboardStatCards } from '../components/dashboard/DashboardStatCards';
 import { FoodRequestActivityChart } from '../components/dashboard/FoodRequestActivityChart';
-import { PendingFoodRequestsWidget } from '../components/dashboard/PendingFoodRequestsWidget';
+import { SecondaryMetricsCard } from '../components/dashboard/SecondaryMetricsCard';
+import { DarkModerationQueueCard } from '../components/dashboard/DarkModerationQueueCard';
 import { PublicFoodDatabaseTable } from '../components/dashboard/PublicFoodDatabaseTable';
 import { useThemeLanguage } from '../context/ThemeLanguageContext';
 import { FoodRequest, Food } from '../types';
@@ -20,38 +21,48 @@ export const Dashboard: React.FC = () => {
   const { t } = useThemeLanguage();
 
   return (
-    <div className="w-full space-y-6 animate-fade-in pb-12">
-      {/* Top Header */}
+    <div className="w-full animate-fade-in pb-12">
+      {/* ── ROW 0: TOP HEADER (Quiet 16-18px label, 32px gap below) ── */}
       <AdminHeader
-        title={t('consoleTitle')}
-        actionLabel={t('addFood')}
+        title={t('consoleTitle') || 'Dashboard'}
+        actionLabel={t('addFood') || 'Tambah Makanan'}
         onAction={handleOpenFoodModal}
         searchPlaceholder={t('searchPlaceholder')}
       />
 
-      {/* 1. Quick Stats (6 Cards Row matching Figma) */}
+      {/* ── ROW 1: GREETING + PAGE TITLE + 3 EQUAL KPI CARDS (28px Padding, Shared Baseline) ── */}
       <DashboardStatCards />
 
-      {/* 2. Middle Section: Activity Chart & Pending Requests */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-        {/* Left: Food Request Activity Dual Bar Chart (8 cols) */}
+      {/* ── ROW 2: 8 COLS (Activity Chart) + 4 COLS (Pale Lime-Mint Metric Card) ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch mb-6 sm:mb-7">
+        {/* Left: Food Request Activity Chart with single soft track per month & floating tooltip (8 cols) */}
         <div className="xl:col-span-8 flex flex-col">
           <FoodRequestActivityChart />
         </div>
 
-        {/* Right: Pending Food Requests Review List (4 cols) */}
+        {/* Right: Secondary Metrics Pale Mint Card (4 cols, height matches chart) */}
         <div className="xl:col-span-4 flex flex-col">
-          <PendingFoodRequestsWidget
+          <SecondaryMetricsCard />
+        </div>
+      </div>
+
+      {/* ── ROW 3: 8 COLS (Public Food Database Table) + 4 COLS (Dark Moderation Queue Card) ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+        {/* Left: Public Food Database Table (8 cols) */}
+        <div className="xl:col-span-8 flex flex-col">
+          <PublicFoodDatabaseTable
+            onOpenFoodModal={handleOpenFoodModal}
+            onEditFood={handleEditFood}
+          />
+        </div>
+
+        {/* Right: Dark Moderation Queue Card matching table height (4 cols) */}
+        <div className="xl:col-span-4 flex flex-col">
+          <DarkModerationQueueCard
             onOpenRequestModal={handleOpenRequestModal}
           />
         </div>
       </div>
-
-      {/* 3. Bottom Section: Public Food Database */}
-      <PublicFoodDatabaseTable
-        onOpenFoodModal={handleOpenFoodModal}
-        onEditFood={handleEditFood}
-      />
     </div>
   );
 };

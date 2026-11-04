@@ -47,7 +47,7 @@ export const MacroDistributionChart: React.FC = () => {
   }, [foods, categories]);
 
   return (
-    <div className="p-6 bg-white dark:bg-calora-dark-surface rounded-2xl border border-gray-100 dark:border-calora-dark-border shadow-xs">
+    <div className="p-6 bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center space-x-2">

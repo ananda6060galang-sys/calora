@@ -39,7 +39,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const { searchQuery, setSearchQuery, stats, isLoading, refreshAll } = useAdmin();
   const { t } = useThemeLanguage();
 
-  // Try to get onToggleMobileMenu from outlet context if not explicitly passed as prop
   const outletCtx = useOutletContext<{ onToggleMobileMenu?: () => void } | null>();
   const toggleMobileNav = onToggleMobileMenu || outletCtx?.onToggleMobileMenu;
 
@@ -53,92 +52,87 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   };
 
   return (
-    <header className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-[#EAECE8] dark:border-[#222D23] mb-6 transition-colors">
-      {/* ── LEFT: MOBILE MENU TOGGLE + TITLE ──────────────────────── */}
-      <div className="flex items-center space-x-2 shrink-0">
-        {/* Mobile Hamburger Button */}
+    <header className="w-full h-14 sm:h-16 flex items-center justify-between gap-4 mb-8 transition-colors select-none">
+      {/* ── LEFT: QUIET 16-18PX MEDIUM LABEL (Matching Reference) ──── */}
+      <div className="flex items-center space-x-3 shrink-0">
         {toggleMobileNav && (
           <button
             onClick={toggleMobileNav}
             title="Open menu"
             aria-label="Open menu"
-            className="md:hidden p-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-[#111111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1E2E23] cursor-pointer transition-colors"
+            className="md:hidden p-2 rounded-full text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors"
           >
             <Menu className="w-5 h-5 stroke-[1.8]" />
           </button>
         )}
 
-        <div className="flex items-center space-x-1.5 cursor-pointer group">
-          <h1 className="text-base sm:text-lg font-bold text-[#111111] dark:text-[#F3F5EF] tracking-tight group-hover:text-[#16A34A] dark:group-hover:text-[#B8FF3B] transition-colors">
-            {title || t('consoleTitle')}
-          </h1>
-          <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors stroke-[2]" />
+        <div className="flex items-center space-x-2 cursor-pointer group">
+          <span className="text-[16px] sm:text-[18px] font-medium text-stone-600 dark:text-stone-300 tracking-normal">
+            {title || 'Calora Admin'}
+          </span>
+          <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-700 dark:group-hover:text-stone-300 transition-colors" />
         </div>
       </div>
 
-      {/* ── CENTER: SEARCH BAR ───────────────────────────────────── */}
+      {/* ── CENTER: ROUNDED SEARCH (Soft Fill, No Heavy Border) ────── */}
       {showSearch && (
-        <div className="relative flex-1 max-w-md mx-0 md:mx-4">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
+        <div className="relative flex-1 max-w-sm mx-2 md:mx-6">
+          <Search className="w-4 h-4 text-stone-400 dark:text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
           <input
             type="text"
             value={currentSearch}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder={searchPlaceholder || t('searchPlaceholder')}
-            className="w-full bg-[#F4F6F3] dark:bg-[#181E19] border border-[#E5EAE3] dark:border-[#263226] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-9 pr-14 py-2 focus:outline-none focus:border-[#B8FF3B] focus:ring-1 focus:ring-[#B8FF3B] transition-all"
+            className="w-full bg-white dark:bg-[#141C16] border-0 text-xs text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-gray-500 rounded-full pl-10 pr-8 py-2.5 shadow-soft focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50 transition-all"
           />
-          {currentSearch ? (
+          {currentSearch && (
             <button
               onClick={() => handleSearch('')}
               aria-label="Clear search"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 dark:hover:text-white cursor-pointer"
             >
               <X className="w-3.5 h-3.5 stroke-[2]" />
             </button>
-          ) : (
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-mono bg-white dark:bg-[#202820] px-1.5 py-0.2 rounded border border-gray-200 dark:border-gray-700 pointer-events-none">
-              ⌘K
-            </span>
           )}
         </div>
       )}
 
-      {/* ── RIGHT: SYNC + NOTIFICATION + CTA ─────────────────────── */}
-      <div className="flex items-center space-x-2 self-end md:self-auto shrink-0">
-        {/* Sync Data */}
+      {/* ── RIGHT: 40PX CIRCLES & PRIMARY DARK PILL BUTTON ──────────── */}
+      <div className="flex items-center space-x-2.5 shrink-0">
+        {/* Sync Data Circle */}
         <button
           onClick={() => refreshAll()}
           title={t('syncData')}
           aria-label={t('syncData')}
-          className="w-8 h-8 rounded-full bg-white dark:bg-[#181E19] hover:bg-gray-50 dark:hover:bg-[#222D23] border border-[#EAECE8] dark:border-[#263226] flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white transition-colors shadow-2xs cursor-pointer"
+          className="w-10 h-10 rounded-full bg-white dark:bg-[#141C16] hover:bg-stone-50 dark:hover:bg-white/[0.04] flex items-center justify-center text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all shadow-soft cursor-pointer active:scale-95 border-0"
         >
-          <RotateCw className={`w-3.5 h-3.5 stroke-[1.8] ${isLoading ? 'animate-spin text-[#16A34A] dark:text-[#B8FF3B]' : ''}`} />
+          <RotateCw className={`w-4 h-4 stroke-[1.8] ${isLoading ? 'animate-spin text-[#16A34A] dark:text-[#B8FF3B]' : ''}`} />
         </button>
 
-        {/* Notification Bell */}
+        {/* Notification Bell Circle */}
         <div className="relative">
           <button
             title="Notifications"
             aria-label="Notifications"
-            className="w-8 h-8 rounded-full bg-white dark:bg-[#181E19] hover:bg-gray-50 dark:hover:bg-[#222D23] border border-[#EAECE8] dark:border-[#263226] flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white transition-colors shadow-2xs cursor-pointer"
+            className="w-10 h-10 rounded-full bg-white dark:bg-[#141C16] hover:bg-stone-50 dark:hover:bg-white/[0.04] flex items-center justify-center text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all shadow-soft cursor-pointer active:scale-95 border-0"
           >
-            <Bell className="w-3.5 h-3.5 stroke-[1.8]" />
+            <Bell className="w-4 h-4 stroke-[1.8]" />
           </button>
           {stats.pendingRequests > 0 && (
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#FF5A5F] text-white text-[8px] font-black flex items-center justify-center shadow-xs pointer-events-none">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#E53935] text-white text-[10px] font-bold flex items-center justify-center pointer-events-none ring-2 ring-white dark:ring-[#0B120C]">
               {stats.pendingRequests > 9 ? '9+' : stats.pendingRequests}
             </span>
           )}
         </div>
 
-        {/* Primary CTA */}
+        {/* Primary CTA: Add Food (Dark Pill with Lime Plus Icon) */}
         {actionLabel && onAction && (
           <button
             onClick={onAction}
-            className="h-8 px-3.5 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#202820] hover:bg-gray-50 dark:hover:bg-[#283528] text-[#111111] dark:text-white text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer ml-1 active:scale-95"
+            className="h-10 px-5 rounded-full bg-[#0B120C] hover:bg-[#162118] dark:bg-[#17221A] dark:hover:bg-[#1F2F23] text-white text-xs font-semibold tracking-normal flex items-center space-x-1.5 transition-all shadow-soft cursor-pointer active:scale-95 border-0"
           >
-            <span>{actionLabel}</span>
-            <ActionIcon className="w-3.5 h-3.5 text-[#111111] dark:text-[#B8FF3B]" />
+            <ActionIcon className="w-3.5 h-3.5 text-[#B8FF3B] stroke-[2.5]" />
+            <span className="font-semibold text-white">{actionLabel}</span>
           </button>
         )}
       </div>
