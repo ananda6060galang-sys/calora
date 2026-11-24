@@ -95,7 +95,7 @@ export const FoodRequestActivityChart: React.FC = () => {
           <h3 className="text-base sm:text-lg font-semibold text-stone-900 dark:text-white tracking-tight">
             {t('foodRequestActivity') || (language === 'id' ? 'Aktivitas Permintaan Makanan' : 'Food Request Activity')}
           </h3>
-          <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 font-normal">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5 font-normal">
             {language === 'id'
               ? 'Aktivitas pengajuan komunitas vs makanan terverifikasi'
               : 'Community submission activity vs verified foods'}
@@ -103,16 +103,16 @@ export const FoodRequestActivityChart: React.FC = () => {
         </div>
 
         {/* Legend top-right with small dots (Comfortably clear of tooltip) */}
-        <div className="flex items-center space-x-5 text-xs self-start sm:self-auto font-normal shrink-0">
+        <div className="flex items-center space-x-5 text-xs sm:text-[13px] self-start sm:self-auto font-medium shrink-0">
           <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#B8FF3B] shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#B8FF3B] shrink-0" />
             <span className="text-stone-700 dark:text-stone-300">
               {t('submittedRequests') || (language === 'id' ? 'Diajukan' : 'Submitted')}
             </span>
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#18261B] dark:bg-[#3D5643] shrink-0" />
-            <span className="text-stone-500 dark:text-stone-400">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#18261B] dark:bg-[#3D5643] shrink-0" />
+            <span className="text-stone-600 dark:text-stone-400">
               {t('approvedFoods') || (language === 'id' ? 'Disetujui' : 'Approved')}
             </span>
           </div>
@@ -228,14 +228,14 @@ export const FoodRequestActivityChart: React.FC = () => {
           </div>
 
           {/* X-Axis Month Labels in sentence case (12px muted, locale-aware EN/ID) */}
-          <div className="flex justify-between pl-7 sm:pl-8 pr-2 sm:pr-4 pt-3 text-stone-400 dark:text-stone-500 tabular-nums">
+          <div className="flex justify-between pl-7 sm:pl-8 pr-2 sm:pr-4 pt-3 text-stone-500 dark:text-stone-400 tabular-nums">
             {data.map((item, idx) => (
               <span
                 key={item.month}
-                className={`flex-1 text-center transition-colors text-[10px] sm:text-[12px] tracking-tight sm:tracking-normal ${
+                className={`flex-1 text-center transition-colors text-xs sm:text-[13px] tracking-tight sm:tracking-normal ${
                   idx === activeIndex
                     ? 'text-stone-900 dark:text-white font-semibold'
-                    : 'hover:text-stone-700 dark:hover:text-gray-300 font-normal'
+                    : 'hover:text-stone-700 dark:hover:text-gray-300 font-medium'
                 }`}
               >
                 {item.month}

@@ -10,6 +10,8 @@ import '../diary/providers/diary_provider.dart';
 import '../notifications/notifications_screen.dart';
 import '../notifications/providers/notifications_provider.dart';
 import 'insights_detail_screen.dart';
+import 'providers/insights_provider.dart';
+import 'widgets/ai_coach_spotlight_card.dart';
 import 'widgets/nutrition_summary_card.dart';
 import 'widgets/organic_aura.dart';
 
@@ -140,6 +142,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     final profile = ref.watch(userProfileProvider);
     final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final diaryTotals = ref.watch(diaryTotalsForDateProvider(_selectedDate));
+    final insightsState = ref.watch(insightsProvider);
 
     final consumedCalories = diaryTotals.calories;
     final targetCalories = profile.dailyCalorieTarget;
@@ -179,7 +182,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           SafeArea(
             bottom: false,
             child: ListView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              physics: const ClampingScrollPhysics(),
               padding: EdgeInsets.zero,
               children: [
                 Padding(
@@ -192,69 +195,78 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Left: Existing Calora User Avatar + Name Capsule
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkSurface
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: isDark ? 0.35 : 0.08,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkSurface
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.35 : 0.08,
+                                    ),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                CaloraAvatar(
-                                  avatarUrl: profile.avatarUrl,
-                                  displayName: profile.name,
-                                  size: 34,
-                                  isDark: isDark,
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      profile.name.isNotEmpty
-                                          ? profile.name
-                                          : 'onboarding.defaultUser'.tr(),
-                                      style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
-                                        color: isDark
-                                            ? AppColors.darkTextPrimary
-                                            : const Color(0xFF131814),
-                                        height: 1.15,
-                                      ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CaloraAvatar(
+                                    avatarUrl: profile.avatarUrl,
+                                    displayName: profile.name,
+                                    size: 34,
+                                    isDark: isDark,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          profile.name.isNotEmpty
+                                              ? profile.name
+                                              : 'onboarding.defaultUser'.tr(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: isDark
+                                                ? AppColors.darkTextPrimary
+                                                : const Color(0xFF131814),
+                                            height: 1.15,
+                                          ),
+                                        ),
+                                        Text(
+                                          'insights.premiumUser'.tr(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? AppColors.accent
+                                                : const Color(0xFF2E6319),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      'insights.premiumUser'.tr(),
-                                      style: GoogleFonts.inter(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? AppColors.accent
-                                            : const Color(0xFF2E6319),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(width: 6),
-                              ],
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 12),
 
                           // Right: Notification Icon with badge
                           GestureDetector(
@@ -368,12 +380,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
                       // ── 4. HORIZONTAL 7-DAY DATE CALENDAR (ANIMATED & SATISFYING) ──
                       SizedBox(
-                        height: 104,
+                        height: 96,
                         child: PageView.builder(
                           controller: _pageController,
                           clipBehavior: Clip.none,
                           scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                          physics: const ClampingScrollPhysics(),
                           itemCount: _totalDays,
                           onPageChanged: _onPageChanged,
                           itemBuilder: (context, index) {
@@ -392,10 +404,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 280),
                                   curve: Curves.easeOutCubic,
-                                  width: isSelected ? 48 : 41,
-                                  height: isSelected ? 82 : 64,
+                                  width: isSelected ? 44 : 38,
+                                  height: isSelected ? 78 : 62,
                                   padding: const EdgeInsets.symmetric(
-                                      vertical: 6, horizontal: 2),
+                                      vertical: 5, horizontal: 2),
                                   clipBehavior: Clip.hardEdge,
                                   decoration: BoxDecoration(
                                     color: isSelected
@@ -408,7 +420,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                                             : Colors.white.withValues(
                                                 alpha: 0.58)),
                                     borderRadius: BorderRadius.circular(
-                                      isSelected ? 26 : 22,
+                                      isSelected ? 24 : 20,
                                     ),
                                     border: Border.all(
                                       color: isSelected
@@ -549,7 +561,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
                 // ── ONE DOMINANT WHITE NUTRITION SUMMARY SURFACE ─────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   child: NutritionSummaryCard(
                     consumedCalories: consumedCalories,
                     targetCalories: targetCalories,
@@ -563,6 +575,22 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     ctaLabel: 'insights.seeTodaysInsights'.tr(),
                     isDark: isDark,
                     onActionTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const InsightsDetailScreen(),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── AI NUTRITION COACH SPOTLIGHT CARD ────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+                  child: AiCoachSpotlightCard(
+                    report: insightsState.aiReport,
+                    isLoading: insightsState.isLoadingAiReport,
+                    isDark: isDark,
+                    onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const InsightsDetailScreen(),

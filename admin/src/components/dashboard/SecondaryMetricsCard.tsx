@@ -52,7 +52,7 @@ export const SecondaryMetricsCard: React.FC = () => {
         <h3 className="text-base sm:text-lg font-semibold tracking-tight text-stone-900 dark:text-white">
           {t('foodTaxonomy') || (language === 'id' ? 'Kategori Makanan' : 'Food Categories')}
         </h3>
-        <p className="text-xs text-stone-600 dark:text-stone-300 font-normal mt-0.5">
+        <p className="text-sm text-stone-600 dark:text-stone-300 font-normal mt-0.5">
           {t('quickStatsSubtitle') || (language === 'id' ? 'Ringkasan database makanan publik.' : 'Overview of public nutrition database.')}
         </p>
       </div>
@@ -75,10 +75,10 @@ export const SecondaryMetricsCard: React.FC = () => {
                   <Icon className="w-4 h-4 stroke-[1.8]" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-stone-900 dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-[#B8FF3B] transition-colors leading-tight">
+                  <h4 className="text-[15px] font-semibold text-stone-900 dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-[#B8FF3B] transition-colors leading-tight">
                     {row.title}
                   </h4>
-                  <p className="text-xs text-stone-600 dark:text-stone-400 font-normal mt-0.5 leading-tight">
+                  <p className="text-xs text-stone-600 dark:text-stone-300 font-medium mt-0.5 leading-tight">
                     {row.subtitle}
                   </p>
                 </div>
@@ -98,13 +98,13 @@ export const SecondaryMetricsCard: React.FC = () => {
       </div>
 
       {/* ── FOOTER: DIRECTLY UNDER ROWS ── */}
-      <div className="pt-3 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs">
+      <div className="pt-3 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-sm">
         <Link
           to="/categories"
-          className="font-medium text-[#16A34A] dark:text-[#B8FF3B] hover:underline flex items-center space-x-1"
+          className="font-semibold text-[#16A34A] dark:text-[#B8FF3B] hover:underline flex items-center space-x-1"
         >
           <span>{t('viewAll') || (language === 'id' ? 'Lihat semua' : 'View all')}</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-4 h-4" />
         </Link>
         <span className="text-xs text-stone-500 dark:text-stone-400 font-normal">
           Calora Console

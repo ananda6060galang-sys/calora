@@ -61,38 +61,38 @@ export const Settings: React.FC = () => {
             <ShieldCheck className="w-6 h-6 stroke-[1.8]" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#111111] dark:text-[#F3F5EF]">
+            <h3 className="text-base font-bold text-[#111111] dark:text-[#F3F5EF]">
               Active Administrator Profile
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
               Role permissions verified by PostgreSQL Row Level Security (RLS)
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#F2F5F0] dark:border-[#202C22] text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#F2F5F0] dark:border-[#202C22] text-sm">
           <div>
-            <span className="text-gray-400 font-medium block">Account Name</span>
-            <span className="font-bold text-[#111111] dark:text-[#F3F5EF] text-sm">
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide block">Account Name</span>
+            <span className="font-bold text-[#111111] dark:text-[#F3F5EF] text-base mt-0.5 block">
               {user?.name || 'Administrator'}
             </span>
           </div>
           <div>
-            <span className="text-gray-400 font-medium block">Email Address</span>
-            <span className="font-bold text-[#111111] dark:text-[#F3F5EF] text-sm">
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide block">Email Address</span>
+            <span className="font-bold text-[#111111] dark:text-[#F3F5EF] text-base mt-0.5 block">
               {user?.email || 'admin@calora.app'}
             </span>
           </div>
           <div>
-            <span className="text-gray-400 font-medium block">Console Role</span>
-            <span className="inline-flex items-center px-2.5 py-0.5 mt-0.5 rounded-full text-[10px] font-bold bg-[#B8FF3B] text-[#0C2417]">
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide block">Console Role</span>
+            <span className="inline-flex items-center px-3 py-1 mt-1 rounded-full text-xs font-bold bg-[#B8FF3B] text-[#0C2417]">
               Super Admin
             </span>
           </div>
           <div>
-            <span className="text-gray-400 font-medium block">Security Status</span>
-            <span className="inline-flex items-center text-emerald-700 dark:text-emerald-400 font-semibold space-x-1 mt-0.5">
-              <CheckCircle2 className="w-3.5 h-3.5 stroke-[2]" />
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide block">Security Status</span>
+            <span className="inline-flex items-center text-emerald-700 dark:text-emerald-400 font-semibold space-x-1.5 mt-1 text-sm">
+              <CheckCircle2 className="w-4 h-4 stroke-[2]" />
               <span>Full CRUD Access</span>
             </span>
           </div>
@@ -101,9 +101,9 @@ export const Settings: React.FC = () => {
         <div className="pt-3 border-t border-[#F2F5F0] dark:border-[#202C22] flex justify-end">
           <button
             onClick={() => logout()}
-            className="px-4 py-2 rounded-full text-xs font-bold border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-1.5 transition-colors cursor-pointer"
+            className="px-4.5 py-2.5 rounded-full text-sm font-semibold border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5 stroke-[1.8]" />
+            <LogOut className="w-4 h-4 stroke-[1.8]" />
             <span>{t('logout')}</span>
           </button>
         </div>
@@ -117,10 +117,10 @@ export const Settings: React.FC = () => {
               <Database className="w-5 h-5 stroke-[1.8]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#111111] dark:text-[#F3F5EF]">
+              <h3 className="text-base font-bold text-[#111111] dark:text-[#F3F5EF]">
                 Supabase PostgreSQL Backend
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
                 Connected project: nutrition, workouts, profiles, and moderation queues
               </p>
             </div>
@@ -129,9 +129,9 @@ export const Settings: React.FC = () => {
           <button
             onClick={testSupabaseConnection}
             disabled={isTesting}
-            className="px-4 py-2 rounded-full text-xs font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#1E2A20] text-gray-700 dark:text-gray-200 flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
+            className="px-4.5 py-2.5 rounded-full text-sm font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#1E2A20] text-stone-700 dark:text-stone-200 flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
           >
-            <RotateCw className={`w-3.5 h-3.5 stroke-[1.8] ${isTesting ? 'animate-spin text-[#16A34A] dark:text-[#B8FF3B]' : ''}`} />
+            <RotateCw className={`w-4 h-4 stroke-[1.8] ${isTesting ? 'animate-spin text-[#16A34A] dark:text-[#B8FF3B]' : ''}`} />
             <span>{isTesting ? 'Testing...' : 'Test Connection'}</span>
           </button>
         </div>

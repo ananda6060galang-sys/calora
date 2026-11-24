@@ -87,18 +87,18 @@ export const DashboardStatCards: React.FC = () => {
     <section className="select-none mb-8">
       {/* ── 0. GREETING & PAGE TITLE (Sentence Case, Clean Typography, 8px / 12-16px / 28-32px Gaps) ── */}
       <div className="flex flex-col">
-        {/* Small muted greeting line: 8px above title in 13px muted */}
-        <p className="text-[13px] text-stone-500 dark:text-stone-400 font-normal mb-2 leading-none">
+        {/* Small muted greeting line: 8px above title in 14px medium */}
+        <p className="text-sm text-stone-600 dark:text-stone-400 font-medium mb-2 leading-none">
           {greeting}, {user?.name || 'Calora Admin'}
         </p>
 
         {/* Quick Stats: Page title at 28-32px semibold, tight tracking */}
-        <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-stone-900 dark:text-white leading-none">
+        <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-stone-900 dark:text-white leading-none">
           {t('quickStats') || (language === 'id' ? 'Statistik Cepat' : 'Quick Stats')}
         </h1>
 
-        {/* Subtitle: 12-16px gap below title, reverted to original wording */}
-        <p className="text-xs sm:text-[13px] text-stone-500 dark:text-stone-400 mt-3 sm:mt-3.5 font-normal leading-normal">
+        {/* Subtitle: 12-16px gap below title, comfortable 14px reading size */}
+        <p className="text-sm text-stone-600 dark:text-stone-400 mt-3 sm:mt-3.5 font-normal leading-normal">
           {t('quickStatsSubtitle') ||
             (language === 'id'
               ? 'Ringkasan database makanan publik.'
@@ -106,12 +106,12 @@ export const DashboardStatCards: React.FC = () => {
         </p>
       </div>
 
-      {/* ── 1. ROW 1: THREE EQUAL KPI CARDS (28-32px Gap Below Title, 28px Padding, Shared Baseline) ── */}
+      {/* ── 1. ROW 1: THREE EQUAL KPI CARDS (28-32px Gap Below Title, 24px Padding, Shared Baseline) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 items-stretch mt-7 sm:mt-8">
-        {/* ── CARD 1: TOTAL FOODS (Dark Hero Card, Padding 28px, Lime Mini Bars) ── */}
+        {/* ── CARD 1: TOTAL FOODS (Dark Hero Card, Padding 24px, Lime Mini Bars) ── */}
         <Link
           to="/foods"
-          className="rounded-[24px] p-7 bg-[#0B120C] text-white shadow-soft hover-card-lift flex flex-col justify-between cursor-pointer border-0 h-[196px] animate-card-rise stagger-1 group"
+          className="rounded-[24px] p-6 sm:p-6.5 bg-[#0B120C] text-white shadow-soft hover-card-lift flex flex-col justify-between cursor-pointer border-0 min-h-[190px] animate-card-rise stagger-1 group"
         >
           {/* Top: Icon circle + Small lime trend pill */}
           <div className="flex items-center justify-between">
@@ -119,7 +119,7 @@ export const DashboardStatCards: React.FC = () => {
               <Apple className="w-5 h-5 stroke-[1.8]" />
             </div>
 
-            <span className="px-3 py-1 rounded-full bg-[#18261B] text-[#B8FF3B] text-xs font-medium">
+            <span className="px-3 py-1 rounded-full bg-[#18261B] text-[#B8FF3B] text-xs font-semibold">
               {language === 'id' ? '↗ 2.4% vs bln lalu' : '↗ 2.4% vs last month'}
             </span>
           </div>
@@ -127,10 +127,10 @@ export const DashboardStatCards: React.FC = () => {
           {/* Middle: Numbers on shared baseline + Mini Bar Chart on right */}
           <div className="flex items-end justify-between">
             <div>
-              <span className="text-[13px] text-white/70 font-normal block leading-tight">
+              <span className="text-sm text-white/80 font-medium block leading-tight">
                 {t('totalFoods') || (language === 'id' ? 'Total Makanan' : 'Total foods')}
               </span>
-              <span className="text-3xl sm:text-[38px] font-semibold text-white tracking-[-0.02em] tabular-nums leading-none block mt-1.5">
+              <span className="text-3xl sm:text-[36px] font-bold text-white tracking-tight tabular-nums leading-none block mt-2">
                 {animatedFoodCount}
               </span>
             </div>
@@ -162,7 +162,7 @@ export const DashboardStatCards: React.FC = () => {
           </div>
 
           {/* Bottom: Muted Caption */}
-          <p className="text-xs text-white/60 font-normal leading-tight">
+          <p className="text-xs text-white/70 font-medium leading-tight">
             {language === 'id' ? 'Katalog terverifikasi' : 'Verified catalog'}
           </p>
         </Link>
@@ -170,7 +170,7 @@ export const DashboardStatCards: React.FC = () => {
         {/* ── CARD 2: PENDING REQUESTS (White Card, Outlined Review Button, Pulsing Dot, Lime Mini Bars) ── */}
         <Link
           to="/food-requests"
-          className="rounded-[24px] p-7 bg-white dark:bg-[#141C16] text-stone-900 dark:text-white shadow-soft hover-card-lift flex flex-col justify-between cursor-pointer border-0 h-[196px] animate-card-rise stagger-2 group"
+          className="rounded-[24px] p-6 sm:p-6.5 bg-white dark:bg-[#141C16] text-stone-900 dark:text-white shadow-soft hover-card-lift flex flex-col justify-between cursor-pointer border-0 min-h-[190px] animate-card-rise stagger-2 group"
         >
           {/* Top: Icon circle + Real outlined pill button with pulsing dot & sliding arrow */}
           <div className="flex items-center justify-between">
@@ -189,10 +189,10 @@ export const DashboardStatCards: React.FC = () => {
           {/* Middle: Numbers on shared baseline + Lime Mini Bars on White */}
           <div className="flex items-end justify-between">
             <div>
-              <span className="text-[13px] text-stone-500 dark:text-stone-400 font-normal block leading-tight">
+              <span className="text-sm text-stone-600 dark:text-stone-300 font-medium block leading-tight">
                 {t('pendingRequests') || (language === 'id' ? 'Permintaan Menunggu' : 'Pending requests')}
               </span>
-              <span className="text-3xl sm:text-[38px] font-semibold text-stone-900 dark:text-white tracking-[-0.02em] tabular-nums leading-none block mt-1.5">
+              <span className="text-3xl sm:text-[36px] font-bold text-stone-900 dark:text-white tracking-tight tabular-nums leading-none block mt-2">
                 {pendingCount}
               </span>
             </div>
@@ -224,7 +224,7 @@ export const DashboardStatCards: React.FC = () => {
           </div>
 
           {/* Bottom: Muted Caption */}
-          <p className="text-xs text-stone-500 dark:text-stone-400 font-normal leading-tight">
+          <p className="text-xs text-stone-500 dark:text-stone-400 font-medium leading-tight">
             {language === 'id' ? 'Perlu tindakan review' : 'Needs review action'}
           </p>
         </Link>
@@ -232,7 +232,7 @@ export const DashboardStatCards: React.FC = () => {
         {/* ── CARD 3: APPROVED REQUESTS (White Card, No Redundant Pill, Mini Bars) ── */}
         <Link
           to="/food-requests"
-          className="rounded-[24px] p-7 bg-white dark:bg-[#141C16] text-stone-900 dark:text-white shadow-soft hover-card-lift flex flex-col justify-between cursor-pointer border-0 h-[196px] animate-card-rise stagger-3 group"
+          className="rounded-[24px] p-6 sm:p-6.5 bg-white dark:bg-[#141C16] text-stone-900 dark:text-white shadow-soft hover-card-lift flex flex-col justify-between cursor-pointer border-0 min-h-[190px] animate-card-rise stagger-3 group"
         >
           {/* Top: Icon circle + Trend indicator (no redundant "Approved" pill) */}
           <div className="flex items-center justify-between">
@@ -241,7 +241,7 @@ export const DashboardStatCards: React.FC = () => {
             </div>
 
             {/* Subtle trend indicator instead of redundant badge */}
-            <span className="text-xs text-stone-500 dark:text-stone-400 font-medium">
+            <span className="text-xs text-stone-600 dark:text-stone-300 font-semibold">
               ↗ 100% {language === 'id' ? 'selesai' : 'resolution'}
             </span>
           </div>
@@ -249,10 +249,10 @@ export const DashboardStatCards: React.FC = () => {
           {/* Middle: Numbers on shared baseline + Mini Bar Chart on right */}
           <div className="flex items-end justify-between">
             <div>
-              <span className="text-[13px] text-stone-500 dark:text-stone-400 font-normal block leading-tight">
+              <span className="text-sm text-stone-600 dark:text-stone-300 font-medium block leading-tight">
                 {t('approvedRequests') || (language === 'id' ? 'Permintaan Disetujui' : 'Approved requests')}
               </span>
-              <span className="text-3xl sm:text-[38px] font-semibold text-stone-900 dark:text-white tracking-[-0.02em] tabular-nums leading-none block mt-1.5">
+              <span className="text-3xl sm:text-[36px] font-bold text-stone-900 dark:text-white tracking-tight tabular-nums leading-none block mt-2">
                 {approvedCount}
               </span>
             </div>
@@ -284,7 +284,7 @@ export const DashboardStatCards: React.FC = () => {
           </div>
 
           {/* Bottom: Muted Caption */}
-          <p className="text-xs text-stone-500 dark:text-stone-400 font-normal leading-tight">
+          <p className="text-xs text-stone-500 dark:text-stone-400 font-medium leading-tight">
             {language === 'id' ? 'Disetujui ke katalog publik' : 'Approved to catalog'}
           </p>
         </Link>

@@ -104,10 +104,10 @@ export const ActivityChart: React.FC = () => {
       {/* Header with Title & Timeframe Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-base font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight">
+          <h3 className="text-base sm:text-lg font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight">
             {t('activityChartTitle')}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
             {t('activityChartSubtitle')}
           </p>
         </div>
@@ -115,30 +115,30 @@ export const ActivityChart: React.FC = () => {
         <div className="flex items-center space-x-1 p-1 bg-[#EFF2EE] dark:bg-[#1A241E] rounded-full border border-gray-200 dark:border-gray-700 self-start">
           <button
             onClick={() => setTimeframe('7d')}
-            className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all cursor-pointer ${
               timeframe === '7d'
-                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
-                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs font-bold'
+                : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
             }`}
           >
             {t('timeframe7d')}
           </button>
           <button
             onClick={() => setTimeframe('30d')}
-            className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all cursor-pointer ${
               timeframe === '30d'
-                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
-                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs font-bold'
+                : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
             }`}
           >
             {t('timeframe30d')}
           </button>
           <button
             onClick={() => setTimeframe('1y')}
-            className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all cursor-pointer ${
               timeframe === '1y'
-                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
-                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs font-bold'
+                : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
             }`}
           >
             {t('timeframe1y')}
@@ -147,22 +147,22 @@ export const ActivityChart: React.FC = () => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center space-x-5 text-xs mb-4">
+      <div className="flex items-center space-x-5 text-sm mb-4">
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 rounded-full bg-calora-success" />
-          <span className="text-gray-600 dark:text-calora-dark-muted font-medium">
+          <span className="text-stone-700 dark:text-stone-300 font-medium">
             {t('approvedFoods')}
           </span>
         </div>
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-          <span className="text-gray-600 dark:text-calora-dark-muted font-medium">
+          <span className="text-stone-700 dark:text-stone-300 font-medium">
             {t('pendingReview')}
           </span>
         </div>
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 rounded-full bg-calora-danger" />
-          <span className="text-gray-600 dark:text-calora-dark-muted font-medium">
+          <span className="text-stone-700 dark:text-stone-300 font-medium">
             {t('rejectedStatus')}
           </span>
         </div>
@@ -186,18 +186,18 @@ export const ActivityChart: React.FC = () => {
             <XAxis
               dataKey="name"
               stroke="#9CA3AF"
-              fontSize={11}
+              fontSize={12}
               tickLine={false}
               axisLine={false}
             />
-            <YAxis stroke="#9CA3AF" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+            <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: '#181E19',
                 borderColor: '#303830',
                 borderRadius: '12px',
                 color: '#F3F5EF',
-                fontSize: '12px',
+                fontSize: '13px',
               }}
               itemStyle={{ color: '#F3F5EF' }}
             />

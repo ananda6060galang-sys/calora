@@ -355,7 +355,7 @@ class _PersonalInformationScreenState
         ),
       ),
       body: ListView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 48),
         children: [
           // ── SECTION 1: PROFILE & IDENTITY HERO CARD ─────────────
@@ -1137,7 +1137,7 @@ class _EditPersonalDetailsSheetState
           // Form
           Expanded(
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              physics: const ClampingScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
                 20,
                 16,

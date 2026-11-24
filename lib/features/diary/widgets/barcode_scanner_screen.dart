@@ -1,25 +1,31 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/services/barcode_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/meal_time_resolver.dart';
+import '../../../core/widgets/calora_time_picker_sheet.dart';
 import '../../../models/food.dart';
+import '../../../models/scan_history_item.dart';
 import '../food_diary_screen.dart';
 import '../food_request_screen.dart';
 import '../providers/diary_provider.dart';
+import '../providers/scan_history_provider.dart';
+import 'scan_history_screen.dart';
 
 /// Full-screen Barcode Food Scanner for Calora.
-/// Supports automated detection for EAN-13, EAN-8, UPC-A.
-/// Follows 4-tier product lookup:
-/// 1. Calora Foods database
-/// 2. Open Food Facts
-/// 3. USDA FoodData Central
-/// 4. Food Request fallback (prefilled barcode)
+/// Follows Figma specifications:
+/// - Screen 1: Camera scanning with clean top bar and bottom control capsule
+/// - Screen 2: Instant scan result popup with "Review Food" and "Add to Diary"
+/// - Screen 3: Smooth expanded review sheet with meal pills, flame calories card,
+///   macro composition, portion multipliers, and date/time selector.
 class BarcodeScannerScreen extends ConsumerStatefulWidget {
   const BarcodeScannerScreen({
     super.key,
@@ -36,7 +42,7 @@ class BarcodeScannerScreen extends ConsumerStatefulWidget {
 }
 
 class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin {
   late final MobileScannerController _scannerController;
 
   // Scanning & lookup lifecycle state
@@ -46,12 +52,18 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
   String? _errorMessage;
   String? _lastScannedBarcode;
   bool _isTorchOn = false;
+  Timer? _cooldownTimer;
+
+  // AR Live Barcode Tracking Reticle state
+  Rect? _trackedBarcodeRect;
+  bool _isLockedOn = false;
 
   // Product found & review food state
   Food? _scannedFood;
   bool _showProductFound = false;
   bool _isReviewExpanded = false;
   late String _selectedMeal;
+  late DateTime _selectedDate;
   double _servings = 1.0;
   bool _isGramMode = false;
   late final TextEditingController _gramController;
@@ -63,22 +75,22 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
 
+    _selectedDate = widget.date ?? DateTime.now();
     _selectedMeal = widget.meal != null && widget.meal!.trim().isNotEmpty
         ? widget.meal!
-        : getDefaultMealType(DateTime.now());
+        : MealTimeResolver.resolveCurrentMeal(time: _selectedDate);
 
     _gramController = TextEditingController(text: '100');
 
+    // Passing empty formats list allows ML Kit to detect ALL barcode formats:
+    // EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, Code 93, Codabar, ITF, QR Code, Data Matrix.
     _scannerController = MobileScannerController(
-      formats: const [
-        BarcodeFormat.ean13,
-        BarcodeFormat.ean8,
-        BarcodeFormat.upcA,
-      ],
+      formats: const <BarcodeFormat>[],
       detectionSpeed: DetectionSpeed.normal,
+      detectionTimeoutMs: 250,
       torchEnabled: false,
+      autoZoom: true,
     );
 
     _beamAnimationController = AnimationController(
@@ -93,21 +105,8 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      _scannerController.stop();
-    } else if (state == AppLifecycleState.resumed &&
-        !_showProductFound &&
-        !_isNotFound &&
-        !_isSearching) {
-      _scannerController.start();
-    }
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    _cooldownTimer?.cancel();
     _scannerController.dispose();
     _beamAnimationController.dispose();
     _gramController.dispose();
@@ -121,15 +120,137 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
       return;
     }
 
+    final screenSize = MediaQuery.sizeOf(context);
+
     for (final barcode in capture.barcodes) {
-      final rawValue = barcode.rawValue;
+      // Check rawValue first, falling back to displayValue if rawValue is null or empty
+      final rawValue = (barcode.rawValue?.trim().isNotEmpty == true)
+          ? barcode.rawValue
+          : barcode.displayValue;
       final normalized = BarcodeUtils.normalize(rawValue);
 
-      if (normalized != null) {
+      if (normalized != null && normalized.isNotEmpty) {
         _isCooldown = true;
-        _executeBarcodeLookup(normalized);
+
+        // Calculate AR live mapped reticle position on screen
+        final mappedRect = _calculateMappedScreenRect(
+          barcode,
+          capture.size,
+          screenSize,
+        );
+
+        if (mounted) {
+          setState(() {
+            _trackedBarcodeRect = mappedRect;
+            _isLockedOn = true;
+          });
+        }
+
+        HapticFeedback.lightImpact();
+
+        // Safety timer: guarantees cooldown resets within 2000ms if lookup is interrupted or aborted
+        _cooldownTimer?.cancel();
+        _cooldownTimer = Timer(const Duration(milliseconds: 2000), () {
+          if (mounted && !_showProductFound && !_isNotFound && !_isSearching) {
+            setState(() {
+              _isCooldown = false;
+              _isLockedOn = false;
+              _trackedBarcodeRect = null;
+            });
+          }
+        });
+
+        // 180ms smooth spring glide & visual lock-on dwell before showing result
+        Future.delayed(const Duration(milliseconds: 180), () {
+          if (mounted && !_showProductFound && !_isNotFound) {
+            _executeBarcodeLookup(normalized);
+          }
+        });
         break;
       }
+    }
+  }
+
+  Rect? _calculateMappedScreenRect(
+    Barcode barcode,
+    Size captureSize,
+    Size screenSize,
+  ) {
+    try {
+      final corners = barcode.corners;
+      if (corners.isEmpty) {
+        return null;
+      }
+
+      final inputSize = (barcode.size.width > 0 && barcode.size.height > 0)
+          ? barcode.size
+          : captureSize;
+
+      List<Offset> mappedCorners = corners;
+
+      if (inputSize.width > 0 && inputSize.height > 0) {
+        final double imgW;
+        final double imgH;
+        // On portrait phones, the camera sensor buffer is typically landscape (width > height)
+        if (screenSize.height > screenSize.width &&
+            inputSize.width > inputSize.height) {
+          imgW = inputSize.height;
+          imgH = inputSize.width;
+        } else {
+          imgW = inputSize.width;
+          imgH = inputSize.height;
+        }
+
+        final scaleX = screenSize.width / imgW;
+        final scaleY = screenSize.height / imgH;
+        final scale = math.max(scaleX, scaleY);
+
+        final scaledW = imgW * scale;
+        final scaledH = imgH * scale;
+        final dx = (screenSize.width - scaledW) / 2;
+        final dy = (screenSize.height - scaledH) / 2;
+
+        mappedCorners = [
+          for (final c in corners)
+            Offset(c.dx * scale + dx, c.dy * scale + dy),
+        ];
+      }
+
+      double minX = double.infinity;
+      double maxX = double.negativeInfinity;
+      double minY = double.infinity;
+      double maxY = double.negativeInfinity;
+
+      for (final c in mappedCorners) {
+        if (c.dx < minX) minX = c.dx;
+        if (c.dx > maxX) maxX = c.dx;
+        if (c.dy < minY) minY = c.dy;
+        if (c.dy > maxY) maxY = c.dy;
+      }
+
+      if (minX.isInfinite || minY.isInfinite || maxX.isInfinite || maxY.isInfinite) {
+        return null;
+      }
+
+      const padding = 18.0;
+      final w = math.max((maxX - minX) + (padding * 2), 160.0);
+      final h = math.max((maxY - minY) + (padding * 2), 100.0);
+      final centerX = (minX + maxX) / 2;
+      final centerY = (minY + maxY) / 2;
+
+      final clampedCenter = Offset(
+        centerX.clamp(w / 2 + 16, screenSize.width - w / 2 - 16),
+        centerY.clamp(h / 2 + 80, screenSize.height - h / 2 - 150),
+      );
+
+      return Rect.fromCenter(
+        center: clampedCenter,
+        width: w.clamp(160.0, screenSize.width * 0.88),
+        height: h.clamp(100.0, 240.0),
+      );
+    } catch (e) {
+      debugPrint('Error calculating mapped screen rect: $e');
+      return null;
     }
   }
 
@@ -153,22 +274,42 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
 
       if (result.isFound && result.food != null) {
         HapticFeedback.mediumImpact();
-        _scannerController.stop();
+        try {
+          await _scannerController.stop();
+        } catch (_) {}
 
         final foundFood = result.food!;
         final initialGrams = foundFood.portionGrams ?? 100.0;
         _gramController.text = initialGrams.round().toString();
 
+        // Record to Scan History
+        ref.read(scanHistoryProvider.notifier).addScan(
+              id: foundFood.id,
+              foodName: foundFood.name,
+              calories: foundFood.calories,
+              proteinG: foundFood.proteinG,
+              carbsG: foundFood.carbsG,
+              fatG: foundFood.fatG,
+              scanType: ScanType.barcode,
+              portionGrams: foundFood.portionGrams,
+              servingLabel: foundFood.servingLabel,
+              barcode: barcode,
+              suggestedMeal: _selectedMeal,
+            );
+
         setState(() {
           _isSearching = false;
           _scannedFood = foundFood;
           _showProductFound = true;
+          _isReviewExpanded = false; // Starts in compact popup state (pop up.png)
           _servings = 1.0;
           _isGramMode = false;
         });
       } else if (result.isNotFound) {
         HapticFeedback.vibrate();
-        _scannerController.stop();
+        try {
+          await _scannerController.stop();
+        } catch (_) {}
         setState(() {
           _isSearching = false;
           _isNotFound = true;
@@ -178,7 +319,11 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
         setState(() {
           _isSearching = false;
           _errorMessage = result.errorMessage ?? 'diary.networkErrorRetry'.tr();
+          _isCooldown = false;
+          _isLockedOn = false;
+          _trackedBarcodeRect = null;
         });
+        _beamAnimationController.repeat(reverse: true);
       }
     } catch (e) {
       if (!mounted) return;
@@ -186,12 +331,17 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
       setState(() {
         _isSearching = false;
         _errorMessage = 'diary.networkErrorRetry'.tr();
+        _isCooldown = false;
+        _isLockedOn = false;
+        _trackedBarcodeRect = null;
       });
+      _beamAnimationController.repeat(reverse: true);
     }
   }
 
   void _resetScan() {
     HapticFeedback.selectionClick();
+    _cooldownTimer?.cancel();
     setState(() {
       _isNotFound = false;
       _isSearching = false;
@@ -199,14 +349,15 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
       _isReviewExpanded = false;
       _scannedFood = null;
       _errorMessage = null;
+      _trackedBarcodeRect = null;
+      _isLockedOn = false;
+      _isCooldown = false;
     });
 
     _beamAnimationController.repeat(reverse: true);
-    _scannerController.start();
-
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) _isCooldown = false;
-    });
+    try {
+      _scannerController.start();
+    } catch (_) {}
   }
 
   Future<void> _toggleTorch() async {
@@ -222,6 +373,43 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     await _scannerController.switchCamera();
   }
 
+  Future<void> _pickImageFromGallery() async {
+    HapticFeedback.selectionClick();
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+
+    try {
+      final capture = await _scannerController.analyzeImage(image.path);
+      if (capture != null && capture.barcodes.isNotEmpty) {
+        _onDetect(capture);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Tidak ditemukan barcode pada gambar tersebut.',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+              backgroundColor: const Color(0xFF182218),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menganalisis gambar: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
   // ── ADD TO FOOD DIARY ─────────────────────────────────────────────────────
 
   void _addToFoodDiary() {
@@ -229,7 +417,6 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
 
     HapticFeedback.mediumImpact();
     final food = _scannedFood!;
-
     final calculatedCalories = (food.calories * _servings).round();
 
     double? totalGrams;
@@ -245,13 +432,11 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
       portionGrams: food.portionGrams,
     );
 
-    final targetDate = widget.date ?? DateTime.now();
-
     ref.read(diaryProvider.notifier).add(
           entryFood,
           _servings,
           _selectedMeal,
-          targetDate,
+          _selectedDate,
           portionGrams: totalGrams,
         );
 
@@ -265,7 +450,99 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
       foodName: entryFood.name,
       meal: _selectedMeal,
       entryCalories: calculatedCalories,
-      date: targetDate,
+      date: _selectedDate,
+    );
+  }
+
+  Future<void> _pickDateTime() async {
+    final result = await CaloraTimePickerSheet.show(
+      context,
+      initialDateTime: _selectedDate,
+      title: 'Atur Waktu Catat',
+      includeDate: true,
+      activeMeal: _selectedMeal,
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _selectedDate = result.dateTime;
+        _selectedMeal = result.suggestedMeal;
+      });
+    }
+  }
+
+  void _showMoreOptionsMenu() {
+    HapticFeedback.selectionClick();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkBorder : const Color(0xFFD1D5DB),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              ListTile(
+                leading: const Icon(Icons.history_rounded, color: AppColors.accent),
+                title: Text(
+                  'Riwayat Scan Makanan',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Lihat daftar makanan yang pernah discan',
+                  style: GoogleFonts.inter(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  ScanHistoryScreen.show(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.dialpad_rounded, color: AppColors.accent),
+                title: Text(
+                  'Input Barcode Manual',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Ketik nomor barcode secara manual',
+                  style: GoogleFonts.inter(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _showManualBarcodeSheet(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.refresh_rounded, color: AppColors.accent),
+                title: Text(
+                  'Reset Scanner',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _resetScan();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -289,8 +566,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
             return Container(
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.35),
@@ -315,9 +591,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkBorder
-                            : const Color(0xFFE5E7EB),
+                        color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -344,18 +618,16 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                           children: [
                             Text(
                               'diary.manualBarcode'.tr(),
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.inter(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF111827),
+                                color: isDark ? Colors.white : const Color(0xFF111827),
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'diary.enterBarcodeNumber'.tr(),
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: isDark
                                     ? AppColors.darkTextSecondary
@@ -365,24 +637,10 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                           ],
                         ),
                       ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => Navigator.pop(sheetCtx),
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.close_rounded,
-                              size: 20,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : const Color(0xFF6B7280),
-                            ),
-                          ),
-                        ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetCtx),
+                        icon: const Icon(Icons.close_rounded),
+                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
                       ),
                     ],
                   ),
@@ -391,7 +649,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                     controller: textController,
                     autofocus: true,
                     keyboardType: TextInputType.number,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.2,
@@ -399,13 +657,6 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                     ),
                     decoration: InputDecoration(
                       hintText: 'diary.barcodeHint'.tr(),
-                      hintStyle: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        letterSpacing: 0,
-                        color: isDark
-                            ? AppColors.darkTextSecondary.withValues(alpha: 0.6)
-                            : const Color(0xFF9CA3AF),
-                      ),
                       prefixIcon: const Icon(Icons.qr_code_rounded, size: 20),
                       suffixIcon: textController.text.isNotEmpty
                           ? IconButton(
@@ -417,95 +668,18 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                             )
                           : null,
                       filled: true,
-                      fillColor: isDark
-                          ? AppColors.darkSurfaceAlt
-                          : const Color(0xFFF9FAFB),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
+                      fillColor: isDark ? AppColors.darkSurfaceAlt : const Color(0xFFF9FAFB),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE5E7EB),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE5E7EB),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: AppColors.accent,
-                          width: 2,
+                          color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
                         ),
                       ),
                     ),
                     onChanged: (_) => setSheetState(() {}),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'diary.quickPresets'.tr(),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : const Color(0xFF6B7280),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildPresetChip(
-                        label: 'Nutella (OFF)',
-                        code: '3017620422003',
-                        isDark: isDark,
-                        onTap: () {
-                          textController.text = '3017620422003';
-                          setSheetState(() {});
-                        },
-                      ),
-                      _buildPresetChip(
-                        label: 'Coca Cola (OFF)',
-                        code: '5449000000996',
-                        isDark: isDark,
-                        onTap: () {
-                          textController.text = '5449000000996';
-                          setSheetState(() {});
-                        },
-                      ),
-                      _buildPresetChip(
-                        label: 'Indomie (OFF)',
-                        code: '089686010955',
-                        isDark: isDark,
-                        onTap: () {
-                          textController.text = '089686010955';
-                          setSheetState(() {});
-                        },
-                      ),
-                      _buildPresetChip(
-                        label: 'Greek Yogurt (Calora)',
-                        code: '899276100234',
-                        isDark: isDark,
-                        onTap: () {
-                          textController.text = '899276100234';
-                          setSheetState(() {});
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -519,13 +693,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
-                        disabledBackgroundColor: isDark
-                            ? Colors.white12
-                            : const Color(0xFFE5E7EB),
                         foregroundColor: const Color(0xFF0F1410),
-                        disabledForegroundColor: isDark
-                            ? Colors.white38
-                            : const Color(0xFF9CA3AF),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -533,7 +701,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                       ),
                       child: Text(
                         'diary.searchBarcodeAction'.tr(),
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -549,54 +717,6 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     );
   }
 
-  Widget _buildPresetChip({
-    required String label,
-    required String code,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceAlt : const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.barcode_reader,
-                size: 14,
-                color: Color(0xFF4D7800),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // ── BUILD MAIN VIEWPORT ───────────────────────────────────────────────────
 
   @override
@@ -604,8 +724,14 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     final size = MediaQuery.sizeOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final frameWidth = math.min(size.width * 0.80, 310.0);
-    final frameHeight = (frameWidth / 1.65).clamp(160.0, 195.0);
+    final defaultFrameWidth = math.min(size.width * 0.82, 300.0);
+    final defaultFrameHeight = 190.0;
+    final defaultHoleRect = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height * 0.42),
+      width: defaultFrameWidth,
+      height: defaultFrameHeight,
+    );
+    final activeHoleRect = _trackedBarcodeRect ?? defaultHoleRect;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -617,185 +743,167 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
           MobileScanner(
             controller: _scannerController,
             onDetect: _onDetect,
+            tapToFocus: true,
             errorBuilder: (context, error) {
               return _buildPermissionErrorState(context, error.errorCode.name);
             },
           ),
 
-          // ── LAYER 2: Dimmed Overlay Mask ──
+          // ── LAYER 2 & 3: Dynamic AR Tracking Reticle & Overlay Mask ──
           if (!_isNotFound && !_showProductFound)
-            CustomPaint(
-              size: Size(size.width, size.height),
-              painter: _BarcodeOverlayPainter(
-                frameWidth: frameWidth,
-                frameHeight: frameHeight,
+            TweenAnimationBuilder<Rect?>(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              tween: RectTween(
+                begin: defaultHoleRect,
+                end: activeHoleRect,
               ),
-            ),
+              builder: (context, rect, child) {
+                final currentRect = rect ?? defaultHoleRect;
 
-          // ── LAYER 3: Barcode Guide Frame & Beam ──
-          if (!_isNotFound && !_showProductFound)
-            Center(
-              child: SizedBox(
-                width: frameWidth,
-                height: frameHeight,
-                child: Stack(
+                return Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.20),
-                          width: 1.2,
-                        ),
-                      ),
-                    ),
+                    // Dynamic Dimmed Overlay with Cutout
                     CustomPaint(
-                      size: Size(frameWidth, frameHeight),
-                      painter: _CornerBracketPainter(
-                        color: AppColors.accent,
-                        strokeWidth: 3.5,
-                        cornerLength: 24.0,
-                        radius: 16.0,
+                      size: Size(size.width, size.height),
+                      painter: _BarcodeOverlayPainter(
+                        holeRect: currentRect,
                       ),
                     ),
-                    if (!_isSearching)
-                      AnimatedBuilder(
-                        animation: _beamAnimation,
-                        builder: (context, child) {
-                          final topOffset =
-                              _beamAnimation.value * (frameHeight - 4);
-                          return Positioned(
-                            top: topOffset,
-                            left: 8,
-                            right: 8,
-                            child: Container(
-                              height: 2.5,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(2),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.accent.withValues(alpha: 0.0),
-                                    AppColors.accent.withValues(alpha: 0.95),
-                                    AppColors.accent.withValues(alpha: 0.0),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        AppColors.accent.withValues(alpha: 0.5),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
+
+                    // Tracking Reticle Frame & Laser Beam
+                    Positioned(
+                      left: currentRect.left,
+                      top: currentRect.top,
+                      width: currentRect.width,
+                      height: currentRect.height,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Neon Corner Brackets
+                          CustomPaint(
+                            size: Size(currentRect.width, currentRect.height),
+                            painter: _CornerBracketPainter(
+                              color: _isLockedOn
+                                  ? const Color(0xFFC7FF47)
+                                  : AppColors.accent,
+                              strokeWidth: _isLockedOn ? 5.2 : 4.5,
+                              cornerLength: math.min(
+                                currentRect.width * 0.22,
+                                32.0,
+                              ),
+                              radius: 14.0,
+                            ),
+                          ),
+
+                          // Animated Scan Laser Beam
+                          if (!_isSearching)
+                            AnimatedBuilder(
+                              animation: _beamAnimation,
+                              builder: (context, child) {
+                                final topOffset = _beamAnimation.value *
+                                    (currentRect.height - 6);
+                                return Positioned(
+                                  top: topOffset,
+                                  left: 10,
+                                  right: 10,
+                                  child: Container(
+                                    height: 3.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(2),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppColors.accent
+                                              .withValues(alpha: 0.0),
+                                          AppColors.accent
+                                              .withValues(alpha: 0.95),
+                                          AppColors.accent
+                                              .withValues(alpha: 0.0),
+                                        ],
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.accent
+                                              .withValues(alpha: 0.6),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
+                                );
+                              },
+                            ),
+
+                          // Lock-on Tracking Tag
+                          if (_isLockedOn)
+                            Positioned(
+                              bottom: -28,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0F1410),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: AppColors.accent,
+                                      width: 0.8,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.accent
+                                            .withValues(alpha: 0.35),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 13,
+                                        color: AppColors.accent,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        'BARCODE TERDETEKSI',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.accent,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                          );
-                        },
+                        ],
                       ),
+                    ),
                   ],
-                ),
-              ),
+                );
+              },
             ),
 
-          // ── LAYER 4: Helper Instructions Below Frame ──
-          if (!_isNotFound && !_showProductFound && !_isSearching)
-            Positioned(
-              left: 20,
-              right: 20,
-              top: (size.height / 2) + (frameHeight / 2) + 20,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.60),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.qr_code_scanner_rounded,
-                          color: AppColors.accent,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'diary.alignBarcode'.tr(),
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _showManualBarcodeSheet(context),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.22),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.dialpad_rounded,
-                              color: AppColors.accent,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'diary.manualBarcode'.tr(),
-                              style: GoogleFonts.plusJakartaSans(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // ── LAYER 5: Finding Food Loading Overlay ──
+          // ── LAYER 4: Finding Food Loading Overlay ──
           if (_isSearching)
             Center(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.75),
+                  color: Colors.black.withValues(alpha: 0.80),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.35),
+                    color: AppColors.accent.withValues(alpha: 0.40),
                   ),
                 ),
                 child: Row(
@@ -806,14 +914,13 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.accent),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
                       ),
                     ),
                     const SizedBox(width: 14),
                     Text(
                       'diary.findingFood'.tr(),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -824,7 +931,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
               ),
             ),
 
-          // ── LAYER 6: Error Banner Overlay ──
+          // ── LAYER 5: Error Banner Overlay ──
           if (_errorMessage != null && !_isSearching)
             Positioned(
               left: 24,
@@ -850,17 +957,14 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: GoogleFonts.plusJakartaSans(
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
+                        style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
                       ),
                     ),
                     TextButton(
                       onPressed: _resetScan,
                       child: Text(
                         'diary.retry'.tr(),
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.inter(
                           color: AppColors.accent,
                           fontWeight: FontWeight.w700,
                         ),
@@ -871,58 +975,129 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
               ),
             ),
 
-          // ── LAYER 7: Top App Bar ──
+          // ── LAYER 6: Top App Bar (Figma scan.png) ──
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
-            left: 16,
-            right: 16,
+            left: 20,
+            right: 20,
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildCircleButton(
-                  icon: Icons.arrow_back_rounded,
-                  tooltip: 'Back',
+                  icon: Icons.close_rounded,
+                  tooltip: 'Tutup',
                   onTap: () => Navigator.pop(context),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'diary.scanBarcode'.tr(),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: -0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                Text(
+                  'Barcode Food Scanner',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(width: 8),
                 _buildCircleButton(
-                  icon: Icons.dialpad_rounded,
-                  tooltip: 'diary.manualBarcode'.tr(),
-                  onTap: () => _showManualBarcodeSheet(context),
-                ),
-                const SizedBox(width: 8),
-                _buildCircleButton(
-                  icon: _isTorchOn
-                      ? Icons.flash_on_rounded
-                      : Icons.flash_off_rounded,
-                  tooltip: 'Flash',
-                  color: _isTorchOn ? AppColors.accent : Colors.white,
-                  onTap: _toggleTorch,
-                ),
-                const SizedBox(width: 8),
-                _buildCircleButton(
-                  icon: Icons.cameraswitch_rounded,
-                  tooltip: 'Flip Camera',
-                  onTap: _flipCamera,
+                  icon: Icons.more_horiz_rounded,
+                  tooltip: 'Pilihan Lainnya',
+                  onTap: _showMoreOptionsMenu,
                 ),
               ],
             ),
           ),
 
-          // ── LAYER 8: Product Found Card Sheet ──
+          // ── LAYER 7: Bottom Floating Controls Bar (Figma scan.png) ──
+          if (!_isNotFound && !_showProductFound && !_isSearching)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 26,
+              left: 28,
+              right: 28,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Flip Camera Circle Button
+                  _buildCircleButton(
+                    icon: Icons.cameraswitch_rounded,
+                    tooltip: 'Putar Kamera',
+                    onTap: _flipCamera,
+                  ),
+
+                  // Center Floating Capsule (Camera Active Pill + Gallery Icon)
+                  Container(
+                    height: 52,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF121612).withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          blurRadius: 18,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Active Camera Pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.photo_camera_rounded,
+                                size: 18,
+                                color: Color(0xFF0F1410),
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                'Camera',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F1410),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Gallery Button
+                        GestureDetector(
+                          onTap: _pickImageFromGallery,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            color: Colors.transparent,
+                            child: Icon(
+                              Icons.add_photo_alternate_outlined,
+                              size: 21,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Torch Toggle Circle Button
+                  _buildCircleButton(
+                    icon: _isTorchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                    tooltip: 'Flash',
+                    color: _isTorchOn ? AppColors.accent : Colors.white,
+                    onTap: _toggleTorch,
+                  ),
+                ],
+              ),
+            ),
+
+          // ── LAYER 8: Product Found Bottom Sheet (Figma pop up.png & detail.png) ──
           if (_showProductFound && _scannedFood != null)
             _buildProductFoundBottomSheet(context, isDark),
 
@@ -933,7 +1108,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     );
   }
 
-  // ── PRODUCT FOUND & REVIEW FOOD SHEET (SECTIONS 7, 8, 9, 10) ──────────────
+  // ── PRODUCT FOUND SHEET (FIGMA pop up.png & detail.png) ────────────────────
 
   Widget _buildProductFoundBottomSheet(BuildContext context, bool isDark) {
     final food = _scannedFood!;
@@ -943,11 +1118,16 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     final totalCarbs = food.carbsG * _servings;
     final totalFat = food.fatG * _servings;
 
-    final sourceDisplay = food.source == 'calora'
-        ? 'Calora Food Database'
-        : (food.source == 'openfoodfacts'
-            ? 'Open Food Facts'
-            : (food.source == 'usda' ? 'USDA FoodData Central' : 'Calora'));
+    double? totalGrams;
+    if (food.portionGrams != null) {
+      totalGrams = food.portionGrams! * _servings;
+    }
+
+    final surfaceColor = isDark ? AppColors.darkSurface : Colors.white;
+    final cardBg = isDark ? AppColors.darkSurfaceAlt : const Color(0xFFF3F6F1);
+    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE5EAE1);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF111827);
+    final textSecondary = isDark ? Colors.white70 : const Color(0xFF6B7280);
 
     return Positioned(
       left: 0,
@@ -958,695 +1138,802 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
           maxHeight: MediaQuery.sizeOf(context).height * 0.88,
         ),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: surfaceColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 32,
+              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.22),
+              blurRadius: 30,
               offset: const Offset(0, -8),
             ),
           ],
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            12,
-            24,
-            MediaQuery.of(context).padding.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  decoration: BoxDecoration(
-                    color:
-                        isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
-              // Product Info Header
-              Row(
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              12,
+              20,
+              MediaQuery.of(context).padding.bottom + 16,
+            ),
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 68,
-                    height: 68,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurfaceAlt
-                          : const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.darkBorder
-                            : const Color(0xFFE5E7EB),
+                  // 1. Center Drag Handle
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4.5,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkBorder : const Color(0xFFD1D5DB),
+                        borderRadius: BorderRadius.circular(2.5),
                       ),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: food.imageUrl != null && food.imageUrl!.isNotEmpty
-                        ? Image.network(
-                            food.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(
-                              child: Icon(
-                                Icons.restaurant_rounded,
-                                color: AppColors.accent,
-                                size: 28,
-                              ),
-                            ),
-                          )
-                        : const Center(
-                            child: Icon(
-                              Icons.restaurant_rounded,
-                              color: AppColors.accent,
-                              size: 28,
-                            ),
-                          ),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          food.name,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                isDark ? Colors.white : const Color(0xFF111827),
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+
+                  // 2. Title Header with optional collapse icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Scan Barcode',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: textPrimary,
+                          letterSpacing: -0.3,
                         ),
-                        if (food.brand != null && food.brand!.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(
-                            food.brand!,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : const Color(0xFF4B5563),
+                      ),
+                      if (_isReviewExpanded)
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _isReviewExpanded = false);
+                          },
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF222C22) : const Color(0xFFECEFEA),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.north_east_rounded,
+                              size: 17,
+                              color: textPrimary,
                             ),
                           ),
-                        ],
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.accent.withValues(alpha: 0.14),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                sourceDisplay,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF4D7800),
-                                ),
-                              ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: _resetScan,
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF222C22) : const Color(0xFFECEFEA),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                food.servingLabel,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : const Color(0xFF6B7280),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 17,
+                              color: textPrimary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // 3. Food Card (Matching Figma in both popup and detail)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: borderColor, width: 1.0),
+                    ),
+                    child: Row(
+                      children: [
+                        // White Squircle Thumbnail
+                        Container(
+                          width: 64,
+                          height: 64,
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: food.imageUrl != null && food.imageUrl!.isNotEmpty
+                              ? Image.network(
+                                  food.imageUrl!,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) => const Icon(
+                                    Icons.restaurant_rounded,
+                                    color: AppColors.accent,
+                                    size: 28,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.restaurant_rounded,
+                                  color: AppColors.accent,
+                                  size: 28,
                                 ),
+                        ),
+                        const SizedBox(width: 14),
+
+                        // Food Name & Subtitle
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                food.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: textPrimary,
+                                  letterSpacing: -0.2,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(
+                                food.servingLabel.isNotEmpty
+                                    ? '${food.servingLabel} · ${food.calories} kcal'
+                                    : '1 Porsi (${(food.portionGrams ?? 100).round()}g) · ${food.calories} kcal',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
 
-              const SizedBox(height: 18),
-
-              // Calories Highlight Box
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceAlt
-                      : const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color:
-                        isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // ── POPUP STATE (pop up.png): 2 Action Buttons ──
+                  if (!_isReviewExpanded) ...[
+                    const SizedBox(height: 20),
+                    Row(
                       children: [
-                        Text(
-                          'KALORI',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : const Color(0xFF6B7280),
+                        // Review Food Button
+                        Expanded(
+                          child: SizedBox(
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _isReviewExpanded = true);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? const Color(0xFF232D23)
+                                    : const Color(0xFFF0F3ED),
+                                foregroundColor: textPrimary,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                              ),
+                              child: Text(
+                                'Review Food',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: textPrimary,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
+                        const SizedBox(width: 12),
+
+                        // Add to Diary Button
+                        Expanded(
+                          child: SizedBox(
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _addToFoodDiary,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accent,
+                                foregroundColor: const Color(0xFF0F1410),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                              ),
+                              child: Text(
+                                'Add to Diary',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F1410),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ]
+
+                  // ── DETAIL STATE (detail.png): Full Review & Customization ──
+                  else ...[
+                    const SizedBox(height: 14),
+
+                    // Meal Type Pills (Breakfast, Lunch, Dinner, Snack)
+                    Row(
+                      children: ['Breakfast', 'Lunch', 'Dinner', 'Snack'].map((m) {
+                        final isSelected = m.toLowerCase() == _selectedMeal.toLowerCase();
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _selectedMeal = m);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(vertical: 9),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.accent
+                                      : (isDark
+                                          ? AppColors.darkSurfaceAlt
+                                          : const Color(0xFFF3F5F1)),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppColors.accent
+                                        : (isDark ? AppColors.darkBorder : const Color(0xFFE5E9E2)),
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    m,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12.5,
+                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                      color: isSelected
+                                          ? const Color(0xFF0F1410)
+                                          : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Quick Date & Time selector pill
+                    GestureDetector(
+                      onTap: _pickDateTime,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Row(
                           children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 14,
+                              color: isDark ? AppColors.accent : const Color(0xFF4D8500),
+                            ),
+                            const SizedBox(width: 8),
                             Text(
-                              '$totalCalories',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF111827),
+                              'Waktu Catat: ',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: textSecondary,
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                DateUtils.isSameDay(_selectedDate, DateTime.now())
+                                    ? 'Hari Ini, ${DateFormat('HH:mm').format(_selectedDate)}'
+                                    : DateFormat('dd MMM, HH:mm').format(_selectedDate),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: textPrimary,
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Ubah Jam',
+                              style: GoogleFonts.inter(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? AppColors.accent : const Color(0xFF427A00),
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              'kcal',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : const Color(0xFF6B7280),
-                              ),
+                            Icon(
+                              Icons.edit_calendar_rounded,
+                              size: 13,
+                              color: isDark ? AppColors.accent : const Color(0xFF427A00),
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Total Calories Card with Flame (Figma detail.png)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total $totalCalories kcal',
+                            style: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: textPrimary,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkSurface : Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.local_fire_department_rounded,
+                              size: 21,
+                              color: Color(0xFFFF9500),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 2-Column: Macro Composition & Adjust Portion (Figma detail.png)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left Column: Macro Composition
+                        Expanded(
+                          flex: 6,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Macro Composition',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF8E95A2),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              _buildFigmaMacroItem(
+                                label: 'Protein',
+                                dotColor: const Color(0xFFFF4757), // Red
+                                grams: totalProtein,
+                                progressColor: const Color(0xFFFF4757),
+                                textPrimary: textPrimary,
+                              ),
+                              const SizedBox(height: 6),
+                              _buildFigmaMacroItem(
+                                label: 'Carbs',
+                                dotColor: const Color(0xFFFFA502), // Yellow
+                                grams: totalCarbs,
+                                progressColor: const Color(0xFFFFA502),
+                                textPrimary: textPrimary,
+                              ),
+                              const SizedBox(height: 6),
+                              _buildFigmaMacroItem(
+                                label: 'Fat',
+                                dotColor: const Color(0xFF8C7AE6), // Purple
+                                grams: totalFat,
+                                progressColor: const Color(0xFF8C7AE6),
+                                textPrimary: textPrimary,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+
+                        // Right Column: Adjust Portion (Segmented Toggle)
+                        Expanded(
+                          flex: 5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Adjust Portion',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF8E95A2),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF222B22) : const Color(0xFFEAF0E7),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          setState(() => _isGramMode = false);
+                                        },
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 180),
+                                          padding: const EdgeInsets.symmetric(vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: !_isGramMode ? AppColors.accent : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            'Serving',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11.5,
+                                              fontWeight: !_isGramMode ? FontWeight.w800 : FontWeight.w600,
+                                              color: !_isGramMode
+                                                  ? const Color(0xFF0F1410)
+                                                  : (isDark ? Colors.white70 : const Color(0xFF6B7280)),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          final baseG = food.portionGrams ?? 100.0;
+                                          _gramController.text = (baseG * _servings).round().toString();
+                                          setState(() => _isGramMode = true);
+                                        },
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 180),
+                                          padding: const EdgeInsets.symmetric(vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: _isGramMode ? AppColors.accent : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            'Gram (g)',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11.5,
+                                              fontWeight: _isGramMode ? FontWeight.w800 : FontWeight.w600,
+                                              color: _isGramMode
+                                                  ? const Color(0xFF0F1410)
+                                                  : (isDark ? Colors.white70 : const Color(0xFF6B7280)),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkElevated : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE5E7EB),
-                        ),
-                      ),
-                      child: Text(
-                        _isGramMode
-                            ? '${(_servings * (food.portionGrams ?? 100)).round()} g'
-                            : '${_servings == _servings.roundToDouble() ? _servings.toInt() : _servings} porsi',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF111827),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                    const SizedBox(height: 16),
 
-              const SizedBox(height: 16),
-
-              // ── SECTION 9: MACRO BREAKDOWN (VISUAL COMPARISON) ──────────
-              Text(
-                'diary.macroBreakdown'.tr(),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF111827),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildMacroBreakdownBars(
-                protein: totalProtein,
-                carbs: totalCarbs,
-                fat: totalFat,
-                isDark: isDark,
-              ),
-
-              const SizedBox(height: 16),
-
-              // ── SECTION 8: REVIEW FOOD (PORTION & MEAL SELECTION) ───────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Pilihan Waktu Makan',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : const Color(0xFF111827),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _isReviewExpanded = !_isReviewExpanded;
-                      });
-                    },
-                    icon: Icon(
-                      _isReviewExpanded
-                          ? Icons.expand_less_rounded
-                          : Icons.tune_rounded,
-                      size: 16,
-                      color: const Color(0xFF4D7800),
-                    ),
-                    label: Text(
-                      _isReviewExpanded ? 'Tutup Atur' : 'diary.reviewFood'.tr(),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF4D7800),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-
-              // Meal selector chips
-              Row(
-                children: ['Breakfast', 'Lunch', 'Dinner', 'Snack'].map((m) {
-                  final isSelected =
-                      m.toLowerCase() == _selectedMeal.toLowerCase();
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: InkWell(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _selectedMeal = m);
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.accent
-                                : (isDark
-                                    ? AppColors.darkSurfaceAlt
-                                    : const Color(0xFFF3F4F6)),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.accent
-                                  : (isDark
-                                      ? AppColors.darkBorder
-                                      : const Color(0xFFE5E7EB)),
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            m,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected
-                                  ? const Color(0xFF0F1410)
-                                  : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : const Color(0xFF4B5563)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              if (_isReviewExpanded) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'diary.adjustPortion'.tr(),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF111827),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceAlt
-                            : const Color(0xFFE5E7EB),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
+                    // Portion Multiplier Pills (¼, ½, 1, 1½, 2, Custom) or Gram Input
+                    if (!_isGramMode) ...[
+                      Row(
                         children: [
-                          _buildUnitToggleTab('Porsi', !_isGramMode, isDark,
-                              () {
-                            setState(() => _isGramMode = false);
-                          }),
-                          _buildUnitToggleTab('Gram', _isGramMode, isDark, () {
-                            final baseGrams = food.portionGrams ?? 100.0;
-                            _gramController.text =
-                                (baseGrams * _servings).round().toString();
-                            setState(() => _isGramMode = true);
-                          }),
+                          _buildMultiplierPill('¼', 0.25, isDark),
+                          const SizedBox(width: 6),
+                          _buildMultiplierPill('½', 0.5, isDark),
+                          const SizedBox(width: 6),
+                          _buildMultiplierPill('1', 1.0, isDark),
+                          const SizedBox(width: 6),
+                          _buildMultiplierPill('1 ½', 1.5, isDark),
+                          const SizedBox(width: 6),
+                          _buildMultiplierPill('2', 2.0, isDark),
+                          const SizedBox(width: 6),
+                          _buildCustomMultiplierPill(isDark),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                if (!_isGramMode) ...[
-                  Row(
-                    children: [0.5, 1.0, 1.5, 2.0].map((val) {
-                      final isSel = _servings == val;
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 3),
-                          child: OutlinedButton(
-                            onPressed: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _servings = val);
-                            },
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: isSel
-                                  ? AppColors.accent.withValues(alpha: 0.18)
-                                  : Colors.transparent,
-                              side: BorderSide(
-                                color: isSel
-                                    ? AppColors.accent
-                                    : (isDark
-                                        ? AppColors.darkBorder
-                                        : const Color(0xFFE5E7EB)),
-                                width: isSel ? 1.5 : 1.0,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
-                            child: Text(
-                              '${val}x',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          '= ${(totalGrams ?? 100).round()} g',
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF8E95A2),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _gramController,
+                              keyboardType: TextInputType.number,
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: isSel
-                                    ? (isDark
-                                        ? AppColors.accent
-                                        : const Color(0xFF355E00))
-                                    : (isDark
-                                        ? Colors.white
-                                        : const Color(0xFF374151)),
+                                color: textPrimary,
                               ),
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.scale_rounded, size: 18),
+                                suffixText: 'gram',
+                                filled: true,
+                                fillColor: isDark ? const Color(0xFF1B221B) : Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: borderColor),
+                                ),
+                              ),
+                              onChanged: (text) {
+                                final g = double.tryParse(text);
+                                if (g != null && g > 0) {
+                                  final baseG = food.portionGrams ?? 100.0;
+                                  setState(() => _servings = g / baseG);
+                                }
+                              },
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ] else ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _gramController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            suffixText: 'g',
-                            filled: true,
-                            fillColor: isDark
-                                ? AppColors.darkSurfaceAlt
-                                : const Color(0xFFF9FAFB),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onChanged: (text) {
-                            final g = double.tryParse(text);
-                            if (g != null && g > 0) {
-                              final baseG = food.portionGrams ?? 100.0;
-                              setState(() {
-                                _servings = g / baseG;
-                              });
-                            }
-                          },
-                        ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
-              ],
+                    const SizedBox(height: 20),
 
-              const SizedBox(height: 22),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _resetScan,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : const Color(0xFFE5E7EB),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        'Scan Lagi',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF111827),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _addToFoodDiary,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: const Color(0xFF0F1410),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_rounded, size: 20),
-                          const SizedBox(width: 6),
-                          Text(
-                            'diary.addToDiary'.tr(),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
+                    // Full-width Add to Diary Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _addToFoodDiary,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: const Color(0xFF0F1410),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
                           ),
-                        ],
+                        ),
+                        child: Text(
+                          'Add to Diary',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F1410),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildUnitToggleTab(
-      String label, bool isSelected, bool isDark, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? AppColors.darkElevated : Colors.white)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? (isDark ? Colors.white : const Color(0xFF111827))
-                : (isDark
-                    ? AppColors.darkTextSecondary
-                    : const Color(0xFF6B7280)),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── MACRO BREAKDOWN BARS (SECTION 9) ──────────────────────────────────────
-
-  Widget _buildMacroBreakdownBars({
-    required double protein,
-    required double carbs,
-    required double fat,
-    required bool isDark,
-  }) {
-    final maxMacro = math.max(protein, math.max(carbs, fat));
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceAlt : const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-        ),
-      ),
-      child: Column(
-        children: [
-          _buildMacroRow(
-            label: 'Protein',
-            grams: protein,
-            color: AppColors.protein,
-            factor: maxMacro > 0 ? (protein / maxMacro).clamp(0.08, 1.0) : 0.08,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 10),
-          _buildMacroRow(
-            label: 'Carbs',
-            grams: carbs,
-            color: AppColors.carbs,
-            factor: maxMacro > 0 ? (carbs / maxMacro).clamp(0.08, 1.0) : 0.08,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 10),
-          _buildMacroRow(
-            label: 'Fat',
-            grams: fat,
-            color: AppColors.fat,
-            factor: maxMacro > 0 ? (fat / maxMacro).clamp(0.08, 1.0) : 0.08,
-            isDark: isDark,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMacroRow({
+  // Helper macro row item for detail.png
+  Widget _buildFigmaMacroItem({
     required String label,
+    required Color dotColor,
     required double grams,
-    required Color color,
-    required double factor,
-    required bool isDark,
+    required Color progressColor,
+    required Color textPrimary,
   }) {
     return Row(
       children: [
-        SizedBox(
-          width: 56,
-          child: Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color:
-                  isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563),
-            ),
-          ),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : const Color(0xFFE5E7EB),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  Container(
-                    height: 8,
-                    width: constraints.maxWidth * factor,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 6),
         SizedBox(
           width: 48,
           child: Text(
-            '${grams.toStringAsFixed(1)}g',
-            textAlign: TextAlign.end,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF111827),
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: textPrimary,
             ),
+          ),
+        ),
+        Container(
+          width: 38,
+          height: 4.5,
+          decoration: BoxDecoration(
+            color: progressColor,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${grams.round()}g',
+          style: GoogleFonts.inter(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: textPrimary,
           ),
         ),
       ],
     );
   }
 
-  // ── PRODUCT NOT FOUND OVERLAY (SECTION 11) ────────────────────────────────
+  Widget _buildMultiplierPill(String label, double value, bool isDark) {
+    final isSelected = (_servings - value).abs() < 0.05;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() => _servings = value);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.accent
+                : (isDark ? const Color(0xFF222B22) : const Color(0xFFF3F5F1)),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.accent
+                  : (isDark ? const Color(0xFF2E3A2E) : const Color(0xFFE5EAE1)),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              color: isSelected
+                  ? const Color(0xFF0F1410)
+                  : (isDark ? Colors.white70 : const Color(0xFF374151)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomMultiplierPill(bool isDark) {
+    final standardValues = [0.25, 0.5, 1.0, 1.5, 2.0];
+    final isCustom = !standardValues.any((v) => (_servings - v).abs() < 0.05);
+
+    return Expanded(
+      flex: 2,
+      child: GestureDetector(
+        onTap: () async {
+          HapticFeedback.selectionClick();
+          final textCtrl = TextEditingController(text: _servings.toString());
+          final customVal = await showDialog<double>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text('Kustomisasi Porsi', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+              content: TextField(
+                controller: textCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Jumlah porsi (misal 2.5)'),
+                autofocus: true,
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+                ElevatedButton(
+                  onPressed: () {
+                    final parsed = double.tryParse(textCtrl.text);
+                    Navigator.pop(ctx, parsed);
+                  },
+                  child: const Text('Pilih'),
+                ),
+              ],
+            ),
+          );
+          if (customVal != null && customVal > 0) {
+            setState(() => _servings = customVal);
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: isCustom
+                ? AppColors.accent
+                : (isDark ? const Color(0xFF222B22) : const Color(0xFFF3F5F1)),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isCustom
+                  ? AppColors.accent
+                  : (isDark ? const Color(0xFF2E3A2E) : const Color(0xFFE5EAE1)),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            isCustom ? '${_servings}x' : 'Custom',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: isCustom ? FontWeight.w800 : FontWeight.w600,
+              color: isCustom
+                  ? const Color(0xFF0F1410)
+                  : (isDark ? Colors.white70 : const Color(0xFF374151)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── PRODUCT NOT FOUND OVERLAY ─────────────────────────────────────────────
 
   Widget _buildNotFoundOverlay(BuildContext context, bool isDark) {
     return Center(
@@ -1688,7 +1975,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
             const SizedBox(height: 18),
             Text(
               'diary.foodNotFound'.tr(),
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : const Color(0xFF111827),
@@ -1698,49 +1985,35 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
             Text(
               'diary.productNotFoundDesc'.tr(),
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : const Color(0xFF6B7280),
+                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
               ),
             ),
             if (_lastScannedBarcode != null) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceAlt
-                      : const Color(0xFFF3F4F6),
+                  color: isDark ? AppColors.darkSurfaceAlt : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : const Color(0xFFE5E7EB),
+                    color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.qr_code_rounded,
-                      size: 16,
-                      color: Color(0xFF4D7800),
-                    ),
+                    const Icon(Icons.qr_code_rounded, size: 16, color: Color(0xFF4D7800)),
                     const SizedBox(width: 8),
                     Text(
                       _lastScannedBarcode!,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
-                        color:
-                            isDark ? Colors.white : const Color(0xFF111827),
+                        color: isDark ? Colors.white : const Color(0xFF111827),
                       ),
                     ),
                   ],
@@ -1756,9 +2029,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(
-                        color: isDark
-                            ? AppColors.darkBorder
-                            : const Color(0xFFE5E7EB),
+                        color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1766,11 +2037,10 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                     ),
                     child: Text(
                       'diary.scanAgain'.tr(),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color:
-                            isDark ? Colors.white : const Color(0xFF111827),
+                        color: isDark ? Colors.white : const Color(0xFF111827),
                       ),
                     ),
                   ),
@@ -1800,7 +2070,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
                     ),
                     child: Text(
                       'diary.requestThisFood'.tr(),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1815,7 +2085,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     );
   }
 
-  // ── PERMISSION & ERROR STATE ──────────────────────────────────────────────
+  // ── PERMISSION ERROR STATE ────────────────────────────────────────────────
 
   Widget _buildPermissionErrorState(BuildContext context, String error) {
     return Center(
@@ -1840,7 +2110,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
             const SizedBox(height: 18),
             Text(
               'diary.cameraAccessNeeded'.tr(),
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
@@ -1850,7 +2120,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
             Text(
               'diary.cameraAccessNeededSubtitle'.tr(),
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 color: Colors.white70,
@@ -1862,32 +2132,12 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: const Color(0xFF0F1410),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               child: Text(
                 'diary.allowCamera'.tr(),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => _showManualBarcodeSheet(context),
-              child: Text(
-                'diary.manualBarcode'.tr(),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.accent,
-                ),
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -1902,52 +2152,47 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen>
     String? tooltip,
     Color color = Colors.white,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: Tooltip(
-        message: tooltip ?? '',
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.45),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.18),
-                width: 1,
-              ),
+    return Tooltip(
+      message: tooltip ?? '',
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.55),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.18),
+              width: 1,
             ),
-            alignment: Alignment.center,
-            child: Icon(icon, color: color, size: 20),
           ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: color, size: 20),
         ),
       ),
     );
   }
 }
 
-/// Custom painter to darken surrounding area outside the central barcode frame
+/// Custom painter to darken surrounding area outside the central or tracked barcode frame
 class _BarcodeOverlayPainter extends CustomPainter {
   const _BarcodeOverlayPainter({
-    required this.frameWidth,
-    required this.frameHeight,
+    required this.holeRect,
   });
 
-  final double frameWidth;
-  final double frameHeight;
+  final Rect holeRect;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = Colors.black.withValues(alpha: 0.55);
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
 
-    final left = (size.width - frameWidth) / 2;
-    final top = (size.height - frameHeight) / 2;
     final hole = RRect.fromRectAndRadius(
-      Rect.fromLTWH(left, top, frameWidth, frameHeight),
+      holeRect,
       const Radius.circular(16),
     );
 
@@ -1961,8 +2206,7 @@ class _BarcodeOverlayPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BarcodeOverlayPainter oldDelegate) {
-    return oldDelegate.frameWidth != frameWidth ||
-        oldDelegate.frameHeight != frameHeight;
+    return oldDelegate.holeRect != holeRect;
   }
 }
 

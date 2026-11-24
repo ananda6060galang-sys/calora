@@ -57,9 +57,7 @@ class DashboardScreen extends ConsumerWidget {
           SafeArea(
             bottom: false,
         child: ListView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 124),
           children: [
             _DashboardHeader(
@@ -86,41 +84,44 @@ class DashboardScreen extends ConsumerWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final gap = constraints.maxWidth < 340 ? 8.0 : 10.0;
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _MacroCard(
-                        label: 'dashboard.protein'.tr(),
-                        value: '${totals.proteinG.round()}g',
-                        target: '${profile.proteinTargetG.round()}g',
-                        color: AppColors.protein,
-                        progress: totals.proteinG / profile.proteinTargetG,
-                        isDark: isDark,
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _MacroCard(
+                          label: 'dashboard.protein'.tr(),
+                          value: '${totals.proteinG.round()}g',
+                          target: '${profile.proteinTargetG.round()}g',
+                          color: AppColors.protein,
+                          progress: totals.proteinG / profile.proteinTargetG,
+                          isDark: isDark,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: gap),
-                    Expanded(
-                      child: _MacroCard(
-                        label: 'dashboard.carbs'.tr(),
-                        value: '${totals.carbsG.round()}g',
-                        target: '${profile.carbsTargetG.round()}g',
-                        color: AppColors.carbs,
-                        progress: totals.carbsG / profile.carbsTargetG,
-                        isDark: isDark,
+                      SizedBox(width: gap),
+                      Expanded(
+                        child: _MacroCard(
+                          label: 'dashboard.carbs'.tr(),
+                          value: '${totals.carbsG.round()}g',
+                          target: '${profile.carbsTargetG.round()}g',
+                          color: AppColors.carbs,
+                          progress: totals.carbsG / profile.carbsTargetG,
+                          isDark: isDark,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: gap),
-                    Expanded(
-                      child: _MacroCard(
-                        label: 'dashboard.fat'.tr(),
-                        value: '${totals.fatG.round()}g',
-                        target: '${profile.fatTargetG.round()}g',
-                        color: AppColors.lavender,
-                        progress: totals.fatG / profile.fatTargetG,
-                        isDark: isDark,
+                      SizedBox(width: gap),
+                      Expanded(
+                        child: _MacroCard(
+                          label: 'dashboard.fat'.tr(),
+                          value: '${totals.fatG.round()}g',
+                          target: '${profile.fatTargetG.round()}g',
+                          color: AppColors.lavender,
+                          progress: totals.fatG / profile.fatTargetG,
+                          isDark: isDark,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
@@ -130,28 +131,31 @@ class DashboardScreen extends ConsumerWidget {
               isDark: isDark,
             ),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionTile(
-                    assetPath: 'assets/log.webp',
-                    title: 'dashboard.logFood'.tr(),
-                    subtitle: 'dashboard.logFoodSubtitle'.tr(),
-                    onTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
-                    isDark: isDark,
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _QuickActionTile(
+                      assetPath: 'assets/log.webp',
+                      title: 'dashboard.logFood'.tr(),
+                      subtitle: 'dashboard.logFoodSubtitle'.tr(),
+                      onTap: () => FoodDiaryScreen.openAddFoodSheet(context, ref),
+                      isDark: isDark,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickActionTile(
-                    assetPath: 'assets/scan.webp',
-                    title: 'dashboard.scanFood'.tr(),
-                    subtitle: 'dashboard.scanFoodSubtitle'.tr(),
-                    onTap: () => FoodDiaryScreen.openAiScannerSheet(context),
-                    isDark: isDark,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickActionTile(
+                      assetPath: 'assets/scan.webp',
+                      title: 'dashboard.scanFood'.tr(),
+                      subtitle: 'dashboard.scanFoodSubtitle'.tr(),
+                      onTap: () => FoodDiaryScreen.openAiScannerSheet(context),
+                      isDark: isDark,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             _SectionTitle(title: 'dashboard.todaysInsights'.tr(), isDark: isDark),
@@ -273,51 +277,57 @@ class _CalorieHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 244,
+      constraints: const BoxConstraints(minHeight: 240),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: _cardDecoration(isDark: isDark, radius: 34),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
+              Expanded(
                 child: Text(
                   'dashboard.dailySummary'.tr(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _textStyle(isDark: isDark, size: 19, weight: FontWeight.w800),
+                  style: _textStyle(isDark: isDark, size: 18, weight: FontWeight.w800),
                 ),
               ),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
-                  vertical: 7,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.flag_outlined,
-                      size: 14,
+                      size: 13,
                       color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      goal,
-                      style: _textStyle(isDark: isDark, size: 11, weight: FontWeight.w700),
+                    const SizedBox(width: 5),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 120),
+                      child: Text(
+                        goal,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _textStyle(isDark: isDark, size: 11, weight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 10),
           Center(
             child: SizedBox(
               height: 132,
@@ -332,6 +342,7 @@ class _CalorieHeroCard extends StatelessWidget {
                   Positioned(
                     bottom: 14,
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           remaining < 0
@@ -386,7 +397,7 @@ class _CalorieHeroCard extends StatelessWidget {
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -417,6 +428,8 @@ class _HeroMetric extends StatelessWidget {
       children: [
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: _textStyle(
             isDark: isDark,
             size: 11,
@@ -425,7 +438,10 @@ class _HeroMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(value, style: _textStyle(isDark: isDark, size: 14, weight: FontWeight.w800)),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(value, style: _textStyle(isDark: isDark, size: 14, weight: FontWeight.w800)),
+        ),
       ],
     );
   }
@@ -451,11 +467,12 @@ class _MacroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 92,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: _cardDecoration(isDark: isDark, radius: 20, blur: 18, offset: 7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
@@ -480,9 +497,13 @@ class _MacroCard extends StatelessWidget {
               ),
             ],
           ),
-          const Spacer(),
-          Text(value, style: _textStyle(isDark: isDark, size: 16, weight: FontWeight.w900)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: _textStyle(isDark: isDark, size: 16, weight: FontWeight.w900)),
+          ),
+          const SizedBox(height: 5),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
@@ -492,14 +513,20 @@ class _MacroCard extends StatelessWidget {
               backgroundColor: isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt,
             ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            'dashboard.ofTarget'.tr(args: [target]),
-            style: _textStyle(
-              isDark: isDark,
-              size: 10,
-              weight: FontWeight.w600,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'dashboard.ofTarget'.tr(args: [target]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _textStyle(
+                isDark: isDark,
+                size: 10,
+                weight: FontWeight.w600,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
             ),
           ),
         ],
@@ -548,7 +575,7 @@ class _QuickActionTile extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         decoration: _cardDecoration(isDark: isDark, radius: 28, blur: 20, offset: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -556,14 +583,14 @@ class _QuickActionTile extends StatelessWidget {
           children: [
             Center(
               child: SizedBox(
-                height: 76,
+                height: 72,
                 child: Image.asset(
                   assetPath,
                   fit: BoxFit.contain,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               title,
               maxLines: 1,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../models/ai_insight_report.dart';
 
 enum InsightsPeriod { week, month }
 
@@ -94,6 +95,9 @@ class InsightsState {
     required this.loggedDaysCount,
     this.totalDaysCount = 7,
     this.isDemoMode = false,
+    this.aiReport,
+    this.isLoadingAiReport = false,
+    this.aiReportError,
   });
 
   final InsightsPeriod period;
@@ -108,6 +112,9 @@ class InsightsState {
   final int loggedDaysCount;
   final int totalDaysCount;
   final bool isDemoMode;
+  final AiInsightReport? aiReport;
+  final bool isLoadingAiReport;
+  final String? aiReportError;
 
   double get calorieDifference => averageCalories - targetCalories;
   bool get isBelowTarget => calorieDifference < -25;
@@ -131,6 +138,9 @@ class InsightsState {
     int? loggedDaysCount,
     int? totalDaysCount,
     bool? isDemoMode,
+    AiInsightReport? aiReport,
+    bool? isLoadingAiReport,
+    String? aiReportError,
   }) {
     return InsightsState(
       period: period ?? this.period,
@@ -145,6 +155,9 @@ class InsightsState {
       loggedDaysCount: loggedDaysCount ?? this.loggedDaysCount,
       totalDaysCount: totalDaysCount ?? this.totalDaysCount,
       isDemoMode: isDemoMode ?? this.isDemoMode,
+      aiReport: aiReport ?? this.aiReport,
+      isLoadingAiReport: isLoadingAiReport ?? this.isLoadingAiReport,
+      aiReportError: aiReportError ?? this.aiReportError,
     );
   }
 }

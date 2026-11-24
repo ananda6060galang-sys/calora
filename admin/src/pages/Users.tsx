@@ -155,63 +155,63 @@ export const UsersPage: React.FC = () => {
       {/* ── 4 STAT CARDS ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Card 1: Total Users */}
-        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#B8FF3B] text-[#0C2417]">
-            <Users className="w-4 h-4 stroke-[1.8]" />
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-6 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#B8FF3B] text-[#0C2417]">
+            <Users className="w-4.5 h-4.5 stroke-[1.8]" />
           </div>
           <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {users.length.toLocaleString()}
           </span>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
+          <span className="text-sm font-medium text-stone-600 dark:text-stone-300 block mt-1.5">
             {t('userDirectory')}
           </span>
         </div>
 
         {/* Card 2: Staff Administrators */}
-        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
-            <ShieldCheck className="w-4 h-4 stroke-[1.8]" />
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-6 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-[#111111] dark:text-[#E2E8DF]">
+            <ShieldCheck className="w-4.5 h-4.5 stroke-[1.8]" />
           </div>
           <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalAdmins}
           </span>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
+          <span className="text-sm font-medium text-stone-600 dark:text-stone-300 block mt-1.5">
             {t('administrator')}
           </span>
         </div>
 
         {/* Card 3: Active Members */}
-        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="w-4 h-4 stroke-[1.8]" />
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-6 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-[#F2F5F0] dark:bg-[#1C261F] text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="w-4.5 h-4.5 stroke-[1.8]" />
           </div>
           <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalActive}
           </span>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
+          <span className="text-sm font-medium text-stone-600 dark:text-stone-300 block mt-1.5">
             {t('active')}
           </span>
         </div>
 
         {/* Card 4: Blocked Members */}
-        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-5.5 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
-            <Ban className="w-4 h-4 stroke-[1.8]" />
+        <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] p-5 sm:p-6 border border-[#EAEFE8] dark:border-[#212E23] shadow-xs flex flex-col items-center justify-center text-center">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs shrink-0 mb-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+            <Ban className="w-4.5 h-4.5 stroke-[1.8]" />
           </div>
           <span className="text-2xl sm:text-3xl font-extrabold text-[#111111] dark:text-[#F3F5EF] tracking-tight block leading-tight">
             {totalBlocked}
           </span>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mt-1">
+          <span className="text-sm font-medium text-stone-600 dark:text-stone-300 block mt-1.5">
             {t('blocked')}
           </span>
         </div>
       </div>
 
       {/* ── PRIVACY NOTE ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between p-4 rounded-[20px] bg-[#EBF7EA] dark:bg-[#14331C]/60 border border-[#D5EED1] dark:border-[#234B2D] text-xs">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center text-xs shrink-0">
-            <Lock className="w-3.5 h-3.5 stroke-[2]" />
+      <div className="flex items-center justify-between p-4.5 rounded-[20px] bg-[#EBF7EA] dark:bg-[#14331C]/60 border border-[#D5EED1] dark:border-[#234B2D] text-sm">
+        <div className="flex items-center space-x-3">
+          <div className="w-7 h-7 rounded-full bg-[#16A34A] text-white flex items-center justify-center text-xs shrink-0">
+            <Lock className="w-4 h-4 stroke-[2]" />
           </div>
           <p className="text-emerald-950 dark:text-emerald-200 font-medium leading-tight">
             <strong>RLS Privacy Active:</strong> User food diaries, weight logs, and private health metrics are isolated and not accessible from this console.
@@ -222,7 +222,7 @@ export const UsersPage: React.FC = () => {
       {/* ── USERS TABLE CONTAINER ───────────────────────────────────── */}
       <div className="bg-white dark:bg-[#141C17] rounded-[22px] sm:rounded-[24px] border border-[#EAEFE8] dark:border-[#212E23] shadow-xs overflow-hidden transition-colors duration-200">
         {/* TOOLBAR */}
-        <div className="p-4 border-b border-[#F2F5F0] dark:border-[#202C22] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="p-4.5 sm:px-6 border-b border-[#F2F5F0] dark:border-[#202C22] flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
           <div className="flex items-center space-x-2">
             <span className="font-bold text-[#111111] dark:text-[#F3F5EF]">
               {totalEntries} {t('userDirectory')}
@@ -232,7 +232,7 @@ export const UsersPage: React.FC = () => {
           <div className="flex items-center flex-wrap gap-2.5">
             {/* Search */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
+              <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
               <input
                 type="text"
                 value={localSearch}
@@ -241,30 +241,30 @@ export const UsersPage: React.FC = () => {
                   setCurrentPage(1);
                 }}
                 placeholder={t('searchPlaceholder')}
-                className="bg-white dark:bg-[#181E19] border border-gray-200 dark:border-[#263226] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-8 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#B8FF3B] w-52 transition-colors"
+                className="bg-white dark:bg-[#181E19] border border-gray-200 dark:border-[#263226] text-sm text-[#111111] dark:text-[#F3F5EF] placeholder-stone-500 dark:placeholder-stone-400 rounded-full pl-10 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-[#B8FF3B] w-56 transition-colors shadow-2xs"
               />
               {localSearch && (
                 <button
                   onClick={() => setLocalSearch('')}
                   aria-label="Clear search"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-white cursor-pointer"
                 >
-                  <X className="w-3 h-3 stroke-[2]" />
+                  <X className="w-3.5 h-3.5 stroke-[2]" />
                 </button>
               )}
             </div>
 
             {/* Role Filter Pills */}
-            <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-[#202820] rounded-full border border-gray-200 dark:border-[#2D382D] text-xs font-semibold">
+            <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-[#202820] rounded-full border border-gray-200 dark:border-[#2D382D] text-sm font-semibold">
               <button
                 onClick={() => {
                   setRoleFilter('all');
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                   roleFilter === 'all'
                     ? 'bg-white dark:bg-[#181E19] text-[#111111] dark:text-[#F3F5EF] shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
                 }`}
               >
                 {t('all')}
@@ -274,10 +274,10 @@ export const UsersPage: React.FC = () => {
                   setRoleFilter('admin');
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                   roleFilter === 'admin'
                     ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-[#111111] dark:hover:text-white'
+                    : 'text-stone-600 hover:text-[#111111] dark:text-stone-400 dark:hover:text-white'
                 }`}
               >
                 {t('administrator')}
@@ -287,10 +287,10 @@ export const UsersPage: React.FC = () => {
                   setRoleFilter('user');
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                   roleFilter === 'user'
                     ? 'bg-[#16A34A] dark:bg-[#3DDC84] text-white dark:text-[#0C2417] shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
                 }`}
               >
                 {t('member')}
@@ -298,16 +298,16 @@ export const UsersPage: React.FC = () => {
             </div>
 
             {/* Status Filter Pills */}
-            <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-[#202820] rounded-full border border-gray-200 dark:border-[#2D382D] text-xs font-semibold">
+            <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-[#202820] rounded-full border border-gray-200 dark:border-[#2D382D] text-sm font-semibold">
               <button
                 onClick={() => {
                   setStatusFilter('all');
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
                   statusFilter === 'all'
                     ? 'bg-white dark:bg-[#181E19] text-[#111111] dark:text-[#F3F5EF] shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
                 }`}
               >
                 {t('statusFilterAll')}
@@ -317,10 +317,10 @@ export const UsersPage: React.FC = () => {
                   setStatusFilter('active');
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
                   statusFilter === 'active'
                     ? 'bg-[#16A34A] dark:bg-[#3DDC84] text-white dark:text-[#0C2417] shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
                 }`}
               >
                 {t('statusFilterActive')}
@@ -330,10 +330,10 @@ export const UsersPage: React.FC = () => {
                   setStatusFilter('blocked');
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
                   statusFilter === 'blocked'
                     ? 'bg-rose-600 text-white shadow-2xs font-bold'
-                    : 'text-gray-500 hover:text-rose-600 dark:hover:text-rose-400'
+                    : 'text-stone-600 hover:text-rose-600 dark:text-stone-400 dark:hover:text-rose-400'
                 }`}
               >
                 {t('statusFilterBlocked')}
@@ -344,19 +344,19 @@ export const UsersPage: React.FC = () => {
 
         {/* ── SELECTION BAR ─────────────────────────────────────────── */}
         {selectedIds.length > 0 && (
-          <div className="p-3 mx-4 my-3 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-[#16A34A] text-white text-[11px] font-bold flex items-center justify-center">
+          <div className="p-3.5 mx-4 my-3 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex items-center space-x-2.5">
+              <span className="w-5.5 h-5.5 rounded-full bg-[#16A34A] text-white text-xs font-bold flex items-center justify-center">
                 {selectedIds.length}
               </span>
-              <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+              <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
                 {selectedIds.length} {t('itemsSelected')}
               </span>
             </div>
 
             <button
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-[#1A241E] text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-xl border border-stone-300 dark:border-stone-600 hover:bg-white dark:hover:bg-[#1A241E] text-sm font-medium text-stone-700 dark:text-stone-300 transition-colors cursor-pointer"
             >
               {t('deselectAll')}
             </button>
@@ -365,10 +365,10 @@ export const UsersPage: React.FC = () => {
 
         {/* TABLE CONTENT */}
         <div className="overflow-x-auto scrollbar-wide">
-          <table className="w-full text-left border-collapse text-xs min-w-[650px]">
+          <table className="w-full text-left border-collapse text-sm min-w-[650px]">
             <thead>
-              <tr className="border-b border-[#F2F5F0] dark:border-[#202C22] text-[11px] font-semibold text-gray-400 dark:text-gray-500 pb-3">
-                <th className="py-3 px-4 w-10 text-center">
+              <tr className="border-b border-[#F2F5F0] dark:border-[#202C22] text-[13px] font-semibold text-stone-700 dark:text-stone-300">
+                <th className="py-3.5 px-4 w-10 text-center">
                   <button
                     onClick={toggleSelectAll}
                     aria-label="Select all users on this page"
@@ -389,65 +389,65 @@ export const UsersPage: React.FC = () => {
                 </th>
                 <th
                   onClick={() => handleSort('name')}
-                  className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
+                  className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
                 >
                   <div className="flex items-center space-x-1">
                     <span>{t('userProfile')}</span>
                     {sortField === 'name' ? (
-                      sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 opacity-40 stroke-[2]" />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('role')}
-                  className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>{t('role')}</span>
-                    {sortField === 'role' ? (
-                      sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 opacity-40 stroke-[2]" />
-                    )}
-                  </div>
-                </th>
-                <th className="py-3 px-4">{t('accountStatus')}</th>
-                <th
-                  onClick={() => handleSort('submissions')}
-                  className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>{t('foodRequests')}</span>
-                    {sortField === 'submissions' ? (
-                      sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
-                    ) : (
-                      <ChevronsUpDown className="w-3 h-3 opacity-40 stroke-[2]" />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('created_at')}
-                  className="py-3 px-6 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>{t('registrationDate')}</span>
-                    {sortField === 'created_at' ? (
-                      sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3 h-3 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
+                      sortOrder === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
                     ) : (
                       <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 stroke-[2]" />
                     )}
                   </div>
                 </th>
-                <th className="py-3 px-4 text-right">{t('action')}</th>
+                <th
+                  onClick={() => handleSort('role')}
+                  className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('role')}</span>
+                    {sortField === 'role' ? (
+                      sortOrder === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
+                    ) : (
+                      <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 stroke-[2]" />
+                    )}
+                  </div>
+                </th>
+                <th className="py-3.5 px-4">{t('accountStatus')}</th>
+                <th
+                  onClick={() => handleSort('submissions')}
+                  className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('foodRequests')}</span>
+                    {sortField === 'submissions' ? (
+                      sortOrder === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
+                    ) : (
+                      <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 stroke-[2]" />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('created_at')}
+                  className="py-3.5 px-6 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('registrationDate')}</span>
+                    {sortField === 'created_at' ? (
+                      sortOrder === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#B8FF3B] stroke-[2.2]" />
+                    ) : (
+                      <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 stroke-[2]" />
+                    )}
+                  </div>
+                </th>
+                <th className="py-3.5 px-4 text-right">{t('action')}</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-[#F2F5F0] dark:divide-[#202C22]">
               {paginatedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400">
+                  <td colSpan={7} className="py-12 text-center text-sm text-stone-400 dark:text-stone-500">
                     No accounts found matching search criteria.
                   </td>
                 </tr>
@@ -482,7 +482,7 @@ export const UsersPage: React.FC = () => {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`relative w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ${
+                            className={`relative w-8.5 h-8.5 rounded-full flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ${
                               u.role === 'admin'
                                 ? 'bg-[#0B2114] text-[#B8FF3B] ring-1 ring-[#B8FF3B]'
                                 : u.is_blocked
@@ -503,10 +503,10 @@ export const UsersPage: React.FC = () => {
                             <span>{u.name?.[0]?.toUpperCase() || 'U'}</span>
                           </div>
                           <div>
-                            <p className="font-semibold text-[#111111] dark:text-[#F3F5EF]">
+                            <p className="font-semibold text-sm text-[#111111] dark:text-[#F3F5EF]">
                               {u.name}
                             </p>
-                            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate max-w-[220px]" title={u.email}>
+                            <p className="text-xs text-stone-500 dark:text-stone-400 font-medium truncate max-w-[220px]" title={u.email}>
                               {u.email || '—'}
                             </p>
                           </div>
@@ -515,10 +515,10 @@ export const UsersPage: React.FC = () => {
 
                       <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full ${
+                          className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${
                             u.role === 'admin'
-                              ? 'bg-[#B8FF3B] text-[#0C2417]'
-                              : 'bg-gray-100 dark:bg-[#202820] text-gray-600 dark:text-gray-300'
+                              ? 'bg-[#B8FF3B] text-[#0C2417] font-bold'
+                              : 'bg-gray-100 dark:bg-[#202820] text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-[#2D382D]'
                           }`}
                         >
                           {u.role === 'admin' ? t('administrator') : t('member')}
@@ -527,36 +527,36 @@ export const UsersPage: React.FC = () => {
 
                       <td className="py-3.5 px-4">
                         {u.is_blocked ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40">
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>
                             {t('blocked')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-[#14331C] text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-[#14331C] text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
                             {t('active')}
                           </span>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 font-semibold text-[#111111] dark:text-white">
+                      <td className="py-3.5 px-4 font-bold text-sm text-[#111111] dark:text-white">
                         {submissionCount}
                       </td>
 
-                      <td className="py-3.5 px-6 text-gray-500 dark:text-gray-400 font-medium">
+                      <td className="py-3.5 px-6 text-stone-600 dark:text-stone-300 font-medium text-xs">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString() : 'Active member'}
                       </td>
 
                       {/* Action Column */}
                       <td className="py-3.5 px-4 text-right">
                         {u.role === 'admin' ? (
-                          <span className="text-[11px] text-gray-400 dark:text-gray-500 italic">
+                          <span className="text-xs text-stone-400 dark:text-stone-500 italic">
                             {t('administrator')}
                           </span>
                         ) : u.is_blocked ? (
                           <button
                             onClick={() => setTargetUserForBlock({ user: u, action: 'unblock' })}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
                             title={t('unblockUser')}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5 stroke-[2]" />
@@ -565,7 +565,7 @@ export const UsersPage: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => setTargetUserForBlock({ user: u, action: 'block' })}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
                             title={t('blockUser')}
                           >
                             <Ban className="w-3.5 h-3.5 stroke-[2]" />
@@ -583,7 +583,7 @@ export const UsersPage: React.FC = () => {
 
         {/* PAGINATION */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-[#F2F5F0] dark:border-[#202C22] flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div className="p-4 border-t border-[#F2F5F0] dark:border-[#202C22] flex items-center justify-between text-sm text-stone-600 dark:text-stone-400">
             <span>
               {t('showingText')} {Math.min(totalEntries, (validCurrentPage - 1) * pageSize + 1)} {t('toText')}{' '}
               {Math.min(totalEntries, validCurrentPage * pageSize)} {t('ofText')} {totalEntries} {t('entriesText')}
@@ -594,19 +594,19 @@ export const UsersPage: React.FC = () => {
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={validCurrentPage === 1}
                 aria-label="Previous page"
-                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-[#202820] transition-colors cursor-pointer"
+                className="w-8.5 h-8.5 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-[#202820] transition-colors cursor-pointer"
               >
-                <ChevronLeft className="w-3.5 h-3.5 stroke-[2]" />
+                <ChevronLeft className="w-4 h-4 stroke-[2]" />
               </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`w-8.5 h-8.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                     page === validCurrentPage
-                      ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs'
-                      : 'hover:bg-gray-50 dark:hover:bg-[#202820] text-gray-600 dark:text-gray-400'
+                      ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs font-bold'
+                      : 'hover:bg-gray-50 dark:hover:bg-[#202820] text-stone-600 dark:text-stone-400'
                   }`}
                 >
                   {page}
@@ -617,9 +617,9 @@ export const UsersPage: React.FC = () => {
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={validCurrentPage === totalPages}
                 aria-label="Next page"
-                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-[#202820] transition-colors cursor-pointer"
+                className="w-8.5 h-8.5 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-[#202820] transition-colors cursor-pointer"
               >
-                <ChevronRight className="w-3.5 h-3.5 stroke-[2]" />
+                <ChevronRight className="w-4 h-4 stroke-[2]" />
               </button>
             </div>
           </div>

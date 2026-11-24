@@ -269,7 +269,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     {/* Notification Badge in Expanded Mode */}
                     {isWide && item.badge !== null && item.badge !== undefined && (
                       <span
-                        className={`text-[10px] font-bold rounded-full px-2 py-0.5 shrink-0 transition-transform duration-200 ${
+                        className={`text-xs font-bold rounded-full px-2.5 py-0.5 shrink-0 transition-transform duration-200 ${
                           isActive
                             ? 'bg-black text-[#B8FF3B]'
                             : 'bg-[#B8FF3B] text-black shadow-xs'
@@ -295,7 +295,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       >
                         <span>{item.label}</span>
                         {item.badge !== null && item.badge !== undefined && (
-                          <span className="px-1.5 py-0.5 rounded-full bg-[#B8FF3B] text-black text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-[#B8FF3B] text-black text-xs font-bold">
                             {item.badge}
                           </span>
                         )}
@@ -318,7 +318,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 <button
                   onClick={() => setLanguage('en')}
                   aria-label="Switch to English"
-                  className={`flex-1 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-[#B8FF3B] ${
+                  className={`flex-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-[#B8FF3B] ${
                     language === 'en'
                       ? 'bg-[#253628] text-white shadow-xs'
                       : 'text-gray-400 hover:text-gray-200'
@@ -329,7 +329,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 <button
                   onClick={() => setLanguage('id')}
                   aria-label="Switch to Bahasa Indonesia"
-                  className={`flex-1 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-[#B8FF3B] ${
+                  className={`flex-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer focus-visible:ring-1 focus-visible:ring-[#B8FF3B] ${
                     language === 'id'
                       ? 'bg-[#253628] text-white shadow-xs'
                       : 'text-gray-400 hover:text-gray-200'
@@ -360,7 +360,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
                 title={`Language: ${language.toUpperCase()} (Click to toggle)`}
                 aria-label={`Language: ${language.toUpperCase()}`}
-                className="w-8 h-8 rounded-full bg-[#152017] border border-white/[0.06] flex items-center justify-center text-gray-300 hover:text-[#B8FF3B] hover:border-[#B8FF3B]/40 text-[10px] font-bold uppercase transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#B8FF3B] active:scale-95"
+                className="w-8 h-8 rounded-full bg-[#152017] border border-white/[0.06] flex items-center justify-center text-gray-300 hover:text-[#B8FF3B] hover:border-[#B8FF3B]/40 text-xs font-bold uppercase transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#B8FF3B] active:scale-95"
               >
                 <span>{language}</span>
                 <div
@@ -411,16 +411,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               }`}
               title={user?.name || 'Calora Admin'}
             >
-              <div className="w-8 h-8 rounded-full bg-[#182B1D] border border-[#2D4A33] text-[#B8FF3B] font-bold flex items-center justify-center text-xs shrink-0 shadow-xs group-hover:border-[#B8FF3B]/50 transition-colors">
+              <div className="w-8.5 h-8.5 rounded-full bg-[#182B1D] border border-[#2D4A33] text-[#B8FF3B] font-bold flex items-center justify-center text-xs shrink-0 shadow-xs group-hover:border-[#B8FF3B]/50 transition-colors">
                 {user?.name?.[0]?.toUpperCase() || 'C'}
               </div>
 
               {isWide && (
                 <div className="overflow-hidden flex-1">
-                  <h4 className="text-xs font-semibold text-white truncate leading-tight group-hover:text-[#B8FF3B] transition-colors">
+                  <h4 className="text-sm font-semibold text-white truncate leading-tight group-hover:text-[#B8FF3B] transition-colors">
                     {user?.name || 'Calora Admin'}
                   </h4>
-                  <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                  <p className="text-xs text-stone-400 truncate mt-0.5">
                     {user?.email || 'admin@calora.app'}
                   </p>
                 </div>
@@ -451,7 +451,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             >
               <LogOut className="w-3.5 h-3.5 stroke-[1.8]" />
               {isWide && (
-                <span className="text-[11px] font-medium">{t('logout')}</span>
+                <span className="text-xs font-medium">{t('logout')}</span>
               )}
 
               {/* Tooltip in Collapsed Mode */}

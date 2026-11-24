@@ -391,7 +391,7 @@ class _FoodRequestScreenState extends ConsumerState<FoodRequestScreen> {
           children: [
             Expanded(
               child: ListView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
                 children: [
                   if (widget.initialBarcode != null) ...[

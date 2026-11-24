@@ -1,7 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/ai_insights_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/food.dart';
 import '../../../models/user_profile.dart';
@@ -9,13 +12,19 @@ import '../../dashboard/providers/profile_provider.dart';
 import '../../diary/providers/diary_provider.dart';
 import '../models/insights_state.dart';
 
+final aiInsightsServiceProvider = Provider<AiInsightsService>((ref) {
+  return AiInsightsService();
+});
+
 final insightsProvider =
     StateNotifierProvider<InsightsNotifier, InsightsState>((ref) {
   final profile = ref.watch(userProfileProvider);
   final diaryEntries = ref.watch(diaryProvider);
+  final aiService = ref.watch(aiInsightsServiceProvider);
   return InsightsNotifier(
     profile: profile,
     diaryEntries: diaryEntries,
+    aiService: aiService,
   );
 });
 
@@ -23,17 +32,105 @@ class InsightsNotifier extends StateNotifier<InsightsState> {
   InsightsNotifier({
     required UserProfile profile,
     required List<DiaryEntry> diaryEntries,
+    required AiInsightsService aiService,
   })  : _profile = profile,
         _diaryEntries = diaryEntries,
+        _aiService = aiService,
         super(_calculateState(
           profile: profile,
           diaryEntries: diaryEntries,
           isDemoMode: false,
           forceEmpty: false,
-        ));
+        )) {
+    // Lazily load cached report or initial analysis on start
+    _initAiReport();
+  }
 
   final UserProfile _profile;
   final List<DiaryEntry> _diaryEntries;
+  final AiInsightsService _aiService;
+
+  Future<void> _initAiReport() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'anonymous';
+    final cached = await _aiService.getCachedReport(userId);
+    if (cached != null) {
+      state = state.copyWith(aiReport: cached);
+    } else {
+      await fetchAiReport(forceRefresh: false);
+    }
+  }
+
+  Future<void> fetchAiReport({
+    bool forceRefresh = false,
+    String locale = 'id',
+  }) async {
+    state = state.copyWith(isLoadingAiReport: true, aiReportError: null);
+    try {
+      final now = DateTime.now();
+      final sevenDaysAgo = now.subtract(const Duration(days: 7));
+      final recentEntries = _diaryEntries.where((e) {
+        return e.date.isAfter(sevenDaysAgo);
+      }).toList();
+
+      final recentFoods = recentEntries
+          .map((e) => e.food.name)
+          .toSet()
+          .take(15)
+          .toList();
+
+      int breakfastCals = 0;
+      int lunchCals = 0;
+      int dinnerCals = 0;
+      int snackCals = 0;
+
+      for (final e in recentEntries) {
+        final meal = e.meal.toLowerCase();
+        if (meal.contains('breakfast') || meal.contains('sarapan')) {
+          breakfastCals += e.calories;
+        } else if (meal.contains('lunch') || meal.contains('siang')) {
+          lunchCals += e.calories;
+        } else if (meal.contains('dinner') || meal.contains('malam')) {
+          dinnerCals += e.calories;
+        } else {
+          snackCals += e.calories;
+        }
+      }
+
+      final totalMealCals = breakfastCals + lunchCals + dinnerCals + snackCals;
+      final mealDist = <String, int>{
+        'breakfast': totalMealCals > 0 ? ((breakfastCals / totalMealCals) * 100).round() : 25,
+        'lunch': totalMealCals > 0 ? ((lunchCals / totalMealCals) * 100).round() : 35,
+        'dinner': totalMealCals > 0 ? ((dinnerCals / totalMealCals) * 100).round() : 30,
+        'snack': totalMealCals > 0 ? ((snackCals / totalMealCals) * 100).round() : 10,
+      };
+
+      final report = await _aiService.getOrGenerateReport(
+        profile: _profile,
+        avgCalories: state.averageCalories,
+        avgProtein: state.protein.currentG,
+        avgCarbs: state.carbs.currentG,
+        avgFat: state.fat.currentG,
+        loggedDaysCount: state.loggedDaysCount,
+        recentFoods: recentFoods.isNotEmpty
+            ? recentFoods
+            : ['Nasi Putih', 'Dada Ayam', 'Telur Rebus', 'Tempe'],
+        mealDistribution: mealDist,
+        locale: locale,
+        forceRefresh: forceRefresh,
+      );
+
+      state = state.copyWith(
+        aiReport: report,
+        isLoadingAiReport: false,
+        aiReportError: null,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoadingAiReport: false,
+        aiReportError: e.toString(),
+      );
+    }
+  }
 
   void toggleDemoMode() {
     state = _calculateState(

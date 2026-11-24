@@ -8,6 +8,7 @@ import '../dashboard/providers/profile_provider.dart';
 import '../diary/food_diary_screen.dart';
 import 'models/insights_state.dart';
 import 'providers/insights_provider.dart';
+import 'widgets/ai_coach_report_section.dart';
 import 'widgets/calorie_overview_card.dart';
 
 /// CALORA — DETAIL INSIGHTS
@@ -111,6 +112,8 @@ class InsightsDetailScreen extends ConsumerWidget {
         ),
         title: Text(
           'insights.title'.tr(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -122,13 +125,17 @@ class InsightsDetailScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: Center(
-              child: Text(
-                dateRange,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: textTertiary,
-                  letterSpacing: -0.1,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  dateRange,
+                  maxLines: 1,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: textTertiary,
+                    letterSpacing: -0.1,
+                  ),
                 ),
               ),
             ),
@@ -136,7 +143,7 @@ class InsightsDetailScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 60),
         children: [
           // ══════════════════════════════════════════════════════════════
@@ -187,7 +194,10 @@ class InsightsDetailScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   RichText(
                     text: TextSpan(
@@ -211,12 +221,9 @@ class InsightsDetailScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      '•',
-                      style: TextStyle(color: textTertiary, fontSize: 13),
-                    ),
+                  Text(
+                    '•',
+                    style: TextStyle(color: textTertiary, fontSize: 13),
                   ),
                   RichText(
                     text: TextSpan(
@@ -617,78 +624,102 @@ class InsightsDetailScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${profile.weightKg.toStringAsFixed(1)} kg',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                        letterSpacing: -0.3,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${profile.weightKg.toStringAsFixed(1)} kg',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'insights.currentWeight'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
+                      const SizedBox(height: 2),
+                      Text(
+                        'insights.currentWeight'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 28),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${profile.targetWeightKg!.toStringAsFixed(1)} kg',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                        letterSpacing: -0.3,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${profile.targetWeightKg!.toStringAsFixed(1)} kg',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'insights.goalWeight'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
+                      const SizedBox(height: 2),
+                      Text(
+                        'insights.goalWeight'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 28),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${(profile.weightKg - profile.targetWeightKg!).abs().toStringAsFixed(1)} kg',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: isDark
-                            ? AppColors.accent
-                            : const Color(0xFF2E7548),
-                        letterSpacing: -0.3,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${(profile.weightKg - profile.targetWeightKg!).abs().toStringAsFixed(1)} kg',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? AppColors.accent
+                                : const Color(0xFF2E7548),
+                            letterSpacing: -0.3,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'insights.toGoal'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
+                      const SizedBox(height: 2),
+                      Text(
+                        'insights.toGoal'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -698,46 +729,17 @@ class InsightsDetailScreen extends ConsumerWidget {
           const SizedBox(height: 68),
 
           // ══════════════════════════════════════════════════════════════
-          // CHAPTER 04 — SMART INSIGHTS
-          // Purpose: "Small changes based on your nutrition patterns."
+          // CHAPTER 04 — AI NUTRITION COACH
+          // Purpose: "Deep clinical nutrition evaluation & food swaps"
           // ══════════════════════════════════════════════════════════════
-          Text(
-            'insights.smartInsightsTitle'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'insights.smartInsightsSubtitle'.tr(),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 28),
-
-          // Editorial Recommendations (2–3 items, zero AI slop)
-          _buildEditorialInsight(
-            title: 'insights.proteinLowTitle'.tr(),
-            body: 'insights.proteinLowDesc'.tr(),
-            action: 'insights.proteinLowAction'.tr(),
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            actionColor: isDark ? AppColors.accent : const Color(0xFF2E7548),
-          ),
-          const SizedBox(height: 28),
-          _buildEditorialInsight(
-            title: 'insights.caloriesOnTrackTitle'.tr(),
-            body: 'insights.caloriesOnTrackDesc'.tr(),
-            action: 'insights.caloriesOnTrackAction'.tr(),
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            actionColor: isDark ? AppColors.accent : const Color(0xFF2E7548),
+          AiCoachReportSection(
+            report: insightsState.aiReport,
+            isLoading: insightsState.isLoadingAiReport,
+            isDark: isDark,
+            onRefresh: () => ref.read(insightsProvider.notifier).fetchAiReport(
+                  forceRefresh: true,
+                  locale: context.locale.languageCode,
+                ),
           ),
 
           // ── VISUAL PAUSE BEFORE FINAL ACTION (56px) ───────────────────
@@ -824,15 +826,20 @@ class InsightsDetailScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: textPrimary,
-                letterSpacing: 0.5,
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               '$currentG / $targetG g',
               style: GoogleFonts.inter(
@@ -899,47 +906,5 @@ class InsightsDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEditorialInsight({
-    required String title,
-    required String body,
-    required String action,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color actionColor,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w700,
-            color: textPrimary,
-            letterSpacing: -0.2,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          body,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: textSecondary,
-            height: 1.35,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          action,
-          style: GoogleFonts.inter(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: actionColor,
-            height: 1.35,
-          ),
-        ),
-      ],
-    );
-  }
+
 }

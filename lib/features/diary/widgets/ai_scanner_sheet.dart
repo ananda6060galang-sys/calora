@@ -11,11 +11,16 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/input_validators.dart';
+import '../../../core/utils/meal_time_resolver.dart';
+import '../../../core/widgets/calora_time_picker_sheet.dart';
 import '../../../main.dart';
 import '../../../models/food.dart';
+import '../../../models/scan_history_item.dart';
 import '../food_diary_screen.dart';
 import '../providers/ai_scanner_provider.dart';
 import '../providers/diary_provider.dart';
+import '../providers/scan_history_provider.dart';
+import 'scan_history_screen.dart';
 
 /// Full-screen in-app AI Food Scanner screen closely matching the Figma reference design.
 class AiScannerSheet extends ConsumerStatefulWidget {
@@ -35,6 +40,7 @@ class AiScannerSheet extends ConsumerStatefulWidget {
 class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
     with SingleTickerProviderStateMixin {
   late String _selectedMeal;
+  late DateTime _selectedDate;
   late TextEditingController _nameController;
   late TextEditingController _portionController;
   late TextEditingController _calController;
@@ -58,9 +64,11 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
   @override
   void initState() {
     super.initState();
-    _selectedMeal = (widget.initialMeal != null && widget.initialMeal!.trim().isNotEmpty)
-        ? widget.initialMeal!
-        : 'Lunch';
+    _selectedDate = widget.date;
+    _selectedMeal = MealTimeResolver.resolveCurrentMeal(
+      requestedMeal: widget.initialMeal,
+      time: widget.date,
+    );
 
     _nameController = TextEditingController();
     _portionController = TextEditingController();
@@ -252,6 +260,21 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
               ),
               const SizedBox(height: 12),
               ListTile(
+                leading: const Icon(Icons.history_rounded, color: Color(0xFF5BA300)),
+                title: Text(
+                  'Riwayat Scan Makanan',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  'Lihat daftar makanan yang pernah kamu scan',
+                  style: GoogleFonts.inter(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScanHistoryScreen.show(context);
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.tips_and_updates_outlined),
                 title: Text(
                   'diary.scannerTipsTitle'.tr(),
@@ -312,8 +335,23 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
           finalFood,
           1.0,
           _selectedMeal,
-          widget.date,
+          _selectedDate,
           portionGrams: portionGrams,
+        );
+
+    // Save to Scan History
+    ref.read(scanHistoryProvider.notifier).addScan(
+          id: finalFood.id,
+          foodName: finalFood.name,
+          calories: finalFood.calories,
+          proteinG: finalFood.proteinG,
+          carbsG: finalFood.carbsG,
+          fatG: finalFood.fatG,
+          scanType: ScanType.ai,
+          portionGrams: portionGrams,
+          servingLabel: finalFood.servingLabel,
+          imagePath: ref.read(aiScannerProvider).capturedFile?.path,
+          suggestedMeal: _selectedMeal,
         );
 
     ref.read(aiScannerProvider.notifier).reset();
@@ -325,7 +363,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
       foodName: finalFood.name,
       meal: _selectedMeal,
       entryCalories: finalFood.calories,
-      date: widget.date,
+      date: _selectedDate,
     );
   }
 
@@ -506,10 +544,20 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       ),
                     ),
 
-                    // Options / more button
-                    _buildTopCircleButton(
-                      icon: Icons.more_horiz_rounded,
-                      onTap: _showMoreMenu,
+                    // Options & History buttons
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTopCircleButton(
+                          icon: Icons.history_rounded,
+                          onTap: () => ScanHistoryScreen.show(context),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildTopCircleButton(
+                          icon: Icons.more_horiz_rounded,
+                          onTap: _showMoreMenu,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1028,11 +1076,6 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
         ? (food.carbsG / totalMacros).clamp(0.15, 0.90)
         : 0.33;
 
-    final mealLabel = (food.category.trim().isNotEmpty &&
-            ['Breakfast', 'Lunch', 'Dinner', 'Snack'].any((m) =>
-                m.toLowerCase() == food.category.trim().toLowerCase()))
-        ? food.category.toUpperCase()
-        : _selectedMeal.toUpperCase();
     final portionLabel = '${(food.portionGrams ?? 100).round()} G';
 
     final content = Scaffold(
@@ -1102,7 +1145,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
             bottom: 0,
             child: Container(
               constraints: BoxConstraints(
-                maxHeight: size.height * 0.58,
+                maxHeight: size.height * 0.68,
               ),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkSurface : Colors.white,
@@ -1120,7 +1163,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
               child: SafeArea(
                 top: false,
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                  physics: const ClampingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1138,12 +1181,14 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       ),
                       const SizedBox(height: 14),
 
-                      // Category & Portion Pills Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      // Interactive Meal, Date & Portion Pills Row
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          _buildPillTag(mealLabel, isDark),
-                          const SizedBox(width: 10),
+                          _buildInteractiveMealPill(_selectedMeal, isDark),
+                          _buildInteractiveDatePill(isDark),
                           _buildPillTag(portionLabel, isDark),
                         ],
                       ),
@@ -1379,10 +1424,20 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       ),
                     ),
 
-                    // Circular White Close Button
-                    _buildTopWhiteButton(
-                      icon: Icons.close_rounded,
-                      onTap: () => Navigator.of(context).pop(),
+                    // Actions: History & Close
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTopWhiteButton(
+                          icon: Icons.history_rounded,
+                          onTap: () => ScanHistoryScreen.show(context),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildTopWhiteButton(
+                          icon: Icons.close_rounded,
+                          onTap: () => Navigator.of(context).pop(),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1432,6 +1487,203 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
         ),
       ),
     );
+  }
+
+  Widget _buildInteractiveMealPill(String meal, bool isDark) {
+    final icon = MealTimeResolver.getMealIcon(meal);
+    return GestureDetector(
+      onTap: _showMealSelectorModal,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF202F23) : const Color(0xFFEAF5E5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? AppColors.accent.withValues(alpha: 0.6)
+                : const Color(0xFF72D000),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isDark ? AppColors.accent : const Color(0xFF2E6312),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              meal.toUpperCase(),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+                color: isDark ? AppColors.accent : const Color(0xFF2E6312),
+              ),
+            ),
+            const SizedBox(width: 3),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 14,
+              color: isDark ? AppColors.accent : const Color(0xFF2E6312),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInteractiveDatePill(bool isDark) {
+    final now = DateTime.now();
+    final isToday = DateUtils.isSameDay(_selectedDate, now);
+    final formatted = isToday
+        ? 'Hari Ini, ${DateFormat('HH:mm').format(_selectedDate)}'
+        : DateFormat('dd MMM, HH:mm').format(_selectedDate);
+
+    return GestureDetector(
+      onTap: _pickDateTime,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurfaceAlt : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : const Color(0xFFD1D5DB),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.access_time_rounded,
+              size: 13,
+              color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              formatted,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+              ),
+            ),
+            const SizedBox(width: 3),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 14,
+              color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMealSelectorModal() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkBorder : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pilih Sesi Makan',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...MealTimeResolver.standardMeals.map((m) {
+                final isSel = m.toLowerCase() == _selectedMeal.toLowerCase();
+                final icon = MealTimeResolver.getMealIcon(m);
+                final subtitle = MealTimeResolver.getMealSubtitle(m);
+                return ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  tileColor: isSel
+                      ? (isDark
+                          ? const Color(0xFF202F23)
+                          : const Color(0xFFEAF5E5))
+                      : Colors.transparent,
+                  leading: Icon(
+                    icon,
+                    color: isSel
+                        ? const Color(0xFF72D000)
+                        : (isDark ? Colors.white70 : Colors.black54),
+                  ),
+                  title: Text(
+                    m,
+                    style: GoogleFonts.inter(
+                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w600,
+                      color: isSel
+                          ? (isDark ? AppColors.accent : const Color(0xFF2E6312))
+                          : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    subtitle,
+                    style: GoogleFonts.inter(fontSize: 11.5),
+                  ),
+                  trailing: isSel
+                      ? const Icon(Icons.check_circle_rounded,
+                          color: Color(0xFF72D000))
+                      : null,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _selectedMeal = m);
+                    Navigator.pop(ctx);
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickDateTime() async {
+    final result = await CaloraTimePickerSheet.show(
+      context,
+      initialDateTime: _selectedDate,
+      title: 'Atur Waktu Catat',
+      includeDate: true,
+      activeMeal: _selectedMeal,
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _selectedDate = result.dateTime;
+        _selectedMeal = result.suggestedMeal;
+      });
+    }
   }
 
   Widget _buildPillTag(String label, bool isDark) {
@@ -1601,7 +1853,7 @@ class _AiScannerSheetState extends ConsumerState<AiScannerSheet>
                       // Dedicated Scrollable Form Area with Keyboard Avoidance
                       Expanded(
                         child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                          physics: const ClampingScrollPhysics(),
                           padding: EdgeInsets.fromLTRB(
                             20,
                             4,

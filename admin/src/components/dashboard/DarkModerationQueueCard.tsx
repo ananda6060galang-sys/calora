@@ -42,13 +42,13 @@ export const DarkModerationQueueCard: React.FC<DarkModerationQueueCardProps> = (
             <h3 className="text-base sm:text-lg font-semibold tracking-tight text-white">
               {t('pendingFoodRequests') || (language === 'id' ? 'Permintaan Makanan Menunggu' : 'Pending Food Requests')}
             </h3>
-            <p className="text-xs text-white/60 font-normal mt-0.5">
+            <p className="text-sm text-white/70 font-normal mt-0.5">
               {pendingList.length > 0 ? pendingList.length : 1} {language === 'id' ? 'pengajuan menunggu verifikasi' : 'submissions awaiting review'}
             </p>
           </div>
 
           {/* Count pill */}
-          <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-[#B8FF3B] text-xs font-medium">
+          <span className="px-3 py-1 rounded-full bg-white/10 text-[#B8FF3B] text-xs font-semibold">
             {pendingList.length > 0 ? pendingList.length : 1} {language === 'id' ? 'antrean' : 'pending'}
           </span>
         </div>
@@ -78,15 +78,15 @@ export const DarkModerationQueueCard: React.FC<DarkModerationQueueCardProps> = (
                   )}
 
                   <div className="overflow-hidden">
-                    <h4 className="text-sm font-medium text-white truncate group-hover:text-[#B8FF3B] transition-colors leading-tight">
+                    <h4 className="text-sm font-semibold text-white truncate group-hover:text-[#B8FF3B] transition-colors leading-tight">
                       {item.food_name}
                     </h4>
                     <div className="flex items-center space-x-2 mt-1 text-xs">
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-medium text-white/80">
+                      <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-semibold text-white/90">
                         {item.category || 'Food'}
                       </span>
-                      <span className="text-white/30">•</span>
-                      <span className="text-white/50 text-[11px]">
+                      <span className="text-white/40">•</span>
+                      <span className="text-white/70 text-xs font-medium">
                         {formatLocaleDate(item.created_at, language)}
                       </span>
                     </div>
@@ -96,7 +96,7 @@ export const DarkModerationQueueCard: React.FC<DarkModerationQueueCardProps> = (
                 {/* Right: Review Pill (Fills lime on hover with arrow sliding 3px) */}
                 <button
                   onClick={() => onOpenRequestModal(item as FoodRequest)}
-                  className="group/btn px-3.5 py-1.5 rounded-full border border-white/20 bg-transparent text-white hover:bg-[#B8FF3B] hover:text-[#0C2417] hover:border-[#B8FF3B] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer shrink-0 active:scale-95 shadow-2xs"
+                  className="group/btn px-4 py-2 rounded-full border border-white/25 bg-white/5 text-white hover:bg-[#B8FF3B] hover:text-[#0C2417] hover:border-[#B8FF3B] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer shrink-0 active:scale-95 shadow-2xs"
                 >
                   <span>{t('review') || (language === 'id' ? 'Tinjau' : 'Review')}</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-[3px]" />
@@ -107,16 +107,16 @@ export const DarkModerationQueueCard: React.FC<DarkModerationQueueCardProps> = (
         </div>
 
         {/* ── FOOTER: DIRECTLY UNDER LIST (No Dead Gap) ───────────────── */}
-        <div className="pt-3.5 mt-2 border-t border-white/[0.08] flex items-center justify-between text-xs">
+        <div className="pt-3.5 mt-2 border-t border-white/[0.08] flex items-center justify-between text-sm">
           <Link
             to="/food-requests"
-            className="font-medium text-[#B8FF3B] hover:underline flex items-center space-x-1"
+            className="font-semibold text-[#B8FF3B] hover:underline flex items-center space-x-1"
           >
             <span>{t('viewAll') || (language === 'id' ? 'Lihat semua' : 'View all')}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </Link>
 
-          <span className="px-3 py-1 rounded-full bg-[#18261B] text-[#B8FF3B] text-xs font-medium">
+          <span className="px-3 py-1 rounded-full bg-[#18261B] text-[#B8FF3B] text-xs font-semibold">
             {pendingList.length > 0 ? pendingList.length : 1} {language === 'id' ? 'menunggu' : 'pending'}
           </span>
         </div>
@@ -126,11 +126,11 @@ export const DarkModerationQueueCard: React.FC<DarkModerationQueueCardProps> = (
       <div className="mt-6 pt-4 border-t border-white/[0.05] flex items-center justify-between text-xs">
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-[#B8FF3B]" />
-          <span className="text-[11px] font-medium text-white/70">
+          <span className="text-xs font-medium text-white/80">
             {t('rlsActive') || (language === 'id' ? 'Privasi Terjamin' : 'Privacy Enforced')}
           </span>
         </div>
-        <span className="text-[11px] text-white/40">Calora Console</span>
+        <span className="text-xs text-white/50">Calora Console</span>
       </div>
     </div>
   );

@@ -251,7 +251,10 @@ void main() {
       final updated = profile.copyWith(
         targetWeightKg: 55.0,
         goalPace: GoalPace.faster,
+        isPremium: true,
       );
+      expect(profile.isPremium, isFalse);
+      expect(updated.isPremium, isTrue);
       expect(updated.targetWeightKg, equals(55.0));
       expect(updated.goalPace, equals(GoalPace.faster));
       expect(updated.name, equals('Jordan'));

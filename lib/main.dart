@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'features/splash/splash_screen.dart';
@@ -21,6 +22,12 @@ void main() async {
       appCameras = await availableCameras();
     } catch (e) {
       debugPrint('availableCameras error: $e');
+    }
+
+    try {
+      await NotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint('NotificationService init error: $e');
     }
   }
 
@@ -53,9 +60,7 @@ class CaloraScrollBehavior extends MaterialScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const BouncingScrollPhysics(
-      parent: AlwaysScrollableScrollPhysics(),
-    );
+    return const ClampingScrollPhysics();
   }
 }
 

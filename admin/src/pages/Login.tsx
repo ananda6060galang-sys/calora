@@ -69,8 +69,8 @@ export const Login: React.FC = () => {
             </div>
 
             {error && (
-              <div className="p-3.5 bg-red-50 border border-red-100 rounded-2xl flex items-center space-x-3 text-xs font-semibold text-red-600">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" strokeWidth={2} />
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center space-x-3 text-sm font-semibold text-red-600">
+                <AlertCircle className="w-4.5 h-4.5 shrink-0 text-red-500" strokeWidth={2} />
                 <span>{error}</span>
               </div>
             )}
@@ -78,7 +78,7 @@ export const Login: React.FC = () => {
             {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#111111] block">
+                <label className="text-sm font-semibold text-stone-900 block">
                   Email Address
                 </label>
                 <input
@@ -87,12 +87,12 @@ export const Login: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@calora.app"
-                  className="w-full px-4 py-3 rounded-full border border-gray-200 bg-white text-[13px] font-medium text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#B8FF3B] focus:border-transparent transition-all placeholder:font-normal placeholder:text-gray-400"
+                  className="w-full px-4.5 py-3 rounded-full border border-stone-200 bg-white text-sm font-medium text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/70 focus:border-transparent transition-all placeholder:font-normal placeholder:text-stone-400"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#111111] block">
+                <label className="text-sm font-semibold text-stone-900 block">
                   Password
                 </label>
                 <input
@@ -101,7 +101,7 @@ export const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-full border border-gray-200 bg-white text-[13px] font-medium text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#B8FF3B] focus:border-transparent transition-all placeholder:font-normal placeholder:text-gray-400"
+                  className="w-full px-4.5 py-3 rounded-full border border-stone-200 bg-white text-sm font-medium text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/70 focus:border-transparent transition-all placeholder:font-normal placeholder:text-stone-400"
                 />
               </div>
 
@@ -109,16 +109,16 @@ export const Login: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 bg-[#B8FF3B] hover:brightness-105 text-[#0C2417] font-bold text-[13px] rounded-full shadow-xs transition-all flex items-center justify-center space-x-2 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 bg-[#B8FF3B] hover:brightness-105 text-[#0C2417] font-bold text-sm rounded-full shadow-xs transition-all flex items-center justify-center space-x-2 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   <span>{isLoading ? 'Authenticating...' : 'Log in'}</span>
-                  {!isLoading && <ArrowRight className="w-4 h-4 text-[#0C2417]" strokeWidth={2.5} />}
+                  {!isLoading && <ArrowRight className="w-4.5 h-4.5 text-[#0C2417]" strokeWidth={2.5} />}
                 </button>
               </div>
             </form>
 
             <div className="text-center pt-4">
-              <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+              <p className="text-xs text-stone-500 font-medium leading-relaxed">
                 Protected by Supabase Auth &amp; PostgreSQL RLS.
               </p>
             </div>

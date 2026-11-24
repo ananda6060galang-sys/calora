@@ -65,194 +65,219 @@ class NutritionSummaryCard extends StatelessWidget {
         ? (consumedCalories / targetCals).clamp(0.0, 1.0)
         : 0.0;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: borderColor, width: 1.0),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── 1. HEADER: Minimal Line-art Leaf Icon + "Nutrition AI Summary" ──
-          Row(
-            children: [
-              Icon(
-                Icons.eco_outlined,
-                size: 19,
-                color: isDark ? AppColors.accent : const Color(0xFF266E44),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'insights.nutritionAiSummary'.tr(),
-                style: GoogleFonts.inter(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: textPrimary,
-                  letterSpacing: -0.2,
-                ),
-              ),
-            ],
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 320;
+        final arcSize = isCompact ? 114.0 : 126.0;
+        final macroGap = isCompact ? 8.0 : 12.0;
 
-          const SizedBox(height: 18),
-          Divider(height: 1, thickness: 0.8, color: borderColor),
-          const SizedBox(height: 24),
-
-          // ── 2. CIRCULAR ARC GAUGE FLANKED BY CONSUMED & TARGET ────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Left: Consumed
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      _formatWithComma(consumedCalories),
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'insights.consumed'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
-                      ),
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(isCompact ? 16 : 20, 22, isCompact ? 16 : 20, 22),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: borderColor, width: 1.0),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
                     ),
                   ],
-                ),
-              ),
-
-              // Center: Circular Arc Progress Meter
-              SizedBox(
-                width: 135,
-                height: 135,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      size: const Size(135, 135),
-                      painter: _ArcProgressPainter(
-                        progress: progress,
-                        isDark: isDark,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── 1. HEADER: Minimal Line-art Leaf Icon + "Nutrition AI Summary" ──
+              Row(
+                children: [
+                  Icon(
+                    Icons.eco_outlined,
+                    size: 19,
+                    color: isDark ? AppColors.accent : const Color(0xFF266E44),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'insights.nutritionAiSummary'.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+              Divider(height: 1, thickness: 0.8, color: borderColor),
+              const SizedBox(height: 24),
+
+              // ── 2. CIRCULAR ARC GAUGE FLANKED BY CONSUMED & TARGET ────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Left: Consumed
+                  Expanded(
+                    child: Column(
                       children: [
-                        Text(
-                          _formatWithComma(consumedCalories),
-                          style: GoogleFonts.inter(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w900,
-                            color: textPrimary,
-                            letterSpacing: -1.0,
-                            height: 1.0,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _formatWithComma(consumedCalories),
+                            style: GoogleFonts.inter(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: textPrimary,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
-                          'insights.kcalTotal'.tr(),
+                          'insights.consumed'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                             color: textSecondary,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Right: Target
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      _formatWithComma(targetCals.round()),
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                        letterSpacing: -0.5,
-                      ),
+                  // Center: Circular Arc Progress Meter
+                  SizedBox(
+                    width: arcSize,
+                    height: arcSize,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CustomPaint(
+                          size: Size(arcSize, arcSize),
+                          painter: _ArcProgressPainter(
+                            progress: progress,
+                            isDark: isDark,
+                          ),
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                _formatWithComma(consumedCalories),
+                                style: GoogleFonts.inter(
+                                  fontSize: isCompact ? 22 : 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: textPrimary,
+                                  letterSpacing: -1.0,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'insights.kcalTotal'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'insights.target'.tr(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textSecondary,
-                      ),
+                  ),
+
+                  // Right: Target
+                  Expanded(
+                    child: Column(
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _formatWithComma(targetCals.round()),
+                            style: GoogleFonts.inter(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: textPrimary,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'insights.target'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
 
-          const SizedBox(height: 26),
+              const SizedBox(height: 26),
 
-          // ── 3. THREE MACRO HORIZONTAL PROGRESS BARS ─────────────────
-          Row(
-            children: [
-              Expanded(
-                child: _MacroBarItem(
-                  label: 'dashboard.carbs'.tr(),
-                  currentG: carbsConsumed.round(),
-                  targetG: carbsTarget.round(),
-                  color: AppColors.carbs,
-                  isDark: isDark,
-                  textSecondary: textSecondary,
-                  textPrimary: textPrimary,
-                ),
+              // ── 3. THREE MACRO HORIZONTAL PROGRESS BARS ─────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: _MacroBarItem(
+                      label: 'dashboard.carbs'.tr(),
+                      currentG: carbsConsumed.round(),
+                      targetG: carbsTarget.round(),
+                      color: AppColors.carbs,
+                      isDark: isDark,
+                      textSecondary: textSecondary,
+                      textPrimary: textPrimary,
+                    ),
+                  ),
+                  SizedBox(width: macroGap),
+                  Expanded(
+                    child: _MacroBarItem(
+                      label: 'dashboard.protein'.tr(),
+                      currentG: proteinConsumed.round(),
+                      targetG: proteinTarget.round(),
+                      color: AppColors.protein,
+                      isDark: isDark,
+                      textSecondary: textSecondary,
+                      textPrimary: textPrimary,
+                    ),
+                  ),
+                  SizedBox(width: macroGap),
+                  Expanded(
+                    child: _MacroBarItem(
+                      label: 'dashboard.fat'.tr(),
+                      currentG: fatConsumed.round(),
+                      targetG: fatTarget.round(),
+                      color: AppColors.fat,
+                      isDark: isDark,
+                      textSecondary: textSecondary,
+                      textPrimary: textPrimary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MacroBarItem(
-                  label: 'dashboard.protein'.tr(),
-                  currentG: proteinConsumed.round(),
-                  targetG: proteinTarget.round(),
-                  color: AppColors.protein,
-                  isDark: isDark,
-                  textSecondary: textSecondary,
-                  textPrimary: textPrimary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MacroBarItem(
-                  label: 'dashboard.fat'.tr(),
-                  currentG: fatConsumed.round(),
-                  targetG: fatTarget.round(),
-                  color: AppColors.fat,
-                  isDark: isDark,
-                  textSecondary: textSecondary,
-                  textPrimary: textPrimary,
-                ),
-              ),
-            ],
-          ),
 
           const SizedBox(height: 22),
 
@@ -307,6 +332,8 @@ class NutritionSummaryCard extends StatelessWidget {
         ],
       ),
     );
+  },
+);
   }
 }
 
@@ -366,12 +393,16 @@ class _MacroBarItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          '$currentG/${targetG}g',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: textPrimary,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            '$currentG/${targetG}g',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: textPrimary,
+            ),
           ),
         ),
       ],

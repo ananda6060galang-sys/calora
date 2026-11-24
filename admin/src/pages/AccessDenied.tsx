@@ -19,29 +19,29 @@ export const AccessDenied: React.FC = () => {
           <ShieldAlert className="w-8 h-8" />
         </div>
 
-        <div className="space-y-1">
-          <h2 className="text-2xl font-black text-calora-light-text">
+        <div className="space-y-1.5">
+          <h2 className="text-2xl font-black text-stone-900 dark:text-stone-100">
             Access Denied
           </h2>
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-sm text-stone-500 font-medium">
             This console is restricted to administrators. Your account does not have permission to view this resource.
           </p>
         </div>
 
-        <div className="p-4 bg-gray-50 rounded-xl text-left border border-gray-100">
-          <p className="text-[11px] font-semibold text-gray-500">
-            Current session role: <strong className="text-calora-light-text">user</strong>
+        <div className="p-4 bg-stone-50 rounded-xl text-left border border-stone-200">
+          <p className="text-sm font-semibold text-stone-700">
+            Current session role: <strong className="text-stone-900">user</strong>
           </p>
-          <p className="text-[10px] text-gray-400 mt-1">
+          <p className="text-xs text-stone-500 mt-1.5">
             To view personal food logs and workouts, please open the Calora mobile application.
           </p>
         </div>
 
         <button
           onClick={handleReturnToLogin}
-          className="w-full py-3 bg-[#111111] hover:bg-black text-white font-extrabold text-xs rounded-xl transition-all flex items-center justify-center space-x-2"
+          className="w-full py-3.5 bg-stone-900 hover:bg-black text-white font-bold text-sm rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4.5 h-4.5" />
           <span>Return to Admin Login</span>
         </button>
       </div>

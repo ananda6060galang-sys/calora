@@ -47,32 +47,32 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
       <div className="bg-white dark:bg-[#181E19] w-full max-w-md rounded-2xl shadow-2xl border border-[#EAECE8] dark:border-[#263226] overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#F2F4F0] dark:border-[#222D23] shrink-0">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-[#F2F4F0] dark:border-[#222D23] shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-xl bg-[#0B2114] text-[#B8FF3B] flex items-center justify-center">
-              <Folder className="w-4 h-4 stroke-[1.8]" />
+            <div className="w-9 h-9 rounded-xl bg-[#0B2114] text-[#B8FF3B] flex items-center justify-center">
+              <Folder className="w-4.5 h-4.5 stroke-[1.8]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#111111] dark:text-[#F3F5EF]">
+              <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
                 {categoryToEdit ? 'Edit Category' : 'Add New Category'}
               </h3>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
                 Organize verified dishes into taxonomy groups
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 dark:hover:text-white transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4 stroke-[1.8]" />
+            <X className="w-5 h-5 stroke-[1.8]" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
           <div>
-            <label className="text-xs font-bold text-[#111111] dark:text-[#F3F5EF] mb-1.5 block">
+            <label className="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-2 block">
               Category Name *
             </label>
             <input
@@ -82,24 +82,24 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Minuman & Jus Sehat"
-              className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#111111] dark:text-[#F3F5EF] focus:outline-none focus:ring-1 focus:ring-[#B8FF3B]"
+              className="w-full text-sm px-4 py-2.5 rounded-xl border border-stone-200 dark:border-[#303830] bg-stone-50/50 dark:bg-[#202820] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50 transition-colors"
             />
           </div>
 
-          <div className="flex items-center justify-end space-x-2 pt-2 border-t border-[#F2F4F0] dark:border-[#222D23]">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#F2F4F0] dark:border-[#222D23]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#222D23] rounded-xl transition-colors cursor-pointer"
+              className="px-4.5 py-2.5 text-sm font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#222D23] rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="px-5 py-2 text-xs font-black text-[#0C2417] bg-[#B8FF3B] hover:brightness-105 active:scale-95 disabled:opacity-50 rounded-xl transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer"
+              className="px-5 py-2.5 text-sm font-bold text-[#0C2417] bg-[#B8FF3B] hover:brightness-105 active:scale-95 disabled:opacity-50 rounded-xl transition-all shadow-xs flex items-center space-x-2 cursor-pointer"
             >
-              <Check className="w-3.5 h-3.5 stroke-[2.2]" />
+              <Check className="w-4 h-4 text-[#0C2417] stroke-[2.2]" />
               <span>{categoryToEdit ? 'Save Changes' : 'Create Category'}</span>
             </button>
           </div>

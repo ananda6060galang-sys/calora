@@ -12,6 +12,7 @@ import '../auth/providers/auth_provider.dart';
 import '../dashboard/providers/profile_provider.dart';
 import '../diary/providers/diary_provider.dart';
 import '../notifications/notifications_screen.dart';
+import '../premium/premium_paywall_screen.dart';
 import 'providers/weight_log_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -81,9 +82,84 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SafeArea(
             child: ListView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              physics: const ClampingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               children: [
+            // ── CALORA PRO PREMIUM BANNER ───────────────────────
+            GestureDetector(
+              onTap: () => PremiumPaywallScreen.show(context),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF141713),
+                      Color(0xFF222B1E),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD6FA55),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Color(0xFF141713),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Calora Pro',
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            context.locale.languageCode == 'id'
+                                ? 'Dapatkan akses fitur tanpa batas'
+                                : 'Get unlimited access to all features',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFD6FA55),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: Colors.white70,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             // ── SETTINGS LIST ──────────────────────────────────
             Container(
               decoration: BoxDecoration(

@@ -66,17 +66,17 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
           <div className="flex items-center space-x-3">
             <FileText className="w-5 h-5 text-[#16A34A] dark:text-[#3DDC84] stroke-[1.8]" />
             <div>
-              <h3 className="text-base font-bold text-[#111111] dark:text-[#F3F5EF]">
+              <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
                 {t('reviewModalTitle')}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs font-mono font-medium text-stone-500 dark:text-stone-400">
                 {t('requestId')}: {request.id}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 dark:hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5 stroke-[1.8]" />
           </button>
@@ -87,15 +87,15 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
           <div>
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-extrabold text-[#111111] dark:text-[#F3F5EF]">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
                   {request.food_name}
                 </h2>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-sm font-medium text-stone-600 dark:text-stone-300 mt-0.5">
                   {t('portionLabel')}: {request.serving_label}
                 </p>
               </div>
               <span
-                className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${
+                className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${
                   request.status === 'approved'
                     ? 'bg-[#EBF7EE] dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84]'
                     : request.status === 'rejected'
@@ -113,54 +113,54 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
           </div>
 
           {/* Macro Breakdown */}
-          <div className="bg-gray-50 dark:bg-[#202820] p-4 rounded-xl border border-gray-100 dark:border-[#263226]">
-            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider uppercase mb-3">
+          <div className="bg-stone-50 dark:bg-[#202820] p-4.5 rounded-xl border border-stone-200/80 dark:border-[#263226]">
+            <p className="text-xs font-bold text-stone-500 dark:text-stone-400 tracking-wider uppercase mb-3">
               {t('nutritionalValues')}
             </p>
             <div className="grid grid-cols-4 gap-2 text-center">
               <div className="p-2">
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
+                <span className="text-xs font-semibold text-stone-600 dark:text-stone-300 block">
                   Calories
                 </span>
-                <span className="text-lg font-extrabold text-[#111111] dark:text-[#F3F5EF]">
+                <span className="text-xl font-bold text-stone-900 dark:text-stone-100">
                   {request.calories}
                 </span>
-                <span className="text-[10px] text-gray-400 block">kcal</span>
+                <span className="text-xs font-medium text-stone-500 dark:text-stone-400 block">kcal</span>
               </div>
               <div className="p-2">
-                <span className="text-xs font-semibold text-[#FF6B57] block">
+                <span className="text-xs font-bold text-[#FF6B57] block">
                   {t('proteinLabel')}
                 </span>
-                <span className="text-lg font-extrabold text-[#FF6B57]">
+                <span className="text-xl font-bold text-[#FF6B57]">
                   {request.protein_g}
                 </span>
-                <span className="text-[10px] text-gray-400 block">g</span>
+                <span className="text-xs font-medium text-stone-500 dark:text-stone-400 block">g</span>
               </div>
               <div className="p-2">
-                <span className="text-xs font-semibold text-[#FFA048] block">
+                <span className="text-xs font-bold text-[#FFA048] block">
                   {t('carbsLabel')}
                 </span>
-                <span className="text-lg font-extrabold text-[#FFA048]">
+                <span className="text-xl font-bold text-[#FFA048]">
                   {request.carbs_g}
                 </span>
-                <span className="text-[10px] text-gray-400 block">g</span>
+                <span className="text-xs font-medium text-stone-500 dark:text-stone-400 block">g</span>
               </div>
               <div className="p-2">
-                <span className="text-xs font-semibold text-[#7C9CFF] block">
+                <span className="text-xs font-bold text-[#7C9CFF] block">
                   {t('fatLabel')}
                 </span>
-                <span className="text-lg font-extrabold text-[#7C9CFF]">
+                <span className="text-xl font-bold text-[#7C9CFF]">
                   {request.fat_g}
                 </span>
-                <span className="text-[10px] text-gray-400 block">g</span>
+                <span className="text-xs font-medium text-stone-500 dark:text-stone-400 block">g</span>
               </div>
             </div>
           </div>
 
           {/* Contributor Metadata */}
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
-              <div className="relative w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px] shrink-0 bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] overflow-hidden">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center space-x-2.5 text-stone-600 dark:text-stone-300">
+              <div className="relative w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] overflow-hidden">
                 {submitterAvatar ? (
                   <img
                     src={submitterAvatar}
@@ -175,16 +175,16 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
               </div>
               <span className="truncate">
                 {t('submittedByLabel')}:{' '}
-                <strong className="text-[#111111] dark:text-[#F3F5EF]">
+                <strong className="text-stone-900 dark:text-stone-100 font-semibold">
                   {submitterName}
                 </strong>
               </span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
-              <Clock className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+            <div className="flex items-center space-x-2 text-stone-600 dark:text-stone-300">
+              <Clock className="w-4.5 h-4.5 text-stone-400 stroke-[1.8]" />
               <span>
                 {t('requestDateLabel')}:{' '}
-                <strong className="text-[#111111] dark:text-[#F3F5EF]">
+                <strong className="text-stone-900 dark:text-stone-100 font-semibold">
                   {formatDate(request.created_at)}
                 </strong>
               </span>
@@ -194,10 +194,10 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
           {/* User Notes */}
           {request.notes && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1.5">
                 {t('submissionNotes')}
               </p>
-              <div className="p-3 bg-gray-50 dark:bg-[#202820] rounded-lg text-xs italic text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-[#263226]">
+              <div className="p-3.5 bg-stone-50 dark:bg-[#202820] rounded-xl text-sm italic text-stone-700 dark:text-stone-300 border border-stone-200/80 dark:border-[#263226]">
                 "{request.notes}"
               </div>
             </div>
@@ -205,16 +205,16 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
 
           {/* Rejection Input */}
           {isRejecting && (
-            <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-[#263226]">
-              <label className="text-xs font-bold text-red-500 flex items-center space-x-1">
-                <AlertCircle className="w-3.5 h-3.5 stroke-[2]" />
+            <div className="space-y-2 pt-2 border-t border-stone-200 dark:border-[#263226]">
+              <label className="text-sm font-semibold text-red-600 dark:text-red-400 flex items-center space-x-1.5">
+                <AlertCircle className="w-4 h-4 stroke-[2]" />
                 <span>{t('rejectReasonPrompt')}</span>
               </label>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={2}
-                className="w-full text-xs p-2.5 rounded-lg border border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-[#2a1718] text-[#111111] dark:text-[#F3F5EF] focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full text-sm p-3 rounded-xl border border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-[#2a1718] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                 placeholder="Explain why this dish submission does not meet verification standards..."
               />
             </div>
@@ -222,10 +222,10 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end px-6 py-4 bg-gray-50/70 dark:bg-[#151C16] border-t border-gray-100 dark:border-[#222D23] space-x-3">
+        <div className="flex items-center justify-end px-6 py-4 bg-stone-50/80 dark:bg-[#151C16] border-t border-stone-200 dark:border-[#222D23] space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="px-4.5 py-2.5 text-sm font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white transition-colors cursor-pointer"
           >
             {t('cancel')}
           </button>
@@ -237,7 +237,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                   <button
                     onClick={() => setIsRejecting(true)}
                     disabled={isSubmitting}
-                    className="px-4 py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-300 dark:border-red-800 rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
+                    className="px-4.5 py-2.5 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-300 dark:border-red-800 rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
                   >
                     <X className="w-4 h-4 stroke-[2]" />
                     <span>{t('rejectSubmission')}</span>
@@ -245,7 +245,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                   <button
                     onClick={handleApprove}
                     disabled={isSubmitting}
-                    className="px-5 py-2 text-xs font-extrabold bg-[#B8FF3B] text-[#0C2417] hover:brightness-105 active:scale-95 rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
+                    className="px-5 py-2.5 text-sm font-bold bg-[#B8FF3B] text-[#0C2417] hover:brightness-105 active:scale-95 rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
                   >
                     <Check className="w-4 h-4 text-[#0C2417] stroke-[2.5]" />
                     <span>{t('approveAndPublish')}</span>
@@ -255,7 +255,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                 <button
                   onClick={handleReject}
                   disabled={isSubmitting}
-                  className="px-5 py-2 text-xs font-bold bg-red-600 text-white hover:bg-red-700 rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-bold bg-red-600 text-white hover:bg-red-700 rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
                 >
                   <span>{t('confirmReject')}</span>
                 </button>

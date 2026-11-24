@@ -31,7 +31,7 @@ export const ToastContainer: React.FC = () => {
           >
             <div className="flex items-center space-x-3">
               {icon}
-              <p className="text-xs font-semibold text-calora-light-text dark:text-calora-dark-text">
+              <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                 {toast.message}
               </p>
             </div>

@@ -352,7 +352,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             // FORM
             // =====================================================
             SingleChildScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              physics: const ClampingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

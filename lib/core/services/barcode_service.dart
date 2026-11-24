@@ -78,19 +78,29 @@ class BarcodeUtils {
 
   /// Normalizes a raw barcode:
   /// - Trims leading and trailing whitespace
-  /// - Strips non-digit formatting characters if any
+  /// - Strips spaces and hyphens commonly found on human-readable labels
   /// - Preserves leading zeros (e.g., UPC-A '089686010955')
-  /// - Validates reasonable length (7 to 14 digits for standard barcodes)
+  /// - Validates reasonable length (4 to 18 digits for standard barcodes, e.g. UPC-E 6-8, EAN-8 8, UPC-A 12, EAN-13 13, ITF-14 14)
+  /// - Supports alphanumeric barcodes (e.g. Code 128, Code 39)
   static String? normalize(String? raw) {
     if (raw == null) return null;
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return null;
 
-    final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
-    if (digitsOnly.length < 7 || digitsOnly.length > 14) {
+    // Alphanumeric barcode (e.g. Code 128 / Code 39 food inventory codes)
+    if (RegExp(r'[a-zA-Z]').hasMatch(trimmed)) {
+      if (trimmed.length >= 4 && trimmed.length <= 32) {
+        return trimmed;
+      }
       return null;
     }
-    return digitsOnly;
+
+    // Pure numeric barcode (UPC-E, EAN-8, UPC-A, EAN-13, ITF-14, etc.)
+    final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.length >= 4 && digitsOnly.length <= 18) {
+      return digitsOnly;
+    }
+    return null;
   }
 }
 
@@ -103,17 +113,26 @@ class BarcodeService {
   BarcodeService({
     SupabaseClient? supabaseClient,
     http.Client? httpClient,
-  })  : _supabase = supabaseClient ?? Supabase.instance.client,
+  })  : _explicitSupabase = supabaseClient,
         _http = httpClient ?? http.Client();
 
-  final SupabaseClient _supabase;
+  final SupabaseClient? _explicitSupabase;
   final http.Client _http;
+
+  SupabaseClient? get _supabase {
+    if (_explicitSupabase != null) return _explicitSupabase;
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Uri get _edgeFunctionUri =>
       Uri.parse('${SupabaseConfig.url}/functions/v1/fatsecret-food');
 
   Map<String, String> _buildEdgeFunctionHeaders() {
-    final session = _supabase.auth.currentSession;
+    final session = _supabase?.auth.currentSession;
     final accessToken = session?.accessToken;
     final headers = <String, String>{
       'Content-Type': 'application/json',
@@ -179,18 +198,22 @@ class BarcodeService {
 
   /// Queries Supabase public.foods by barcode, with local catalog fallback.
   Future<Food?> _queryCaloraDatabase(String barcode) async {
-    try {
-      final response = await _supabase
-          .from('foods')
-          .select('*, food_categories(name)')
-          .eq('barcode', barcode)
-          .maybeSingle();
+    final client = _supabase;
+    if (client != null) {
+      try {
+        final response = await client
+            .from('foods')
+            .select('*, food_categories(name)')
+            .eq('barcode', barcode)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 4));
 
-      if (response != null) {
-        return Food.fromSupabase(response);
+        if (response != null) {
+          return Food.fromSupabase(response);
+        }
+      } catch (e) {
+        debugPrint('Calora DB barcode query note: $e');
       }
-    } catch (e) {
-      debugPrint('Calora DB barcode query note: $e');
     }
 
     // Check in-memory local Indonesian & demo catalog
@@ -222,12 +245,14 @@ class BarcodeService {
     // If it's a 12-digit UPC-A, also try with leading zero (EAN-13 format)
     if (barcode.length == 12) {
       candidateBarcodes.add('0$barcode');
+    } else if (barcode.length == 13 && barcode.startsWith('0')) {
+      candidateBarcodes.add(barcode.substring(1));
     }
 
     for (final code in candidateBarcodes) {
       try {
         final uri = Uri.parse(
-          'https://world.openfoodfacts.org/api/v2/product/$code.json',
+          'https://world.openfoodfacts.org/api/v2/product/$code.json?fields=code,product_name,product_name_en,product_name_id,generic_name,brands,brand_owner,nutriments,serving_size,serving_quantity,image_front_url,image_url,image_small_url,categories',
         );
         final res = await _http.get(
           uri,
@@ -235,7 +260,7 @@ class BarcodeService {
             'User-Agent':
                 'Calora - Flutter Nutrition App - Version 1.0 (calora.nutrition@gmail.com)',
           },
-        ).timeout(const Duration(seconds: 5));
+        ).timeout(const Duration(seconds: 4));
 
         if (res.statusCode == 200) {
           final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -266,19 +291,23 @@ class BarcodeService {
     final rawName = (product['product_name'] ??
             product['product_name_en'] ??
             product['product_name_id'] ??
+            product['generic_name'] ??
             '')
         .toString()
         .trim();
 
-    if (rawName.isEmpty) return null;
-
     final rawBrand = (product['brands'] ?? product['brand_owner'] ?? '')
         .toString()
         .trim();
-    final displayName = rawBrand.isNotEmpty &&
-            !rawName.toLowerCase().contains(rawBrand.toLowerCase())
-        ? '$rawBrand $rawName'
-        : rawName;
+
+    if (rawName.isEmpty && rawBrand.isEmpty) return null;
+
+    final displayName = rawName.isNotEmpty
+        ? (rawBrand.isNotEmpty &&
+                !rawName.toLowerCase().contains(rawBrand.toLowerCase())
+            ? '$rawBrand $rawName'
+            : rawName)
+        : rawBrand;
 
     // 2. Nutriments
     final nutriments = product['nutriments'] as Map<String, dynamic>? ?? {};

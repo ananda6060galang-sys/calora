@@ -383,7 +383,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             // 2. FORM CONTAINER
             // =====================================================
             SingleChildScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              physics: const ClampingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

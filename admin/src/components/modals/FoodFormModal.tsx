@@ -105,9 +105,9 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          <div className="p-6 space-y-4.5 max-h-[75vh] overflow-y-auto">
             <div>
-              <label className="text-xs font-bold text-[#111111] dark:text-[#F3F5EF] mb-1 block">
+              <label className="text-sm font-semibold text-stone-900 dark:text-white mb-1.5 block">
                 {t('foodNameField')} *
               </label>
               <input
@@ -116,19 +116,19 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Ayam Bakar Madu"
-                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#111111] dark:text-[#F3F5EF] focus:outline-none focus:ring-1 focus:ring-[#74D100]"
+                className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3.5">
               <div>
-                <label className="text-xs font-bold text-[#111111] dark:text-[#F3F5EF] mb-1 block">
+                <label className="text-sm font-semibold text-stone-900 dark:text-white mb-1.5 block">
                   {t('categoryField')}
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#111111] dark:text-[#F3F5EF] focus:outline-none focus:ring-1 focus:ring-[#74D100]"
+                  className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50 cursor-pointer"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.name}>
@@ -139,7 +139,7 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-[#111111] dark:text-[#F3F5EF] mb-1 block">
+                <label className="text-sm font-semibold text-stone-900 dark:text-white mb-1.5 block">
                   {t('servingLabelField')} *
                 </label>
                 <input
@@ -148,18 +148,18 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
                   value={servingLabel}
                   onChange={(e) => setServingLabel(e.target.value)}
                   placeholder="e.g. 1 porsi (150g)"
-                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#111111] dark:text-[#F3F5EF] focus:outline-none focus:ring-1 focus:ring-[#74D100]"
+                  className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#111111] dark:text-[#F3F5EF] mb-1.5 block">
+              <label className="text-sm font-semibold text-stone-900 dark:text-white mb-1.5 block">
                 {t('nutritionalValues')}
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-2.5">
                 <div>
-                  <span className="text-[10px] font-semibold text-gray-400 block mb-1">
+                  <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 block mb-1">
                     {t('caloriesKcalField')}
                   </span>
                   <input
@@ -168,11 +168,11 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
                     required
                     value={calories}
                     onChange={(e) => setCalories(e.target.value)}
-                    className="w-full text-xs font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#111111] dark:text-[#F3F5EF] focus:outline-none focus:ring-1 focus:ring-[#74D100]"
+                    className="w-full text-sm font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#B8FF3B]/50"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold text-[#FF6B57] block mb-1">
+                  <span className="text-xs font-semibold text-[#FF6B57] block mb-1">
                     {t('proteinLabel')} (g)
                   </span>
                   <input
@@ -182,11 +182,11 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
                     required
                     value={protein}
                     onChange={(e) => setProtein(e.target.value)}
-                    className="w-full text-xs font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#FF6B57] focus:outline-none focus:ring-1 focus:ring-[#FF6B57]"
+                    className="w-full text-sm font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#FF6B57] focus:outline-none focus:ring-2 focus:ring-[#FF6B57]/50"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold text-[#FFA048] block mb-1">
+                  <span className="text-xs font-semibold text-[#FFA048] block mb-1">
                     {t('carbsLabel')} (g)
                   </span>
                   <input
@@ -196,11 +196,11 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
                     required
                     value={carbs}
                     onChange={(e) => setCarbs(e.target.value)}
-                    className="w-full text-xs font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#FFA048] focus:outline-none focus:ring-1 focus:ring-[#FFA048]"
+                    className="w-full text-sm font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#FFA048] focus:outline-none focus:ring-2 focus:ring-[#FFA048]/50"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold text-[#7C9CFF] block mb-1">
+                  <span className="text-xs font-semibold text-[#7C9CFF] block mb-1">
                     {t('fatLabel')} (g)
                   </span>
                   <input
@@ -210,7 +210,7 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
                     required
                     value={fat}
                     onChange={(e) => setFat(e.target.value)}
-                    className="w-full text-xs font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#7C9CFF] focus:outline-none focus:ring-1 focus:ring-[#7C9CFF]"
+                    className="w-full text-sm font-bold text-center px-2 py-2 rounded-lg border border-gray-200 dark:border-[#303830] bg-gray-50/50 dark:bg-[#202820] text-[#7C9CFF] focus:outline-none focus:ring-2 focus:ring-[#7C9CFF]/50"
                   />
                 </div>
               </div>
@@ -222,14 +222,14 @@ export const FoodFormModal: React.FC<FoodFormModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="px-4 py-2.5 text-sm font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 text-xs font-extrabold bg-[#B8FF3B] text-[#0C2417] hover:brightness-105 active:scale-95 rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
+              className="px-5 py-2.5 text-sm font-bold bg-[#B8FF3B] text-[#0C2417] hover:brightness-105 active:scale-95 rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4 text-[#0C2417] stroke-[2.2]" />
               <span>{foodToEdit ? t('saveChanges') : t('addToCatalog')}</span>

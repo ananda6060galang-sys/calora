@@ -20,6 +20,7 @@ import 'providers/food_search_provider.dart';
 import 'food_request_screen.dart';
 import 'widgets/ai_scanner_sheet.dart';
 import 'widgets/barcode_scanner_screen.dart';
+import 'widgets/scan_history_screen.dart';
 
 /// Auto-detects the default main meal type based on local device time:
 /// Snack tidak memiliki jadwal otomatis; hanya dipilih saat pengguna mengkliknya.
@@ -114,6 +115,11 @@ class FoodDiaryScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Static helper to open the Scan History Screen.
+  static void openScanHistoryScreen(BuildContext context) {
+    ScanHistoryScreen.show(context);
   }
 
   /// Static helper to open the Food Entry Detail Sheet using the unified AddFoodSheet.
@@ -377,7 +383,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
 
               Expanded(
                 child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                  physics: const ClampingScrollPhysics(),
                   slivers: [
                     // "Set your daily meal plan" + Image
                     SliverToBoxAdapter(
@@ -492,10 +498,10 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                               ),
                               child: Container(
                                 height: 44,
-                                width: 54,
+                                width: 50,
                                 decoration: BoxDecoration(
                                   color: AppColors.accent,
-                                  borderRadius: BorderRadius.circular(18),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 alignment: Alignment.center,
                                 child: Stack(
@@ -504,14 +510,48 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                     Icon(
                                       Icons.crop_free_rounded,
                                       color: isDark ? const Color(0xFF0F1410) : Colors.white,
-                                      size: 26,
+                                      size: 24,
                                     ),
                                     Icon(
                                       Icons.camera_alt_rounded,
                                       color: isDark ? const Color(0xFF0F1410) : Colors.white,
-                                      size: 13,
+                                      size: 12,
                                     ),
                                   ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Scan history button
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                FoodDiaryScreen.openScanHistoryScreen(context);
+                              },
+                              child: Container(
+                                height: 44,
+                                width: 44,
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.darkSurface : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.25 : 0.04,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.history_rounded,
+                                  color: isDark ? AppColors.accent : const Color(0xFF2E6312),
+                                  size: 21,
                                 ),
                               ),
                             ),
@@ -627,7 +667,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                   height: 44,
                                   child: SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
-                                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                                    physics: const ClampingScrollPhysics(),
                                     child: Row(
                                       children: List.generate(12, (index) {
                                         final monthIndex = index + 1;
@@ -711,7 +751,7 @@ class _FoodDiaryScreenBodyState extends ConsumerState<FoodDiaryScreenBody> {
                                           ),
                                           scrollDirection: Axis.horizontal,
                                           physics:
-                                              const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                                              const ClampingScrollPhysics(),
                                           itemCount: _totalDays,
                                           separatorBuilder:
                                               (context, index) =>
@@ -1807,7 +1847,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                       // Form Body
                       Expanded(
                         child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                          physics: const ClampingScrollPhysics(),
                           padding: EdgeInsets.fromLTRB(
                             20,
                             4,
@@ -2358,7 +2398,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
                     height: 36,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.zero,
                       children: [
                         _buildCategoryChip(
@@ -3001,7 +3041,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
 
     // 4. Clean Editorial Results List
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics: const ClampingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
@@ -3307,7 +3347,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
         // ── Scrollable Body Area ──
         Flexible(
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -3648,7 +3688,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
         const SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          physics: const ClampingScrollPhysics(),
           child: Row(
             children: food.servings.map((serving) {
               final isSelected = _selectedServing?.servingId == serving.servingId;
@@ -4020,7 +4060,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           // Quick Delta Adjusters: [-50g] [-25g] [-10g] [+10g] [+25g] [+50g]
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const ClampingScrollPhysics(),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -4097,7 +4137,7 @@ class _AddFoodSheetState extends ConsumerState<AddFoodSheet> {
           // ── Mode Porsi (Presets) ──
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const ClampingScrollPhysics(),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

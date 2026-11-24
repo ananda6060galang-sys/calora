@@ -198,12 +198,12 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               {t('recentSubmissions')}
             </h3>
             {pendingCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF7EA] dark:bg-[#152B1E] text-[#16A34A] dark:text-[#B8FF3B]">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EBF7EA] dark:bg-[#152B1E] text-[#16A34A] dark:text-[#B8FF3B]">
                 {pendingCount} Pending
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
             {t('submissionsSubtitle')}
           </p>
         </div>
@@ -212,7 +212,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
         <div className="flex items-center flex-wrap gap-2.5">
           {/* 1. SEARCH INPUT */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
+            <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[1.8]" />
             <input
               type="text"
               value={searchTerm}
@@ -221,14 +221,14 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setCurrentPage(1);
               }}
               placeholder="Search dishes or users..."
-              className="bg-[#EFF2EE] dark:bg-[#1A241E] border border-[#E0E5DF] dark:border-[#263226] text-xs text-[#111111] dark:text-[#F3F5EF] placeholder-gray-400 rounded-full pl-9 pr-7 py-2 focus:outline-none focus:border-[#B8FF3B] focus:ring-1 focus:ring-[#B8FF3B] w-48 sm:w-56 transition-colors"
+              className="bg-[#EFF2EE] dark:bg-[#1A241E] border border-[#E0E5DF] dark:border-[#263226] text-sm text-[#111111] dark:text-[#F3F5EF] placeholder-stone-500 dark:placeholder-stone-400 rounded-full pl-10 pr-8 py-2.5 focus:outline-none focus:border-[#B8FF3B] focus:ring-1 focus:ring-[#B8FF3B] w-52 sm:w-64 transition-colors"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-white cursor-pointer"
               >
-                <X className="w-3 h-3 stroke-[2]" />
+                <X className="w-3.5 h-3.5 stroke-[2]" />
               </button>
             )}
           </div>
@@ -241,7 +241,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-white dark:bg-[#1A241E] border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-2xs"
+              className="bg-white dark:bg-[#1A241E] border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2.5 text-sm font-medium text-stone-700 dark:text-stone-300 focus:outline-none cursor-pointer shadow-2xs"
             >
               <option value="all">All Categories</option>
               {categoriesList.map((c) => (
@@ -253,16 +253,16 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
           )}
 
           {/* 2. STATUS TABS */}
-          <div className="flex items-center space-x-1 p-0.5 bg-[#EFF2EE] dark:bg-[#1A241E] rounded-full border border-gray-200 dark:border-gray-700 overflow-x-auto text-xs font-semibold">
+          <div className="flex items-center space-x-1 p-0.5 bg-[#EFF2EE] dark:bg-[#1A241E] rounded-full border border-gray-200 dark:border-gray-700 overflow-x-auto text-sm font-semibold">
             <button
               onClick={() => {
                 setStatusFilter('all');
                 setCurrentPage(1);
               }}
-              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'all'
                   ? 'bg-white dark:bg-[#253628] text-[#111111] dark:text-white shadow-2xs font-bold'
-                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                  : 'text-stone-600 hover:text-black dark:text-stone-400 dark:hover:text-white'
               }`}
             >
               All
@@ -272,10 +272,10 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setStatusFilter('pending');
                 setCurrentPage(1);
               }}
-              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'pending'
                   ? 'bg-[#B8FF3B] text-[#0C2417] font-bold shadow-2xs'
-                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                  : 'text-stone-600 hover:text-black dark:text-stone-400 dark:hover:text-white'
               }`}
             >
               Pending ({pendingCount})
@@ -285,10 +285,10 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setStatusFilter('approved');
                 setCurrentPage(1);
               }}
-              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'approved'
                   ? 'bg-white dark:bg-[#253628] text-[#111111] dark:text-white shadow-2xs font-bold'
-                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                  : 'text-stone-600 hover:text-black dark:text-stone-400 dark:hover:text-white'
               }`}
             >
               Approved ({approvedCount})
@@ -298,10 +298,10 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 setStatusFilter('rejected');
                 setCurrentPage(1);
               }}
-              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
                 statusFilter === 'rejected'
                   ? 'bg-white dark:bg-[#253628] text-[#111111] dark:text-white shadow-2xs font-bold'
-                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                  : 'text-stone-600 hover:text-black dark:text-stone-400 dark:hover:text-white'
               }`}
             >
               Rejected ({rejectedCount})
@@ -312,45 +312,45 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
 
       {/* ── BULK ACTION BAR ───────────────────────────────────────── */}
       {selectedIds.length > 0 && (
-        <div className="p-3 mx-4 my-3 bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="flex items-center space-x-2">
-            <span className="w-5 h-5 rounded-full bg-red-600 text-white text-[11px] font-bold flex items-center justify-center">
+        <div className="p-3.5 mx-4 my-3 bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center space-x-2.5">
+            <span className="w-5.5 h-5.5 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center">
               {selectedIds.length}
             </span>
-            <span className="text-xs font-semibold text-red-900 dark:text-red-200">
+            <span className="text-sm font-semibold text-red-900 dark:text-red-200">
               {selectedIds.length} {t('itemsSelected')}
             </span>
           </div>
 
-          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
             {pendingSelectedCount > 0 && (
               <>
                 <button
                   onClick={handleBulkApprove}
-                  className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-emerald-700 active:scale-95 text-white text-sm font-bold flex items-center space-x-2 transition-all shadow-2xs cursor-pointer"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 stroke-[2]" />
+                  <CheckCircle2 className="w-4 h-4 stroke-[2]" />
                   <span>{t('bulkApprove')} ({pendingSelectedCount})</span>
                 </button>
                 <button
                   onClick={() => setIsBulkRejectModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-sm font-bold flex items-center space-x-2 transition-all shadow-2xs cursor-pointer"
                 >
-                  <XCircle className="w-3.5 h-3.5 stroke-[2]" />
+                  <XCircle className="w-4 h-4 stroke-[2]" />
                   <span>{t('bulkReject')}</span>
                 </button>
               </>
             )}
             <button
               onClick={handleBulkDelete}
-              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-sm font-bold flex items-center space-x-2 transition-all shadow-2xs cursor-pointer"
             >
-              <Trash2 className="w-3.5 h-3.5 stroke-[2]" />
+              <Trash2 className="w-4 h-4 stroke-[2]" />
               <span>{t('deleteSelected')}</span>
             </button>
             <button
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-[#1A241E] text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-xl border border-stone-300 dark:border-stone-600 hover:bg-white dark:hover:bg-[#1A241E] text-sm font-medium text-stone-700 dark:text-stone-300 transition-colors cursor-pointer"
             >
               {t('deselectAll')}
             </button>
@@ -362,9 +362,9 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs font-medium">
           <thead>
-            <tr className="border-b border-[#EAECE8] dark:border-[#222D23] text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-50/50 dark:bg-[#151C16]">
+            <tr className="border-b border-[#EAECE8] dark:border-[#222D23] text-[13px] font-semibold text-stone-700 dark:text-stone-300 bg-gray-50/50 dark:bg-[#151C16]">
               {/* Checkbox Header */}
-              <th className="py-3 px-4 w-10 text-center">
+              <th className="py-3.5 px-4 w-10 text-center">
                 <button
                   onClick={toggleSelectAll}
                   aria-label="Select all requests on this page"
@@ -387,7 +387,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               {/* FOOD ITEM */}
               <th
                 onClick={() => handleSort('food_name')}
-                className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
+                className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
               >
                 <div className="flex items-center space-x-1">
                   <span>{t('foodItem')}</span>
@@ -406,7 +406,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               {/* SUBMITTED BY */}
               <th
                 onClick={() => handleSort('user_id')}
-                className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
+                className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
               >
                 <div className="flex items-center space-x-1">
                   <span>{t('submittedBy')}</span>
@@ -425,7 +425,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               {/* CALORIES & MACROS */}
               <th
                 onClick={() => handleSort('calories')}
-                className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
+                className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
               >
                 <div className="flex items-center space-x-1">
                   <span>{t('caloriesMacros')}</span>
@@ -444,7 +444,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               {/* SUBMITTED DATE */}
               <th
                 onClick={() => handleSort('created_at')}
-                className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
+                className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
               >
                 <div className="flex items-center space-x-1">
                   <span>{t('dateCol')}</span>
@@ -463,7 +463,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               {/* STATUS */}
               <th
                 onClick={() => handleSort('status')}
-                className="py-3 px-4 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none transition-colors"
+                className="py-3.5 px-4 cursor-pointer hover:text-black dark:hover:text-white select-none transition-colors"
               >
                 <div className="flex items-center space-x-1">
                   <span>{t('status')}</span>
@@ -480,7 +480,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
               </th>
 
               {/* ACTIONS */}
-              <th className="py-3 px-4 text-right">{t('actionCol')}</th>
+              <th className="py-3.5 px-4 text-right">{t('actionCol')}</th>
             </tr>
           </thead>
 
@@ -530,15 +530,15 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                     {/* FOOD ITEM */}
                     <td className="py-3.5 px-4">
                       <div>
-                        <p className="font-bold text-[#111111] dark:text-[#F3F5EF] leading-tight">
+                        <p className="font-bold text-sm text-[#111111] dark:text-[#F3F5EF] leading-tight">
                           {req.food_name}
                         </p>
-                        <div className="flex items-center space-x-1.5 text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+                        <div className="flex items-center space-x-1.5 text-xs text-stone-500 dark:text-stone-400 mt-1 font-medium">
                           <span>{req.serving_label}</span>
                           {(req.category || req.category_name) && (
                             <>
                               <span>•</span>
-                              <span className="text-gray-500 dark:text-gray-400">
+                              <span className="text-stone-600 dark:text-stone-300">
                                 {req.category || req.category_name}
                               </span>
                             </>
@@ -550,7 +550,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                     {/* SUBMITTED BY */}
                     <td className="py-3.5 px-4 text-[#111111] dark:text-[#F3F5EF]">
                       <div className="flex items-center space-x-2.5">
-                        <div className="relative w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] overflow-hidden">
+                        <div className="relative w-7.5 h-7.5 rounded-full flex items-center justify-center font-bold text-xs shrink-0 bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] overflow-hidden">
                           {getSubmitterAvatar(req) ? (
                             <img
                               src={getSubmitterAvatar(req)}
@@ -564,10 +564,10 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                           <span>{getSubmitterDisplayName(req)?.[0]?.toUpperCase() || 'U'}</span>
                         </div>
                         <div>
-                          <div className="font-semibold text-xs leading-tight">
+                          <div className="font-semibold text-sm leading-tight text-stone-900 dark:text-white">
                             {getSubmitterDisplayName(req)}
                           </div>
-                          <div className="text-[10px] text-gray-400">
+                          <div className="text-xs text-stone-500 dark:text-stone-400 font-medium mt-0.5">
                             {req.submitter_name && req.submitter_name !== 'Community Member' ? 'Verified Member' : 'Mobile User'}
                           </div>
                         </div>
@@ -576,10 +576,10 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
 
                     {/* CALORIES & MACROS */}
                     <td className="py-3.5 px-4">
-                      <div className="font-black text-[#111111] dark:text-[#F3F5EF]">
+                      <div className="font-bold text-sm text-[#111111] dark:text-[#F3F5EF]">
                         {req.calories} kcal
                       </div>
-                      <div className="flex items-center space-x-2 text-[10px] text-gray-400 mt-0.5 font-medium">
+                      <div className="flex items-center space-x-2 text-xs text-stone-500 mt-1 font-semibold">
                         <span className="text-[#FF6B57]">{req.protein_g}g P</span>
                         <span className="text-[#FFC24B]">{req.carbs_g}g C</span>
                         <span className="text-[#7C9CFF]">{req.fat_g}g F</span>
@@ -587,14 +587,14 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                     </td>
 
                     {/* DATE */}
-                    <td className="py-3.5 px-4 text-gray-400 dark:text-gray-500 text-[11px]">
+                    <td className="py-3.5 px-4 text-stone-500 dark:text-stone-400 text-xs font-medium">
                       {formatTimeAgo(req.created_at)}
                     </td>
 
                     {/* STATUS */}
                     <td className="py-3.5 px-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
                           req.status === 'approved'
                             ? 'bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] border border-emerald-200 dark:border-[#234B2D]'
                             : req.status === 'pending'
@@ -614,14 +614,14 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                             <button
                               onClick={() => approveRequest(req.id)}
                               title="Approve submission"
-                              className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] hover:bg-emerald-100 dark:hover:bg-[#1C4627] flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-[#14331C] text-[#16A34A] dark:text-[#3DDC84] hover:bg-emerald-100 dark:hover:bg-[#1C4627] flex items-center justify-center transition-colors cursor-pointer"
                             >
                               <CheckCircle2 className="w-4 h-4" strokeWidth={1.8} />
                             </button>
                             <button
                               onClick={() => rejectRequest(req.id, 'Nutritional data incomplete')}
                               title="Reject submission"
-                              className="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 flex items-center justify-center transition-colors cursor-pointer"
                             >
                               <XCircle className="w-4 h-4" strokeWidth={1.8} />
                             </button>
@@ -631,7 +631,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                           <button
                             onClick={() => onOpenRequestModal(req)}
                             title="View details"
-                            className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#253026] text-gray-600 dark:text-gray-300 hover:text-[#16A34A] dark:hover:text-[#B8FF3B] flex items-center justify-center transition-colors cursor-pointer"
+                            className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#253026] text-stone-600 dark:text-stone-300 hover:text-[#16A34A] dark:hover:text-[#B8FF3B] flex items-center justify-center transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" strokeWidth={1.8} />
                           </button>
@@ -647,7 +647,7 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
       </div>
 
       {/* ── PAGINATION CONTROLS ───────────────────────────────────── */}
-      <div className="p-4 border-t border-[#EAECE8] dark:border-[#222D23] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+      <div className="p-4 border-t border-[#EAECE8] dark:border-[#222D23] flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-stone-600 dark:text-stone-400">
         <div>
           {t('showingText')}{' '}
           <span className="font-bold text-[#111111] dark:text-[#F3F5EF]">
@@ -666,14 +666,14 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
 
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-1">
-            <span className="text-[11px]">{t('rowsText')}</span>
+            <span className="text-xs font-medium">{t('rowsText')}</span>
             <select
               value={pageSize}
               onChange={(e) => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="bg-gray-50 dark:bg-[#202820] border border-gray-200 dark:border-[#2D382D] rounded-lg px-2 py-1 text-xs text-gray-700 dark:text-gray-300 focus:outline-none cursor-pointer"
+              className="bg-gray-50 dark:bg-[#202820] border border-gray-200 dark:border-[#2D382D] rounded-lg px-2.5 py-1 text-sm text-stone-700 dark:text-stone-300 focus:outline-none cursor-pointer"
             >
               <option value={3}>3</option>
               <option value={5}>5</option>
@@ -686,9 +686,9 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={validCurrentPage <= 1}
-              className="w-7 h-7 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="w-8.5 h-8.5 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.8} />
+              <ChevronLeft className="w-4 h-4" strokeWidth={1.8} />
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -700,10 +700,10 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  className={`w-8.5 h-8.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
                     validCurrentPage === pageNum
                       ? 'bg-[#B8FF3B] text-[#0C2417] shadow-2xs font-extrabold'
-                      : 'hover:bg-gray-100 dark:hover:bg-[#202820] text-gray-600 dark:text-gray-400'
+                      : 'hover:bg-gray-100 dark:hover:bg-[#202820] text-stone-600 dark:text-stone-400'
                   }`}
                 >
                   {pageNum}
@@ -713,9 +713,9 @@ export const ModerationQueueTable: React.FC<ModerationQueueTableProps> = ({
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={validCurrentPage >= totalPages}
-              className="w-7 h-7 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="w-8.5 h-8.5 rounded-lg border border-gray-200 dark:border-[#2D382D] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.8} />
+              <ChevronRight className="w-4 h-4" strokeWidth={1.8} />
             </button>
           </div>
         </div>

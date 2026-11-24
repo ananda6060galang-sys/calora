@@ -23,6 +23,7 @@ class UserProfile {
     this.customCalorieTarget,
     this.isAdmin = false,
     this.isBlocked = false,
+    this.isPremium = false,
     this.avatarUrl,
   });
 
@@ -38,6 +39,7 @@ class UserProfile {
   final double? customCalorieTarget;
   final bool isAdmin;
   final bool isBlocked;
+  final bool isPremium;
   final String? avatarUrl;
 
   /// Dynamic age calculated strictly from [dateOfBirth].
@@ -94,6 +96,7 @@ class UserProfile {
     bool clearCustomCalorieTarget = false,
     bool? isAdmin,
     bool? isBlocked,
+    bool? isPremium,
     String? avatarUrl,
     bool clearAvatarUrl = false,
   }) {
@@ -112,6 +115,7 @@ class UserProfile {
           : (customCalorieTarget ?? this.customCalorieTarget),
       isAdmin: isAdmin ?? this.isAdmin,
       isBlocked: isBlocked ?? this.isBlocked,
+      isPremium: isPremium ?? this.isPremium,
       avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
     );
   }

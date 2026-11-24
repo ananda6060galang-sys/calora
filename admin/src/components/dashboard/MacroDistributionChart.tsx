@@ -51,29 +51,29 @@ export const MacroDistributionChart: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center space-x-2">
-            <h3 className="text-base font-extrabold text-calora-light-text dark:text-calora-dark-text tracking-tight">
+            <h3 className="text-base sm:text-lg font-extrabold text-calora-light-text dark:text-calora-dark-text tracking-tight">
               {t('macroDistributionTitle')}
             </h3>
           </div>
-          <p className="text-xs text-gray-500 dark:text-calora-dark-muted mt-0.5">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
             {t('macroDistributionSubtitle')}
           </p>
         </div>
 
         <div className="flex items-center space-x-4">
           {/* Legend */}
-          <div className="flex items-center space-x-3 text-xs">
+          <div className="flex items-center space-x-3 text-sm">
             <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-calora-protein" />
-              <span className="text-gray-500 font-medium">{t('protein')}</span>
+              <span className="text-stone-600 dark:text-stone-300 font-medium">{t('protein')}</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-calora-carbs" />
-              <span className="text-gray-500 font-medium">{t('carbs')}</span>
+              <span className="text-stone-600 dark:text-stone-300 font-medium">{t('carbs')}</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-calora-fat" />
-              <span className="text-gray-500 font-medium">{t('fat')}</span>
+              <span className="text-stone-600 dark:text-stone-300 font-medium">{t('fat')}</span>
             </div>
           </div>
         </div>
@@ -83,8 +83,8 @@ export const MacroDistributionChart: React.FC = () => {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barGap={3}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.5} />
-            <XAxis dataKey="name" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
-            <YAxis stroke="#9CA3AF" fontSize={11} tickLine={false} axisLine={false} />
+            <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip
               formatter={(val: number) => [`${val}g`]}
               contentStyle={{
@@ -92,7 +92,7 @@ export const MacroDistributionChart: React.FC = () => {
                 borderColor: '#303830',
                 borderRadius: '12px',
                 color: '#F3F5EF',
-                fontSize: '12px',
+                fontSize: '13px',
               }}
               itemStyle={{ color: '#F3F5EF' }}
             />

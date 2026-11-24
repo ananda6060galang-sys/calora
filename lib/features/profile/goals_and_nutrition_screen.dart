@@ -287,7 +287,7 @@ class GoalsAndNutritionScreen extends ConsumerWidget {
         ),
       ),
       body: ListView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 48),
         children: [
           // ── SECTION 1: ACTIVE PLAN & WEIGHT PROGRESS CARD ──────────
@@ -1434,7 +1434,7 @@ class _AdjustPlanSheetState extends ConsumerState<_AdjustPlanSheet> {
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                physics: const ClampingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   20,
                   16,
@@ -1910,7 +1910,7 @@ class _LogWeightSheetState extends ConsumerState<_LogWeightSheet> {
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                physics: const ClampingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   20,
                   20,

@@ -51,6 +51,7 @@ class ProfileService {
     final customCalorieTarget = (response['custom_calorie_target'] as num?)?.toDouble();
     final role = response['role'] as String? ?? 'user';
     final isBlocked = response['is_blocked'] as bool? ?? false;
+    final isPremium = response['is_premium'] as bool? ?? false;
     final avatarUrl = response['avatar_url'] as String?;
 
     return UserProfile(
@@ -66,6 +67,7 @@ class ProfileService {
       customCalorieTarget: customCalorieTarget,
       isAdmin: role == 'admin',
       isBlocked: isBlocked,
+      isPremium: isPremium,
       avatarUrl: avatarUrl,
     );
   }
@@ -106,6 +108,7 @@ class ProfileService {
       'protein_target_g': profile.proteinTargetG,
       'carbs_target_g': profile.carbsTargetG,
       'fat_target_g': profile.fatTargetG,
+      'is_premium': profile.isPremium,
       'avatar_url': profile.avatarUrl,
       // Security: 'role' is intentionally omitted. Authorization roles are
       // server/database-controlled and must never be assigned or updated by the client.
@@ -113,6 +116,17 @@ class ProfileService {
     };
 
     await _client.from('profiles').upsert(payload);
+  }
+
+  /// Update user's premium subscription status in Supabase.
+  Future<void> updatePremiumStatus({
+    required String userId,
+    required bool isPremium,
+  }) async {
+    await _client.from('profiles').update({
+      'is_premium': isPremium,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
   }
 
   /// Max file size allowed for profile avatar uploads (5 MB).
